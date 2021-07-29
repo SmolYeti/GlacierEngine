@@ -1,0 +1,12 @@
+[requires]
+gtest/1.12.1
+imgui/1.88
+
+[generators]
+cmake
+
+[imports]
+./res/bindings, imgui_impl_glfw.cpp -> ../bindings
+./res/bindings, imgui_impl_vulkan.cpp -> ../bindings
+./res/bindings, imgui_impl_glfw.h -> ../bindings
+./res/bindings, imgui_impl_vulkan.h -> ../bindings

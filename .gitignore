@@ -1,3 +1,6 @@
+#Visual Studio
+.vs
+
 # Prerequisites
 *.d
 
@@ -6,6 +9,7 @@
 *.lo
 *.o
 *.obj
+*.spv
 
 # Precompiled Headers
 *.gch
@@ -30,3 +34,23 @@
 *.exe
 *.out
 *.app
+
+# Data
+*.png
+
+# User CMake
+*.env.cmake
+
+# Build Files
+.build/*
+build/*
+
+# Conan Imports & files
+conaninfo.txt
+bindings/*
+
+# Environment Files
+.env.cmake
+
+# VS Code
+.vscode/*
