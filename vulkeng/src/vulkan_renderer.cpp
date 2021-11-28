@@ -2,8 +2,8 @@
 
 // STD
 #include <array>
-#include <stdexcept>
 #include <cassert>
+#include <stdexcept>
 
 namespace vulkeng {
     VulkanRenderer::VulkanRenderer(VulkanWindow* window, VulkanDevice* device) :window_(window), device_(device) {
@@ -120,13 +120,14 @@ namespace vulkeng {
         VkRenderPassBeginInfo render_pass_info = {};
         render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         render_pass_info.renderPass = swap_chain_->render_pass();
-        render_pass_info.framebuffer = swap_chain_->framebuffer(current_frame_index_);
+        render_pass_info.framebuffer =
+            swap_chain_->framebuffer(current_image_index_);
 
         render_pass_info.renderArea.offset = { 0, 0 };
         render_pass_info.renderArea.extent = swap_chain_->extent();
 
         std::array<VkClearValue, 2> clear_values{};
-        clear_values[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+        clear_values[0].color = { 0.01f, 0.01f, 0.01f, 1.0f };
         clear_values[1].depthStencil = { 1.0f, 0 };
 
         render_pass_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
