@@ -9,13 +9,11 @@ static constexpr int WINDOW_WIDTH = 2000;
 static constexpr int WINDOW_HEIGHT = 1600;
 
 int main() {
-
     vulkeng::VulkanApplication app(WINDOW_WIDTH, WINDOW_HEIGHT, "Vulkan Grow Project");
 
     try {
         app.Run();
-    }
-    catch (const std::exception& e) {
+    } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;
     }

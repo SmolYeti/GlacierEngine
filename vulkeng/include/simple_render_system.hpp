@@ -1,6 +1,8 @@
 #pragma once
 
+#include "vulkan_camera.hpp"
 #include "vulkan_device.hpp"
+#include "vulkan_frame_info.hpp"
 #include "vulkan_game_object.hpp"
 #include "vulkan_pipeline.hpp"
 
@@ -9,24 +11,24 @@
 #include <vector>
 
 namespace vulkeng {
-    class SimpleRenderSystem {
-    public:
-        SimpleRenderSystem(VulkanDevice* device, VkRenderPass render_pass);
-        ~SimpleRenderSystem();
+class SimpleRenderSystem {
+ public:
+  SimpleRenderSystem(VulkanDevice* device, VkRenderPass render_pass, VkDescriptorSetLayout global_set_layout);
+  ~SimpleRenderSystem();
 
-        SimpleRenderSystem(const SimpleRenderSystem&) = delete;
-        SimpleRenderSystem& operator=(const SimpleRenderSystem&) = delete;
+  SimpleRenderSystem(const SimpleRenderSystem&) = delete;
+  SimpleRenderSystem& operator=(const SimpleRenderSystem&) = delete;
 
-        void RenderGameObjects(VkCommandBuffer command_buffer, std::vector<VulkanGameObject>& game_objects);
-    protected:
-        void CreatePipelineLayout();
-        void CreatePipeline(VkRenderPass render_pass);
+  void RenderGameObjects(const FrameInfo& frame_info);
 
+ protected:
+  void CreatePipelineLayout(VkDescriptorSetLayout global_set_layout);
+  void CreatePipeline(VkRenderPass render_pass);
 
-        // Variables
-        VulkanDevice* device_ = nullptr;
+  // Variables
+  VulkanDevice* device_ = nullptr;
 
-        std::unique_ptr<VulkanPipeline> pipeline_;
-        VkPipelineLayout pipeline_layout_ = nullptr;
-    };
-}
+  std::unique_ptr<VulkanPipeline> pipeline_;
+  VkPipelineLayout pipeline_layout_ = nullptr;
+};
+}  // namespace vulkeng

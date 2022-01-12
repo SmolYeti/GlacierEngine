@@ -1,11 +1,58 @@
-cmake_minimum_required(VERSION 3.10)
+include(./.env.cmake OPTIONAL RESULT_VARIABLE LOCAL_ENV)
+message(STATUS "Local .env.cmake: ${LOCAL_ENV}")
 
-set(GLFW_INCLUDE "C:/Users/WJSSn/Documents/Visual Studio 2017/Libraries/glfw-3.3.2.bin.WIN64/include")
-set(GLM_INCLUDE "C:/Users/WJSSn/Documents/Visual Studio 2017/Libraries/glm")
+cmake_minimum_required(VERSION 3.11.0)
+
+set(NAME VulkanEngine)
+ 
+message(STATUS "using ${CMAKE_GENERATOR}")
+if (CMAKE_GENERATOR STREQUAL "MinGW Makefiles")
+    if (NOT MINGW_PATH) 
+      message(FATAL_ERROR "MINGW_PATH not set in .env.cmake")
+    endif()
+    set(USE_MINGW "True")
+    set(CMAKE_C_COMPILER ${MINGW_PATH}/bin/gcc.exe)
+    set(CMAKE_CXX_COMPILER  ${MINGW_PATH}/bin/g++.exe)
+endif()
 
 # set the project name
-project(Main VERSION 1.0)
-find_package(Vulkan REQUIRED)
+project(${NAME} VERSION 0.0.01)
+
+# 1. Set VULKAN_SDK_PATH in .env.cmake to target specific vulkan version
+if (DEFINED VULKAN_SDK_PATH)
+  set(Vulkan_INCLUDE_DIRS "${VULKAN_SDK_PATH}/Include") # 1.1 Make sure this include path is correct
+  set(Vulkan_LIBRARIES "${VULKAN_SDK_PATH}/Lib") # 1.2 Make sure lib path is correct
+  set(Vulkan_FOUND "True")
+else()
+  find_package(Vulkan REQUIRED) # throws error if could not find Vulkan
+  message(STATUS "Found Vulkan: $ENV{VULKAN_SDK}")
+endif()
+if (NOT Vulkan_FOUND)
+    message(FATAL_ERROR "Could not find Vulkan library!")
+else()
+    message(STATUS "Using vulkan lib at: ${Vulkan_LIBRARIES}")
+endif()
+
+# 2. Set GLFW_PATH in .env.cmake to target specific glfw
+if (DEFINED GLFW_PATH)
+  message(STATUS "Using GLFW path specified in .env")
+  set(GLFW_INCLUDE_DIRS "${GLFW_PATH}/include")
+  if (MSVC)
+    set(GLFW_LIB "${GLFW_PATH}/lib-vc2017") # 2.1 Update lib-vc2019 to use same version as your visual studio
+  elseif (CMAKE_GENERATOR STREQUAL "MinGW Makefiles")
+    message(STATUS "USING MINGW")
+    set(GLFW_LIB "${GLFW_PATH}/lib-mingw-w64") # 2.1 make sure matches glfw mingw subdirectory
+  endif()
+else()
+  find_package(glfw3 3.3 REQUIRED)
+  set(GLFW_LIB glfw)
+  message(STATUS "Found GLFW")
+endif()
+if (NOT GLFW_LIB)
+    message(FATAL_ERROR "Could not find glfw library!")
+else()
+    message(STATUS "Using glfw lib at: ${GLFW_LIB}")
+endif()
 
 # specify the C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -13,90 +60,91 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 configure_file(MainConfig.h.in MainConfig.h)
 
-# add the executable
-#add_executable(Main main.cpp)
-
-# TODO - Move Vulkeng imports into their own library and include library here (static linking, not dlls)
 set(INCLUDE_DIR
-  vulkeng/include/simple_render_system.hpp
-  include/stb_image.h
-  include/tiny_obj_loader.h
-  vulkeng/include/vulkan_application.hpp
-  vulkeng/include/vulkan_device.hpp
-  vulkeng/include/vulkan_game_object.hpp
-  vulkeng/include/vulkan_model.hpp
-  vulkeng/include/vulkan_pipeline.hpp
-  vulkeng/include/vulkan_renderer.hpp
-  vulkeng/include/vulkan_swap_chain.hpp
-  vulkeng/include/vulkan_window.hpp
+  external/stb_image.h
+  external/tiny_obj_loader.h
   shaders/vert.spv
   shaders/frag.spv
 )
 
+# TODO - Move Vulkeng imports into their own library and include library here (static linking, not dlls)
+file(GLOB_RECURSE VULKENG_INCLUDE ${PROJECT_SOURCE_DIR}/vulkeng/include/*.hpp)
+file(GLOB_RECURSE VULKENG_SOURCE ${PROJECT_SOURCE_DIR}/vulkeng/src/*.cpp)
+
 set(SOURCE_DIR
   main.cpp
-  vulkeng/src/simple_render_system.cpp
-  vulkeng/src/vulkan_application.cpp
-  vulkeng/src/vulkan_device.cpp
-  vulkeng/src/vulkan_model.cpp
-  vulkeng/src/vulkan_pipeline.cpp
-  vulkeng/src/vulkan_renderer.cpp
-  vulkeng/src/vulkan_swap_chain.cpp
-  vulkeng/src/vulkan_window.cpp
 )
 
-add_executable(Main ${INCLUDE_DIR} ${SOURCE_DIR})
+add_executable(${NAME} ${INCLUDE_DIR} ${VULKENG_INCLUDE} ${SOURCE_DIR} ${VULKENG_SOURCE})
 
-target_include_directories(Main PUBLIC "${PROJECT_BINARY_DIR}" "${GLFW_INCLUDE}" "${GLM_INCLUDE}" "${VULKAN_INCLUDE}") 
-target_link_libraries(Main "C:/Users/WJSSn/Documents/Visual Studio 2017/Libraries/glfw-3.3.2.bin.WIN64/lib-vc2017/glfw3.lib" Vulkan::Vulkan)
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 
+set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
 
-# From:
-# https://stackoverflow.com/questions/57478571/why-wont-cmake-build-my-vulkan-spirv-shaders
-
-find_package(Vulkan REQUIRED COMPONENTS glslc)
-find_program(glslc_executable NAMES glslc HINTS Vulkan::glslc)
-
-#==============================================================================
-# COMPILE SHADERS
-#
-
-set(SHADER_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
-set(SHADER_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/shaders)
-
-file(GLOB SHADERS_FILES
-  ${SHADER_SOURCE_DIR}/*.vert
-  ${SHADER_SOURCE_DIR}/*.frag
-  ${SHADER_SOURCE_DIR}/*.comp
-  ${SHADER_SOURCE_DIR}/*.geom
-  ${SHADER_SOURCE_DIR}/*.tesc
-  ${SHADER_SOURCE_DIR}/*.tese
-  ${SHADER_SOURCE_DIR}/*.mesh
-  ${SHADER_SOURCE_DIR}/*.task
-  ${SHADER_SOURCE_DIR}/*.rgen
-  ${SHADER_SOURCE_DIR}/*.rchit
-  ${SHADER_SOURCE_DIR}/*.rmiss)
-
-add_custom_command(
-  COMMAND
-    ${CMAKE_COMMAND} -E make_directory ${SHADER_BINARY_DIR}
-  OUTPUT ${SHADER_BINARY_DIR}
-  COMMENT "Creating ${SHADER_BINARY_DIR}"
-)
-
-foreach(source IN LISTS SHADERS_FILES)
-  get_filename_component(FILENAME ${source} NAME)
-  add_custom_command(
-    COMMAND
-      ${glslc_executable}
-      #      -MD -MF ${SHADER_BINARY_DIR}/${FILENAME}.d
-      -o ${SHADER_BINARY_DIR}/${FILENAME}.spv
-      ${source}
-    OUTPUT ${SHADER_BINARY_DIR}/${FILENAME}.spv
-    DEPENDS ${source} ${SHADER_BINARY_DIR}
-    COMMENT "Compiling ${FILENAME}"
+set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
+ 
+if (WIN32)
+  message(STATUS "CREATING BUILD FOR WINDOWS")
+ 
+  if (USE_MINGW)
+    target_include_directories(${PROJECT_NAME} PUBLIC
+      ${MINGW_PATH}/include
+    )
+    target_link_directories(${PROJECT_NAME} PUBLIC
+      ${MINGW_PATH}/lib
+    )
+  endif()
+ 
+  target_include_directories(${PROJECT_NAME} PUBLIC
+    ${PROJECT_SOURCE_DIR}
+    ${Vulkan_INCLUDE_DIRS}
+    ${TINYOBJ_PATH}
+    ${GLFW_INCLUDE_DIRS}
+    ${GLM_PATH}
   )
-  list(APPEND SPV_SHADERS ${SHADER_BINARY_DIR}/${FILENAME}.spv)
-endforeach()
+ 
+  target_link_libraries(${PROJECT_NAME} ${GLFW_LIB}/glfw3.lib Vulkan::Vulkan)
+elseif (UNIX)
+    message(STATUS "CREATING BUILD FOR UNIX")
+    target_include_directories(${PROJECT_NAME} PUBLIC
+      ${PROJECT_SOURCE_DIR}/src
+      ${TINYOBJ_PATH}
+    )
+    target_link_libraries(${PROJECT_NAME} glfw ${Vulkan_LIBRARIES})
+endif()
 
-add_custom_target(shaders_defs ALL DEPENDS ${SPV_SHADERS})
+############## Build SHADERS #######################
+ 
+# Find all vertex and fragment sources within shaders directory
+# taken from VBlancos vulkan tutorial
+# https://github.com/vblanco20-1/vulkan-guide/blob/all-chapters/CMakeLists.txt
+find_program(GLSL_VALIDATOR glslangValidator HINTS 
+  ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} 
+  /usr/bin 
+  /usr/local/bin 
+  ${VULKAN_SDK_PATH}/Bin
+  ${VULKAN_SDK_PATH}/Bin32
+  $ENV{VULKAN_SDK}/Bin/ 
+  $ENV{VULKAN_SDK}/Bin32/
+)
+ 
+# get all .vert and .frag files in shaders directory
+file(GLOB_RECURSE GLSL_SOURCE_FILES
+  "${PROJECT_SOURCE_DIR}/shaders/*.frag"
+  "${PROJECT_SOURCE_DIR}/shaders/*.vert"
+)
+ 
+foreach(GLSL ${GLSL_SOURCE_FILES})
+  get_filename_component(FILE_NAME ${GLSL} NAME)
+  set(SPIRV "${PROJECT_SOURCE_DIR}/shaders/${FILE_NAME}.spv")
+  add_custom_command(
+    OUTPUT ${SPIRV}
+    COMMAND ${GLSL_VALIDATOR} -V ${GLSL} -o ${SPIRV}
+    DEPENDS ${GLSL})
+  list(APPEND SPIRV_BINARY_FILES ${SPIRV})
+endforeach(GLSL)
+ 
+add_custom_target(
+    Shaders
+    DEPENDS ${SPIRV_BINARY_FILES}
+)

@@ -80,6 +80,8 @@ class VulkanDevice {
                            VkMemoryPropertyFlags properties, VkImage& image,
                            VkDeviceMemory& imageMemory);
 
+  VkPhysicalDeviceProperties properties_;
+
  private:
   void CreateInstance();
   void SetupDebugMessenger();

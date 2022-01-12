@@ -10,7 +10,7 @@
 namespace vulkeng {
 class VulkanSwapChain {
  public:
-  static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+  static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
 
   VulkanSwapChain(VulkanDevice* device, VkExtent2D extent);
   VulkanSwapChain(VulkanDevice* device, VkExtent2D extent,
