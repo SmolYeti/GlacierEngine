@@ -1,6 +1,5 @@
 #include "vulkeng/experiment/curve_model.hpp"
 
-#include <iostream>
 namespace vulkeng {
 
 CurveModel::CurveModel(VulkanDevice* device,
@@ -16,8 +15,6 @@ std::shared_ptr<CurveModel> CurveModel::ModelFromCurve2D(
   for (const auto& point : points) {
     LineModel::Vertex v;
     v.pos = {static_cast<float>(point.x), static_cast<float>(point.y), 0};
-    std::cout << "Position: (" << point.x << ", " << point.y << ")"
-              << std::endl;
     v.color = {1.0f, 0.0f, 0.0f};
     vertices.push_back(v);
   }
