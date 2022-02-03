@@ -61,4 +61,15 @@ glm::mat3 TransformComponent::NormalMatrix() {
       },
   };
 }
+
+VulkanGameObject VulkanGameObject::MakePointLight(float intensity, float radius,
+                                                  glm::vec3 color) {
+  VulkanGameObject obj = VulkanGameObject::CreateVulkanGameObject();
+
+  obj.color_ = color;
+  obj.transform_.scale.x = radius;
+  obj.point_light = PointLightComponent{intensity};
+
+  return obj;
+}
 }  // namespace vulkeng

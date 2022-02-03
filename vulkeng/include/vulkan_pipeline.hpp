@@ -7,57 +7,61 @@
 #include <vector>
 
 namespace vulkeng {
-    class VulkanDevice;
+class VulkanDevice;
 
-    struct PipelineConfigInfo {
-        PipelineConfigInfo() = default;
-        PipelineConfigInfo(const PipelineConfigInfo&) = delete;
-        PipelineConfigInfo& operator=(const PipelineConfigInfo&) = delete;
+struct PipelineConfigInfo {
+  PipelineConfigInfo() = default;
+  PipelineConfigInfo(const PipelineConfigInfo&) = delete;
+  PipelineConfigInfo& operator=(const PipelineConfigInfo&) = delete;
 
-        VkPipelineViewportStateCreateInfo viewport_info;
-        VkPipelineInputAssemblyStateCreateInfo input_assembly_info;
-        VkPipelineRasterizationStateCreateInfo rasterization_info;
-        VkPipelineMultisampleStateCreateInfo multisample_info;
-        VkPipelineColorBlendAttachmentState color_blend_attachment;
-        VkPipelineColorBlendStateCreateInfo color_blend_info;
-        VkPipelineDepthStencilStateCreateInfo depth_stencil_info;
-        std::vector<VkDynamicState> dynamic_state_enables;
-        VkPipelineDynamicStateCreateInfo dynamic_state_info;
-        VkPipelineLayout pipeline_layout = nullptr;
-        VkRenderPass render_pass = nullptr;
-        uint32_t subpass = 0;
-    };
+  std::vector<VkVertexInputBindingDescription> binding_descriptions{};
+  std::vector<VkVertexInputAttributeDescription> attribute_descriptions{};
 
-    class VulkanPipeline {
-    public:
-        VulkanPipeline(VulkanDevice* device,      //
-            const std::string& vertex_filepath,   //
-            const std::string& fragment_filepath, //
-            const PipelineConfigInfo& config);    //
-        ~VulkanPipeline();
+  VkPipelineViewportStateCreateInfo viewport_info;
+  VkPipelineInputAssemblyStateCreateInfo input_assembly_info;
+  VkPipelineRasterizationStateCreateInfo rasterization_info;
+  VkPipelineMultisampleStateCreateInfo multisample_info;
+  VkPipelineColorBlendAttachmentState color_blend_attachment;
+  VkPipelineColorBlendStateCreateInfo color_blend_info;
+  VkPipelineDepthStencilStateCreateInfo depth_stencil_info;
+  std::vector<VkDynamicState> dynamic_state_enables;
+  VkPipelineDynamicStateCreateInfo dynamic_state_info;
+  VkPipelineLayout pipeline_layout = nullptr;
+  VkRenderPass render_pass = nullptr;
+  uint32_t subpass = 0;
+};
 
-        VulkanPipeline(const VulkanPipeline&) = delete;
-        VulkanPipeline& operator=(const VulkanPipeline&) = delete;
+class VulkanPipeline {
+ public:
+  VulkanPipeline(VulkanDevice* device,                  //
+                 const std::string& vertex_filepath,    //
+                 const std::string& fragment_filepath,  //
+                 const PipelineConfigInfo& config);     //
+  ~VulkanPipeline();
 
-        void Bind(VkCommandBuffer command_buffer);
+  VulkanPipeline(const VulkanPipeline&) = delete;
+  VulkanPipeline& operator=(const VulkanPipeline&) = delete;
 
-        static void DefaultPipelineConfigInfo(PipelineConfigInfo& config_info);
+  void Bind(VkCommandBuffer command_buffer);
 
-    private:
-        static std::vector<char> ReadFile(const std::string& file_path);
+  static void DefaultPipelineConfigInfo(PipelineConfigInfo& config_info);
 
-        void CreateDescriptorSetLayout();
+ private:
+  static std::vector<char> ReadFile(const std::string& file_path);
 
-        void CreateGraphicsPipeline(const std::string& vertex_filepath,
-            const std::string& fragment_filepath,
-            const PipelineConfigInfo& config);
+  void CreateDescriptorSetLayout();
 
-        void CreateShaderModule(const std::vector<char>& code, VkShaderModule* shader_module);
+  void CreateGraphicsPipeline(const std::string& vertex_filepath,
+                              const std::string& fragment_filepath,
+                              const PipelineConfigInfo& config);
 
-        // Variables
-        VulkanDevice* device_ = nullptr;
-        VkPipeline graphics_pipeline_ = nullptr;
-        VkShaderModule vert_shader_module_ = nullptr;
-        VkShaderModule frag_shader_module_ = nullptr;
-    };
-}
+  void CreateShaderModule(const std::vector<char>& code,
+                          VkShaderModule* shader_module);
+
+  // Variables
+  VulkanDevice* device_ = nullptr;
+  VkPipeline graphics_pipeline_ = nullptr;
+  VkShaderModule vert_shader_module_ = nullptr;
+  VkShaderModule frag_shader_module_ = nullptr;
+};
+}  // namespace vulkeng

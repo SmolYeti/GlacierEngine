@@ -1,4 +1,4 @@
-#include "vulkeng/include/vulkan_model.hpp"
+#include "vulkeng/include/triangle_model.hpp"
 
 #include "vulkeng/include/vulkan_utils.hpp"
 
@@ -15,8 +15,8 @@
 
 namespace std {
 template <>
-struct hash<vulkeng::VulkanModel::Vertex> {
-  size_t operator()(vulkeng::VulkanModel::Vertex const& vertex) const {
+struct hash<vulkeng::TriangleModel::Vertex> {
+  size_t operator()(vulkeng::TriangleModel::Vertex const& vertex) const {
     size_t seed = 0;
     vulkeng::HashCombine(seed, vertex.pos, vertex.color, vertex.normal,
                          vertex.uv);
@@ -26,23 +26,23 @@ struct hash<vulkeng::VulkanModel::Vertex> {
 }  // namespace std
 
 namespace vulkeng {
-VulkanModel::VulkanModel(VulkanDevice* device, const Builder& builder)
+TriangleModel::TriangleModel(VulkanDevice* device, const Builder& builder)
     : device_(device) {
   CreateVertexBuffers(builder.vertices);
   CreateIndexBuffers(builder.indices);
 }
 
-VulkanModel::~VulkanModel() {}
+TriangleModel::~TriangleModel() {}
 
-std::unique_ptr<VulkanModel> VulkanModel::CreateModelFromFile(
+std::unique_ptr<TriangleModel> TriangleModel::CreateModelFromFile(
     VulkanDevice* device, const std::string& file_path) {
   Builder builder{};
   builder.LoadModel(file_path);
 
-  return std::make_unique<VulkanModel>(device, builder);
+  return std::make_unique<TriangleModel>(device, builder);
 }
 
-void VulkanModel::CreateVertexBuffers(const std::vector<Vertex>& vertices) {
+void TriangleModel::CreateVertexBuffers(const std::vector<Vertex>& vertices) {
   vertex_count_ = static_cast<uint32_t>(vertices.size());
   assert(vertex_count_ >= 3 && "Vertex count must be at least 3");
   VkDeviceSize buffer_size = sizeof(vertices[0]) * vertex_count_;
@@ -69,7 +69,7 @@ void VulkanModel::CreateVertexBuffers(const std::vector<Vertex>& vertices) {
                       buffer_size);
 }
 
-void VulkanModel::CreateIndexBuffers(const std::vector<uint32_t>& indices) {
+void TriangleModel::CreateIndexBuffers(const std::vector<uint32_t>& indices) {
   index_count_ = static_cast<uint32_t>(indices.size());
 
   if (indices.empty()) {
@@ -100,7 +100,7 @@ void VulkanModel::CreateIndexBuffers(const std::vector<uint32_t>& indices) {
                       buffer_size);
 }
 
-void VulkanModel::Draw(VkCommandBuffer command_buffer) {
+void TriangleModel::Draw(VkCommandBuffer command_buffer) {
   if (index_buffer_) {
     vkCmdDrawIndexed(command_buffer, index_count_, 1, 0, 0, 0);
   } else {
@@ -108,7 +108,7 @@ void VulkanModel::Draw(VkCommandBuffer command_buffer) {
   }
 }
 
-void VulkanModel::Bind(VkCommandBuffer command_buffer) {
+void TriangleModel::Bind(VkCommandBuffer command_buffer) {
   VkBuffer buffers[] = {vertex_buffer_->buffer()};
   VkDeviceSize offsets[] = {0};
   vkCmdBindVertexBuffers(command_buffer, 0, 1, buffers, offsets);
@@ -120,7 +120,7 @@ void VulkanModel::Bind(VkCommandBuffer command_buffer) {
 }
 
 std::vector<VkVertexInputBindingDescription>
-VulkanModel::Vertex::BindingDescription() {
+TriangleModel::Vertex::BindingDescription() {
   std::vector<VkVertexInputBindingDescription> binding_description(1);
   binding_description[0].binding = 0;
   binding_description[0].stride = sizeof(Vertex);
@@ -130,7 +130,7 @@ VulkanModel::Vertex::BindingDescription() {
 }
 
 std::vector<VkVertexInputAttributeDescription>
-VulkanModel::Vertex::AttributeDescriptions() {
+TriangleModel::Vertex::AttributeDescriptions() {
   std::vector<VkVertexInputAttributeDescription> attributed_descriptions{};
 
   // Position
@@ -149,7 +149,7 @@ VulkanModel::Vertex::AttributeDescriptions() {
   return attributed_descriptions;
 }
 
-void VulkanModel::Builder::LoadModel(const std::string& file_path) {
+void TriangleModel::Builder::LoadModel(const std::string& file_path) {
   tinyobj::attrib_t attrib;
   std::vector<tinyobj::shape_t> shapes;
   std::vector<tinyobj::material_t> materials;

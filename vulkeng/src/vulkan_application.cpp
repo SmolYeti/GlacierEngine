@@ -2,9 +2,20 @@
 
 // VulkEng
 #include "vulkeng/include/keyboard_movement_controller.hpp"
-#include "vulkeng/include/simple_render_system.hpp"
 #include "vulkeng/include/vulkan_buffer.hpp"
 #include "vulkeng/include/vulkan_camera.hpp"
+#include "vulkeng/systems/line_render_system.hpp"
+#include "vulkeng/systems/point_light_system.hpp"
+#include "vulkeng/systems/simple_render_system.hpp"
+
+#include "vulkeng/experiment/perlin_noise_gen.hpp"
+#include "vulkeng/experiment/perlin_noise_render_system.hpp"
+
+// NURBS
+#include "nurbs_cpp/include/bezier_curve.hpp"
+#include "nurbs_cpp/include/parametric_curve.hpp"
+#include "nurbs_cpp/include/power_basis_curve.hpp"
+#include "vulkeng/experiment/curve_model.hpp"
 
 // GLM
 #define GLM_FORCE_RADIANS
@@ -21,13 +32,6 @@
 #include <unordered_map>
 
 namespace vulkeng {
-
-struct GlobalUbo {
-  glm::mat4 projection_view{1.f};
-  glm::vec4 ambient_light_color{1.f, 1.f, 1.f, 0.02f};
-  glm::vec3 light_position{-1.f};
-  alignas(16) glm::vec4 light_color{1.f};
-};
 
 VulkanApplication::VulkanApplication(int width, int height,
                                      std::string app_name) {
@@ -66,10 +70,18 @@ void VulkanApplication::Run() {
         .WriteBuffer(0, &buffer_info)
         .Build(global_descriptor_sets[i]);
   }
-
+  LineRenderSystem line_render_system{device_.get(),
+                                      renderer_->GetSwapChainRenderPass(),
+                                      global_set_layout->DescriptorSetLayout()};
   SimpleRenderSystem render_system{device_.get(),
                                    renderer_->GetSwapChainRenderPass(),
                                    global_set_layout->DescriptorSetLayout()};
+  // PerlinNoiseRenderSystem perlin_render_system{
+  //    device_.get(), renderer_->GetSwapChainRenderPass(),
+  //    global_set_layout->DescriptorSetLayout()};
+  PointLightSystem point_light_system{device_.get(),
+                                      renderer_->GetSwapChainRenderPass(),
+                                      global_set_layout->DescriptorSetLayout()};
   VulkanCamera camera{};
   camera.SetViewTarget(glm::vec3{-1.f, -2.f, 3.f}, glm::vec3{0.0f, 0.f, 2.5f});
 
@@ -100,17 +112,27 @@ void VulkanApplication::Run() {
 
     if (auto command_buffer = renderer_->BeginFrame()) {
       int frame_index = renderer_->FrameIndex();
-      FrameInfo frame_info{frame_index, frame_time, command_buffer, camera,
-                           global_descriptor_sets[frame_index], game_objects_};
+      FrameInfo frame_info{frame_index,
+                           frame_time,
+                           command_buffer,
+                           camera,
+                           global_descriptor_sets[frame_index],
+                           game_objects_};
       // Update
       GlobalUbo ubo;
-      ubo.projection_view = camera.projection_matrix() * camera.view_matrix();
+      ubo.projection = camera.projection_matrix();
+      ubo.view = camera.view_matrix();
+      point_light_system.Update(frame_info, ubo);
+      // perlin_render_system.Update(frame_info, ubo);
       uniform_buffers[frame_index]->WriteToBuffer(&ubo);
       uniform_buffers[frame_index]->Flush();
 
       // Render
       renderer_->BeginSwapChainRenderPass(command_buffer);
+      // perlin_render_system.Render(frame_info);
       render_system.RenderGameObjects(frame_info);
+      line_render_system.RenderGameObjects(frame_info);
+      point_light_system.Render(frame_info);
       renderer_->EndSwapChainRenderPass(command_buffer);
       renderer_->EndFrame();
     }
@@ -128,37 +150,100 @@ VulkanApplication::~VulkanApplication() {
 }
 
 void VulkanApplication::LoadGameObjects() {
-  std::shared_ptr<VulkanModel> model = VulkanModel::CreateModelFromFile(
-      device_.get(),
-      "C:/Users/WJSSn/Documents/GitRepos/VulkanGrowProject/models/"
-      "flat_vase.obj");
+  {
+    std::function<double(double)> x_curve = [](double u) {
+      return std::cos(u);
+    };
+    std::function<double(double)> y_curve = [](double u) {
+      return std::sin(u);
+    };
+    std::array<std::function<double(double)>, 2> curve_funcs = {x_curve,
+                                                                y_curve};
+    nurbs::ParametricCurve2D curve_2d(curve_funcs, {0.0, 6.28});
+    auto curve = CurveModel::ModelFromCurve2D(device_.get(), curve_2d);
 
-  auto flat_vase = VulkanGameObject::CreateVulkanGameObject();
-  flat_vase.model_ = model;
-  flat_vase.transform_.translation = {0.f, 0.5f, 0.f};
-  flat_vase.transform_.scale = {3.0f, 1.f, 3.f};
-  game_objects_.emplace(flat_vase.id(), std::move(flat_vase));
+    auto parametric_curve = VulkanGameObject::CreateVulkanGameObject();
+    parametric_curve.line_model_ = curve;
+    parametric_curve.transform_.translation = {0.f, -1.f, 0.f};
+    parametric_curve.transform_.scale = {0.5f, 0.5f, 0.5f};
+    game_objects_.emplace(parametric_curve.id(), std::move(parametric_curve));
+  }
+  /*{
+    auto line_test = std::make_shared<LineModel>(device_.get());
 
-  model = VulkanModel::CreateModelFromFile(
-      device_.get(),
-      "C:/Users/WJSSn/Documents/GitRepos/VulkanGrowProject/models/"
-      "smooth_vase.obj");
+    auto test_line = VulkanGameObject::CreateVulkanGameObject();
+    test_line.line_model_ = line_test;
+    test_line.transform_.translation = {0.f, -1.f, 0.f};
+    game_objects_.emplace(test_line.id(), std::move(test_line));
+  }*/
 
-  auto smooth_vase = VulkanGameObject::CreateVulkanGameObject();
-  smooth_vase.model_ = model;
-  smooth_vase.transform_.translation = {1.f, 0.5f, 0.f};
-  smooth_vase.transform_.scale = {3.0f, 1.f, 3.f};
-  game_objects_.emplace(smooth_vase.id(), std::move(smooth_vase));
+  // Current Tutorial Objects:
+  {
+    std::shared_ptr<TriangleModel> model = TriangleModel::CreateModelFromFile(
+        device_.get(),
+        "C:/Users/WJSSn/Documents/GitRepos/VulkanGrowProject/models/"
+        "flat_vase.obj");
 
-  model = VulkanModel::CreateModelFromFile(
-      device_.get(),
-      "C:/Users/WJSSn/Documents/GitRepos/VulkanGrowProject/models/"
-      "quad.obj");
+    auto flat_vase = VulkanGameObject::CreateVulkanGameObject();
+    flat_vase.model_ = model;
+    flat_vase.transform_.translation = {-0.5f, 0.5f, 0.f};
+    flat_vase.transform_.scale = {3.0f, 1.f, 3.f};
+    game_objects_.emplace(flat_vase.id(), std::move(flat_vase));
+  }
 
-  auto floor = VulkanGameObject::CreateVulkanGameObject();
-  floor.model_ = model;
-  floor.transform_.translation = {0.f, 0.5f, 0.f};
-  floor.transform_.scale = {3.0f, 1.f, 3.f};
-  game_objects_.emplace(floor.id(), std::move(floor));
+  {
+    std::shared_ptr<TriangleModel> model = TriangleModel::CreateModelFromFile(
+        device_.get(),
+        "C:/Users/WJSSn/Documents/GitRepos/VulkanGrowProject/models/"
+        "smooth_vase.obj");
+
+    auto smooth_vase = VulkanGameObject::CreateVulkanGameObject();
+    smooth_vase.model_ = model;
+    smooth_vase.transform_.translation = {0.5f, 0.5f, 0.f};
+    smooth_vase.transform_.scale = {3.0f, 1.f, 3.f};
+    game_objects_.emplace(smooth_vase.id(), std::move(smooth_vase));
+  }
+  {
+    std::shared_ptr<TriangleModel> model = TriangleModel::CreateModelFromFile(
+        device_.get(),
+        "C:/Users/WJSSn/Documents/GitRepos/VulkanGrowProject/models/"
+        "quad.obj");
+
+    auto floor = VulkanGameObject::CreateVulkanGameObject();
+    floor.model_ = model;
+    floor.transform_.translation = {0.f, 0.5f, 0.f};
+    floor.transform_.scale = {3.0f, 1.f, 3.f};
+    game_objects_.emplace(floor.id(), std::move(floor));
+  }
+
+  {
+    std::vector<glm::vec3> light_colors = {{1.0f, 0.1f, 0.1f},   //
+                                           {0.1f, 0.1f, 1.0f},   //
+                                           {0.1f, 1.0f, 0.1f},   //
+                                           {1.0f, 1.0f, 0.1f},   //
+                                           {0.1f, 1.0f, 1.0f},   //
+                                           {1.0f, 0.1f, 1.0f}};  //
+    for (size_t i = 0; i < light_colors.size(); ++i) {
+      auto point_light = VulkanGameObject::MakePointLight(0.5f);
+      point_light.color_ = light_colors[i];
+      auto rotate_light =
+          glm::rotate(glm::mat4(1.f),
+                      (static_cast<float>(i) * glm::two_pi<float>()) /
+                          static_cast<float>(light_colors.size()),
+                      {0.0f, -1.0f, 0.0f});
+      point_light.transform_.translation =
+          glm::vec3(rotate_light * glm::vec4(2.5f, -0.5f, 0.f, 1.f));
+      game_objects_.emplace(point_light.id(), std::move(point_light));
+    }
+  }
+
+  /*PerlinNoiseGen noise(device_.get());
+
+  auto perlin_model = VulkanGameObject::CreateVulkanGameObject();
+  //perlin_model.model_ = noise.GetModel({0, 0}, {100, 100});
+  perlin_model.model_ = noise.GetModelFlat( {1000, 1000});
+  perlin_model.transform_.translation = {0.5f, 0.5f, 0.f};
+  perlin_model.transform_.scale = {3.0f, 1.f, 3.f};
+  game_objects_.emplace(perlin_model.id(), std::move(perlin_model));*/
 }
 }  // namespace vulkeng

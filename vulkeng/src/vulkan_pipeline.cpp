@@ -1,7 +1,7 @@
 #include "vulkeng/include/vulkan_pipeline.hpp"
 
+#include "vulkeng/include/triangle_model.hpp"
 #include "vulkeng/include/vulkan_device.hpp"
-#include "vulkeng/include/vulkan_model.hpp"
 
 // std
 #include <cassert>
@@ -111,6 +111,11 @@ void VulkanPipeline::DefaultPipelineConfigInfo(
   config_info.dynamic_state_info.dynamicStateCount =
       static_cast<uint32_t>(config_info.dynamic_state_enables.size());
   config_info.dynamic_state_info.flags = 0;
+
+  config_info.binding_descriptions =
+      TriangleModel::Vertex::BindingDescription();
+  config_info.attribute_descriptions =
+      TriangleModel::Vertex::AttributeDescriptions();
 }
 
 std::vector<char> VulkanPipeline::ReadFile(const std::string& file_path) {
@@ -170,8 +175,8 @@ void VulkanPipeline::CreateGraphicsPipeline(
   shader_stages[1].pSpecializationInfo = nullptr;
 
   // Vertex input information
-  auto attribute_descriptions = VulkanModel::Vertex::AttributeDescriptions();
-  auto binding_description = VulkanModel::Vertex::BindingDescription();
+  auto& attribute_descriptions = config_info.attribute_descriptions;
+  auto& binding_description = config_info.binding_descriptions;
 
   VkPipelineVertexInputStateCreateInfo vertex_input_info = {};
   vertex_input_info.sType =

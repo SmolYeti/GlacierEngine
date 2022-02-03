@@ -3,7 +3,7 @@ message(STATUS "Local .env.cmake: ${LOCAL_ENV}")
 
 cmake_minimum_required(VERSION 3.11.0)
 
-set(NAME VulkanEngine)
+set(NAME GlacierEngine)
  
 message(STATUS "using ${CMAKE_GENERATOR}")
 if (CMAKE_GENERATOR STREQUAL "MinGW Makefiles")
@@ -15,7 +15,7 @@ if (CMAKE_GENERATOR STREQUAL "MinGW Makefiles")
     set(CMAKE_CXX_COMPILER  ${MINGW_PATH}/bin/g++.exe)
 endif()
 
-# set the project name
+# set the project name 
 project(${NAME} VERSION 0.0.01)
 
 # 1. Set VULKAN_SDK_PATH in .env.cmake to target specific vulkan version
@@ -68,21 +68,39 @@ set(INCLUDE_DIR
 )
 
 # TODO - Move Vulkeng imports into their own library and include library here (static linking, not dlls)
-file(GLOB_RECURSE VULKENG_INCLUDE ${PROJECT_SOURCE_DIR}/vulkeng/include/*.hpp)
-file(GLOB_RECURSE VULKENG_SOURCE ${PROJECT_SOURCE_DIR}/vulkeng/src/*.cpp)
+file(GLOB_RECURSE VULKENG_INCLUDE ${PROJECT_SOURCE_DIR}/vulkeng/*.hpp)
+file(GLOB_RECURSE VULKENG_SOURCE ${PROJECT_SOURCE_DIR}/vulkeng/*.cpp)
+
+set(NURBS_INCLUDE 
+  nurbs_cpp/include/curve_2d.hpp
+  nurbs_cpp/include/curve_3d.hpp
+  nurbs_cpp/include/parametric_curve.hpp
+  nurbs_cpp/include/power_basis_curve.hpp
+)
+
+set(NURBS_SOURCE 
+  nurbs_cpp/src/parametric_curve.cpp
+)
 
 set(SOURCE_DIR
   main.cpp
 )
 
-add_executable(${NAME} ${INCLUDE_DIR} ${VULKENG_INCLUDE} ${SOURCE_DIR} ${VULKENG_SOURCE})
+add_executable(${NAME}
+    ${INCLUDE_DIR}
+    ${SOURCE_DIR}
+    ${NURBS_INCLUDE}
+    ${NURBS_SOURCE}
+    ${VULKENG_INCLUDE}
+    ${VULKENG_SOURCE}
+)
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
- 
+
 if (WIN32)
   message(STATUS "CREATING BUILD FOR WINDOWS")
  
@@ -106,7 +124,8 @@ if (WIN32)
   target_link_libraries(${PROJECT_NAME} ${GLFW_LIB}/glfw3.lib Vulkan::Vulkan)
 elseif (UNIX)
     message(STATUS "CREATING BUILD FOR UNIX")
-    target_include_directories(${PROJECT_NAME} PUBLIC
+    target_include_directories(${PROJECT_NAME}
+    PUBLIC
       ${PROJECT_SOURCE_DIR}/src
       ${TINYOBJ_PATH}
     )
@@ -118,33 +137,29 @@ endif()
 # Find all vertex and fragment sources within shaders directory
 # taken from VBlancos vulkan tutorial
 # https://github.com/vblanco20-1/vulkan-guide/blob/all-chapters/CMakeLists.txt
-find_program(GLSL_VALIDATOR glslangValidator HINTS 
-  ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} 
-  /usr/bin 
-  /usr/local/bin 
-  ${VULKAN_SDK_PATH}/Bin
-  ${VULKAN_SDK_PATH}/Bin32
-  $ENV{VULKAN_SDK}/Bin/ 
-  $ENV{VULKAN_SDK}/Bin32/
-)
- 
-# get all .vert and .frag files in shaders directory
+find_program(GLSL_VALIDATOR glslangValidator HINTS /usr/bin /usr/local/bin $ENV{VULKAN_SDK}/Bin/ $ENV{VULKAN_SDK}/Bin32/)
+
 file(GLOB_RECURSE GLSL_SOURCE_FILES
   "${PROJECT_SOURCE_DIR}/shaders/*.frag"
   "${PROJECT_SOURCE_DIR}/shaders/*.vert"
+  "${PROJECT_SOURCE_DIR}/shaders/*.comp"
 )
- 
+
 foreach(GLSL ${GLSL_SOURCE_FILES})
+  message(STATUS "BUILDING SHADER")
   get_filename_component(FILE_NAME ${GLSL} NAME)
   set(SPIRV "${PROJECT_SOURCE_DIR}/shaders/${FILE_NAME}.spv")
+  message(STATUS ${GLSL})
   add_custom_command(
     OUTPUT ${SPIRV}
     COMMAND ${GLSL_VALIDATOR} -V ${GLSL} -o ${SPIRV}
     DEPENDS ${GLSL})
   list(APPEND SPIRV_BINARY_FILES ${SPIRV})
 endforeach(GLSL)
- 
+
 add_custom_target(
-    Shaders
-    DEPENDS ${SPIRV_BINARY_FILES}
+  Shaders 
+  DEPENDS ${SPIRV_BINARY_FILES}
 )
+
+message("PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")

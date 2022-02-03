@@ -1,10 +1,10 @@
 #pragma once
 
-#include "vulkan_camera.hpp"
-#include "vulkan_device.hpp"
-#include "vulkan_frame_info.hpp"
-#include "vulkan_game_object.hpp"
-#include "vulkan_pipeline.hpp"
+#include "vulkeng/include/vulkan_camera.hpp"
+#include "vulkeng/include/vulkan_device.hpp"
+#include "vulkeng/include/vulkan_frame_info.hpp"
+#include "vulkeng/include/vulkan_game_object.hpp"
+#include "vulkeng/include/vulkan_pipeline.hpp"
 
 // std
 #include <memory>

@@ -37,3 +37,6 @@
 
 # Data
 *.png
+
+# User CMake
+.env.cmake

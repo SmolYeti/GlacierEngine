@@ -4,7 +4,7 @@
 #include "include/vulkan_device.hpp"
 #include "include/vulkan_game_object.hpp"
 #include "include/vulkan_renderer.hpp"
-#include "include/window.hpp"
+#include "include/vulkan_window.hpp"
 
 // std
 #include <memory>

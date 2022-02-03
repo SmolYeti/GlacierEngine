@@ -1,12 +1,14 @@
 #pragma once
 
-#include "vulkan_model.hpp"
+#include "line_model.hpp"
+#include "triangle_model.hpp"
 
 // libs
 #include <glm/gtc/matrix_transform.hpp>
 
 // std
 #include <memory>
+#include <optional>
 #include <unordered_map>
 
 namespace vulkeng {
@@ -23,6 +25,10 @@ struct TransformComponent {
   glm::mat3 NormalMatrix();
 };
 
+struct PointLightComponent {
+  float light_intensity = 1.0f;
+};
+
 class VulkanGameObject {
  public:
   using id_t = unsigned int;
@@ -33,6 +39,8 @@ class VulkanGameObject {
     return VulkanGameObject(current_id++);
   }
 
+  static VulkanGameObject MakePointLight(float intensity = 10.0f, float radius = 0.1f, glm::vec3 color = glm::vec3(1.f));
+
   VulkanGameObject(const VulkanGameObject&) = delete;
   VulkanGameObject& operator=(const VulkanGameObject&) = delete;
   VulkanGameObject(VulkanGameObject&&) = default;
@@ -40,9 +48,13 @@ class VulkanGameObject {
 
   id_t id() const { return id_; }
 
-  std::shared_ptr<VulkanModel> model_{};
   glm::vec3 color_{};
   TransformComponent transform_{};
+
+  // optional?
+  std::shared_ptr<TriangleModel> model_{};
+  std::shared_ptr<LineModel> line_model_{};
+  std::optional<PointLightComponent> point_light = std::nullopt;
 
  private:
   VulkanGameObject(id_t id) : id_(id) {}

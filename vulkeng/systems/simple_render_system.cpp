@@ -1,4 +1,4 @@
-#include "vulkeng/include/simple_render_system.hpp"
+#include "vulkeng/systems/simple_render_system.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -77,6 +77,10 @@ void SimpleRenderSystem::RenderGameObjects(const FrameInfo& frame_info) {
 
   for (auto& kv : frame_info.game_objects) {
     auto& obj = kv.second;
+    if (obj.model_ == nullptr) {
+      continue;
+    }
+
     SimplePushConstantData push{};
     push.model_matrix = obj.transform_.mat4();
     push.normal_matrix = obj.transform_.NormalMatrix();

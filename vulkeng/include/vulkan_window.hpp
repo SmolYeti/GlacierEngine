@@ -13,7 +13,7 @@ class VulkanWindow {
   CallbackManager callback_manager_;
 
  public:
-  VulkanWindow(int width, int height, std::string name);
+  VulkanWindow(int width, int height, std::string name = "Glacier Engine");
   ~VulkanWindow();
 
   bool ShouldClose() { return glfwWindowShouldClose(window_); }
