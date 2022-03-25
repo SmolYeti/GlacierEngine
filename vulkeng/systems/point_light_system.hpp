@@ -12,25 +12,25 @@
 
 namespace vulkeng {
 class PointLightSystem {
- public:
-  PointLightSystem(VulkanDevice* device, VkRenderPass render_pass,
-                   VkDescriptorSetLayout global_set_layout);
-  ~PointLightSystem();
+   public:
+    PointLightSystem(VulkanDevice* device, VkRenderPass render_pass,
+                     VkDescriptorSetLayout global_set_layout);
+    ~PointLightSystem();
 
-  PointLightSystem(const PointLightSystem&) = delete;
-  PointLightSystem& operator=(const PointLightSystem&) = delete;
+    PointLightSystem(const PointLightSystem&) = delete;
+    PointLightSystem& operator=(const PointLightSystem&) = delete;
 
-  void Update(const FrameInfo& frame_info, GlobalUbo& ubo);
-  void Render(const FrameInfo& frame_info);
+    void Update(const FrameInfo& frame_info, GlobalUbo& ubo);
+    void Render(const FrameInfo& frame_info);
 
- protected:
-  void CreatePipelineLayout(VkDescriptorSetLayout global_set_layout);
-  void CreatePipeline(VkRenderPass render_pass);
+   protected:
+    void CreatePipelineLayout(VkDescriptorSetLayout global_set_layout);
+    void CreatePipeline(VkRenderPass render_pass);
 
-  // Variables
-  VulkanDevice* device_ = nullptr;
+    // Variables
+    VulkanDevice* device_ = nullptr;
 
-  std::unique_ptr<VulkanPipeline> pipeline_;
-  VkPipelineLayout pipeline_layout_ = nullptr;
+    std::unique_ptr<VulkanPipeline> pipeline_;
+    VkPipelineLayout pipeline_layout_ = nullptr;
 };
 }  // namespace vulkeng

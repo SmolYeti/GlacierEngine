@@ -25,10 +25,10 @@ namespace vulkeng {
  */
 VkDeviceSize VulkanBuffer::Alignment(VkDeviceSize instanceSize,
                                      VkDeviceSize minOffsetAlignment) {
-  if (minOffsetAlignment > 0) {
-    return (instanceSize + minOffsetAlignment - 1) & ~(minOffsetAlignment - 1);
-  }
-  return instanceSize;
+    if (minOffsetAlignment > 0) {
+        return (instanceSize + minOffsetAlignment - 1) & ~(minOffsetAlignment - 1);
+    }
+    return instanceSize;
 }
 
 VulkanBuffer::VulkanBuffer(VulkanDevice *device, VkDeviceSize instance_size,
@@ -41,16 +41,16 @@ VulkanBuffer::VulkanBuffer(VulkanDevice *device, VkDeviceSize instance_size,
       instance_count_{instance_count},
       usage_flags_{usage_flags},
       memory_property_flags_{memory_property_flags} {
-  alignment_size_ = Alignment(instance_size_, min_offset_alignment);
-  buffer_size_ = alignment_size_ * instance_count_;
-  device_->CreateBuffer(buffer_size_, usage_flags_, memory_property_flags_, buffer_,
-                      memory_);
+    alignment_size_ = Alignment(instance_size_, min_offset_alignment);
+    buffer_size_ = alignment_size_ * instance_count_;
+    device_->CreateBuffer(buffer_size_, usage_flags_, memory_property_flags_, buffer_,
+                          memory_);
 }
 
 VulkanBuffer::~VulkanBuffer() {
-  Unmap();
-  vkDestroyBuffer(device_->device(), buffer_, nullptr);
-  vkFreeMemory(device_->device(), memory_, nullptr);
+    Unmap();
+    vkDestroyBuffer(device_->device(), buffer_, nullptr);
+    vkFreeMemory(device_->device(), memory_, nullptr);
 }
 
 /**
@@ -64,8 +64,8 @@ VulkanBuffer::~VulkanBuffer() {
  * @return VkResult of the buffer mapping call
  */
 VkResult VulkanBuffer::Map(VkDeviceSize size, VkDeviceSize offset) {
-  assert(buffer_ && memory_ && "Called map on buffer before create");
-  return vkMapMemory(device_->device(), memory_, offset, size, 0, &mapped_);
+    assert(buffer_ && memory_ && "Called map on buffer before create");
+    return vkMapMemory(device_->device(), memory_, offset, size, 0, &mapped_);
 }
 
 /**
@@ -74,10 +74,10 @@ VkResult VulkanBuffer::Map(VkDeviceSize size, VkDeviceSize offset) {
  * @note Does not return a result as vkUnmapMemory can't fail
  */
 void VulkanBuffer::Unmap() {
-  if (mapped_) {
-    vkUnmapMemory(device_->device(), memory_);
-    mapped_ = nullptr;
-  }
+    if (mapped_) {
+        vkUnmapMemory(device_->device(), memory_);
+        mapped_ = nullptr;
+    }
 }
 
 /**
@@ -92,15 +92,15 @@ void VulkanBuffer::Unmap() {
  */
 void VulkanBuffer::WriteToBuffer(void *data, VkDeviceSize size,
                                  VkDeviceSize offset) {
-  assert(mapped_ && "Cannot copy to unmapped buffer");
+    assert(mapped_ && "Cannot copy to unmapped buffer");
 
-  if (size == VK_WHOLE_SIZE) {
-    memcpy(mapped_, data, buffer_size_);
-  } else {
-    char *mem_offset = (char *)mapped_;
-    mem_offset += offset;
-    memcpy(mem_offset, data, size);
-  }
+    if (size == VK_WHOLE_SIZE) {
+        memcpy(mapped_, data, static_cast<size_t>(buffer_size_));
+    } else {
+        char *mem_offset = (char *)mapped_;
+        mem_offset += offset;
+        memcpy(mem_offset, data, static_cast<size_t>(size));
+    }
 }
 
 /**
@@ -115,12 +115,12 @@ void VulkanBuffer::WriteToBuffer(void *data, VkDeviceSize size,
  * @return VkResult of the flush call
  */
 VkResult VulkanBuffer::Flush(VkDeviceSize size, VkDeviceSize offset) {
-  VkMappedMemoryRange mapped_range = {};
-  mapped_range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-  mapped_range.memory = memory_;
-  mapped_range.offset = offset;
-  mapped_range.size = size;
-  return vkFlushMappedMemoryRanges(device_->device(), 1, &mapped_range);
+    VkMappedMemoryRange mapped_range = {};
+    mapped_range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+    mapped_range.memory = memory_;
+    mapped_range.offset = offset;
+    mapped_range.size = size;
+    return vkFlushMappedMemoryRanges(device_->device(), 1, &mapped_range);
 }
 
 /**
@@ -135,12 +135,12 @@ VkResult VulkanBuffer::Flush(VkDeviceSize size, VkDeviceSize offset) {
  * @return VkResult of the invalidate call
  */
 VkResult VulkanBuffer::Invalidate(VkDeviceSize size, VkDeviceSize offset) {
-  VkMappedMemoryRange mapped_range = {};
-  mapped_range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-  mapped_range.memory = memory_;
-  mapped_range.offset = offset;
-  mapped_range.size = size;
-  return vkInvalidateMappedMemoryRanges(device_->device(), 1, &mapped_range);
+    VkMappedMemoryRange mapped_range = {};
+    mapped_range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+    mapped_range.memory = memory_;
+    mapped_range.offset = offset;
+    mapped_range.size = size;
+    return vkInvalidateMappedMemoryRanges(device_->device(), 1, &mapped_range);
 }
 
 /**
@@ -153,11 +153,11 @@ VkResult VulkanBuffer::Invalidate(VkDeviceSize size, VkDeviceSize offset) {
  */
 VkDescriptorBufferInfo VulkanBuffer::DescriptorInfo(VkDeviceSize size,
                                                     VkDeviceSize offset) {
-  return VkDescriptorBufferInfo{
-      buffer_,
-      offset,
-      size,
-  };
+    return VkDescriptorBufferInfo{
+        buffer_,
+        offset,
+        size,
+    };
 }
 
 /**
@@ -169,7 +169,7 @@ VkDescriptorBufferInfo VulkanBuffer::DescriptorInfo(VkDeviceSize size,
  *
  */
 void VulkanBuffer::WriteToIndex(void *data, int index) {
-  WriteToBuffer(data, instance_size_, index * alignment_size_);
+    WriteToBuffer(data, instance_size_, index * alignment_size_);
 }
 
 /**
@@ -180,7 +180,7 @@ void VulkanBuffer::WriteToIndex(void *data, int index) {
  *
  */
 VkResult VulkanBuffer::FlushIndex(int index) {
-  return Flush(alignment_size_, index * alignment_size_);
+    return Flush(alignment_size_, index * alignment_size_);
 }
 
 /**
@@ -191,7 +191,7 @@ VkResult VulkanBuffer::FlushIndex(int index) {
  * @return VkDescriptorBufferInfo for instance at index
  */
 VkDescriptorBufferInfo VulkanBuffer::DescriptorInfoForIndex(int index) {
-  return DescriptorInfo(alignment_size_, index * alignment_size_);
+    return DescriptorInfo(alignment_size_, index * alignment_size_);
 }
 
 /**
@@ -204,7 +204,7 @@ VkDescriptorBufferInfo VulkanBuffer::DescriptorInfoForIndex(int index) {
  * @return VkResult of the invalidate call
  */
 VkResult VulkanBuffer::InvalidateIndex(int index) {
-  return Invalidate(alignment_size_, index * alignment_size_);
+    return Invalidate(alignment_size_, index * alignment_size_);
 }
 
 }  // namespace vulkeng

@@ -1,4 +1,4 @@
-#include "nurbs_cpp/include/parametric_curve.hpp"
+#include "include/parametric_curve.hpp"
 
 namespace nurbs {
 ParametricCurve2D::ParametricCurve2D(
@@ -6,7 +6,7 @@ ParametricCurve2D::ParametricCurve2D(
     : Curve2D(interval), functions_(functions) {}
 
 glm::dvec2 ParametricCurve2D::EvaluateCurve(double u) const {
-  glm::vec2 point{functions_[0](u), functions_[1](u)};
+  glm::dvec2 point{functions_[0](u), functions_[1](u)};
   return point;
 }
 

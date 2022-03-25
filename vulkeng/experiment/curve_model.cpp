@@ -1,4 +1,4 @@
-#include "vulkeng/experiment/curve_model.hpp"
+#include "curve_model.hpp"
 
 namespace vulkeng {
 
@@ -8,31 +8,31 @@ CurveModel::CurveModel(VulkanDevice* device,
 
 std::shared_ptr<CurveModel> CurveModel::ModelFromCurve2D(
     VulkanDevice* device, const nurbs::Curve2D& curve) {
-  const std::vector<glm::dvec2> points = curve.EvaluateCurvePoints(POINT_COUNT);
+    const std::vector<glm::dvec2> points = curve.EvaluateCurvePoints(POINT_COUNT);
 
-  std::vector<LineModel::Vertex> vertices = {};
-  vertices.reserve(points.size());
-  for (const auto& point : points) {
-    LineModel::Vertex v;
-    v.pos = {static_cast<float>(point.x), static_cast<float>(point.y), 0};
-    v.color = {1.0f, 0.0f, 0.0f};
-    vertices.push_back(v);
-  }
-  return std::make_shared<CurveModel>(device, vertices);
+    std::vector<LineModel::Vertex> vertices = {};
+    vertices.reserve(points.size());
+    for (const auto& point : points) {
+        LineModel::Vertex v;
+        v.pos = {static_cast<float>(point.x), static_cast<float>(point.y), 0};
+        v.color = {1.0f, 0.0f, 0.0f};
+        vertices.push_back(v);
+    }
+    return std::make_shared<CurveModel>(device, vertices);
 }
 
 std::shared_ptr<CurveModel> CurveModel::ModelFromCurve3D(
     VulkanDevice* device, const nurbs::Curve3D& curve) {
-  const std::vector<glm::dvec3> points = curve.EvaluateCurvePoints(POINT_COUNT);
+    const std::vector<glm::dvec3> points = curve.EvaluateCurvePoints(POINT_COUNT);
 
-  std::vector<LineModel::Vertex> vertices = {};
-  vertices.reserve(points.size());
-  for (const auto& point : points) {
-    LineModel::Vertex v;
-    v.pos = {point.x, point.y, point.y};
-    v.color = {1.0, 0.0, 0.0};
-    vertices.push_back(v);
-  }
-  return std::make_shared<CurveModel>(device, vertices);
+    std::vector<LineModel::Vertex> vertices = {};
+    vertices.reserve(points.size());
+    for (const auto& point : points) {
+        LineModel::Vertex v;
+        v.pos = {point.x, point.y, point.y};
+        v.color = {1.0, 0.0, 0.0};
+        vertices.push_back(v);
+    }
+    return std::make_shared<CurveModel>(device, vertices);
 }
 }  // namespace vulkeng

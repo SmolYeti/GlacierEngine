@@ -38,7 +38,7 @@ if (DEFINED GLFW_PATH)
   message(STATUS "Using GLFW path specified in .env")
   set(GLFW_INCLUDE_DIRS "${GLFW_PATH}/include")
   if (MSVC)
-    set(GLFW_LIB "${GLFW_PATH}/lib-vc2017") # 2.1 Update lib-vc2019 to use same version as your visual studio
+    set(GLFW_LIB "${GLFW_PATH}/lib-vc2019") # 2.1 Update lib-vc2019 to use same version as your visual studio
   elseif (CMAKE_GENERATOR STREQUAL "MinGW Makefiles")
     message(STATUS "USING MINGW")
     set(GLFW_LIB "${GLFW_PATH}/lib-mingw-w64") # 2.1 make sure matches glfw mingw subdirectory
@@ -54,50 +54,27 @@ else()
     message(STATUS "Using glfw lib at: ${GLFW_LIB}")
 endif()
 
-# specify the C++ standard
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+include_directories(external)
+
+# If TINYOBJ_PATH not specified in .env.cmake, try fetching from git repo
+if (NOT TINYOBJ_PATH)
+  message(STATUS "TINYOBJ_PATH not specified in .env.cmake, using external/tinyobjloader")
+  set(TINYOBJ_PATH external/tinyobjloader)
+endif()
 
 configure_file(MainConfig.h.in MainConfig.h)
 
-set(INCLUDE_DIR
-  external/stb_image.h
-  external/tiny_obj_loader.h
-  shaders/vert.spv
-  shaders/frag.spv
+# Add NURBS Library
+add_subdirectory(nurbs_cpp)
+
+file(GLOB_RECURSE VULKENG_DIR
+  ${PROJECT_SOURCE_DIR}/vulkeng/*.cpp
+  ${PROJECT_SOURCE_DIR}/vulkeng/*.hpp
 )
 
-# TODO - Move Vulkeng imports into their own library and include library here (static linking, not dlls)
-file(GLOB_RECURSE VULKENG_INCLUDE ${PROJECT_SOURCE_DIR}/vulkeng/*.hpp)
-file(GLOB_RECURSE VULKENG_SOURCE ${PROJECT_SOURCE_DIR}/vulkeng/*.cpp)
-
-set(NURBS_INCLUDE 
-  nurbs_cpp/include/curve_2d.hpp
-  nurbs_cpp/include/curve_3d.hpp
-  nurbs_cpp/include/parametric_curve.hpp
-  nurbs_cpp/include/power_basis_curve.hpp
-)
-
-set(NURBS_SOURCE 
-  nurbs_cpp/src/parametric_curve.cpp
-)
-
-set(SOURCE_DIR
-  main.cpp
-)
-
-add_executable(${NAME}
-    ${INCLUDE_DIR}
-    ${SOURCE_DIR}
-    ${NURBS_INCLUDE}
-    ${NURBS_SOURCE}
-    ${VULKENG_INCLUDE}
-    ${VULKENG_SOURCE}
-)
+add_executable(${PROJECT_NAME} main.cpp ${VULKENG_DIR})
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
-
-set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
 
@@ -112,21 +89,24 @@ if (WIN32)
       ${MINGW_PATH}/lib
     )
   endif()
- 
+
   target_include_directories(${PROJECT_NAME} PUBLIC
     ${PROJECT_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/nurbs_cpp
     ${Vulkan_INCLUDE_DIRS}
     ${TINYOBJ_PATH}
     ${GLFW_INCLUDE_DIRS}
     ${GLM_PATH}
   )
- 
-  target_link_libraries(${PROJECT_NAME} ${GLFW_LIB}/glfw3.lib Vulkan::Vulkan)
+
+  target_link_directories(${PROJECT_NAME} PUBLIC ${GLFW_LIB} ${Vulkan_LIBRARIES})
+
+  target_link_libraries(${PROJECT_NAME} glfw3 vulkan-1 nurbs_cpp)
 elseif (UNIX)
     message(STATUS "CREATING BUILD FOR UNIX")
     target_include_directories(${PROJECT_NAME}
     PUBLIC
-      ${PROJECT_SOURCE_DIR}/src
+      ${PROJECT_SOURCE_DIR}
       ${TINYOBJ_PATH}
     )
     target_link_libraries(${PROJECT_NAME} glfw ${Vulkan_LIBRARIES})
@@ -142,7 +122,6 @@ find_program(GLSL_VALIDATOR glslangValidator HINTS /usr/bin /usr/local/bin $ENV{
 file(GLOB_RECURSE GLSL_SOURCE_FILES
   "${PROJECT_SOURCE_DIR}/shaders/*.frag"
   "${PROJECT_SOURCE_DIR}/shaders/*.vert"
-  "${PROJECT_SOURCE_DIR}/shaders/*.comp"
 )
 
 foreach(GLSL ${GLSL_SOURCE_FILES})
@@ -162,4 +141,38 @@ add_custom_target(
   DEPENDS ${SPIRV_BINARY_FILES}
 )
 
-message("PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
+add_dependencies(${NAME} Shaders)
+
+### Testing Includes ###
+# GTest
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/609281088cfefc76f9d0ce82e1ff6c30cc3591e5.zip
+)
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+
+### End Testing Includes ###
+
+enable_testing()
+
+# nc1 => NURBS Chapter 1
+add_executable(nurbs_tests
+  tests/nc1_bezier_tests.cpp
+  tests/nc1_parametric_tests.cpp
+  tests/nc1_power_basis_tests.cpp
+)
+
+target_include_directories(nurbs_tests PUBLIC
+  ${PROJECT_SOURCE_DIR}/nurbs_cpp
+)
+
+target_link_libraries(nurbs_tests
+    gtest_main
+    nurbs_cpp
+)
+
+include(GoogleTest)
+gtest_discover_tests(nurbs_tests)

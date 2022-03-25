@@ -8,7 +8,7 @@
 static constexpr int WINDOW_WIDTH = 2000;
 static constexpr int WINDOW_HEIGHT = 1600;
 
-int main() {
+int main(int argc, char* argv[]) {
     vulkeng::VulkanApplication app(WINDOW_WIDTH, WINDOW_HEIGHT, "Vulkan Grow Project");
 
     try {

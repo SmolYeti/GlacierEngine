@@ -17,7 +17,7 @@ std::shared_ptr<SurfaceModel> SurfaceModel::ModelFromSurface(
     TriangleModel::Vertex v;
     v.pos = {static_cast<float>(point.x), static_cast<float>(point.y),
              static_cast<float>(point.z)};
-    v.color = {1.0f, 0.0f, 0.0f};
+    v.color = {1.0f, 1.0f, 1.0f};
     builder.vertices.push_back(v);
   }
 
