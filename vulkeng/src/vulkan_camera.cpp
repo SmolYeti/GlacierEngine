@@ -48,6 +48,20 @@ void VulkanCamera::SetViewDirection(glm::vec3 position, glm::vec3 direction,
   view_matrix_[3][0] = -glm::dot(u, position);
   view_matrix_[3][1] = -glm::dot(v, position);
   view_matrix_[3][2] = -glm::dot(w, position);
+
+  inverse_view_matrix_ = glm::mat4{ 1.f };
+  inverse_view_matrix_[0][0] = u.x;
+  inverse_view_matrix_[0][1] = u.y;
+  inverse_view_matrix_[0][2] = u.z;
+  inverse_view_matrix_[1][1] = v.y;
+  inverse_view_matrix_[1][2] = v.z;
+  inverse_view_matrix_[2][0] = w.x;
+  inverse_view_matrix_[2][1] = w.y;
+  inverse_view_matrix_[2][2] = w.z;
+  inverse_view_matrix_[3][0] = position.x;
+  inverse_view_matrix_[3][1] = position.y;
+  inverse_view_matrix_[1][0] = v.x;
+  inverse_view_matrix_[3][2] = position.z;
 }
 
 void VulkanCamera::SetViewTarget(glm::vec3 position, glm::vec3 target,
@@ -80,5 +94,19 @@ void VulkanCamera::SetViewYXZ(glm::vec3 position, glm::vec3 rotation) {
   view_matrix_[3][0] = -glm::dot(u, position);
   view_matrix_[3][1] = -glm::dot(v, position);
   view_matrix_[3][2] = -glm::dot(w, position);
+
+  inverse_view_matrix_ = glm::mat4{ 1.f };
+  inverse_view_matrix_[0][0] = u.x;
+  inverse_view_matrix_[0][1] = u.y;
+  inverse_view_matrix_[0][2] = u.z;
+  inverse_view_matrix_[1][1] = v.y;
+  inverse_view_matrix_[1][2] = v.z;
+  inverse_view_matrix_[2][0] = w.x;
+  inverse_view_matrix_[2][1] = w.y;
+  inverse_view_matrix_[2][2] = w.z;
+  inverse_view_matrix_[3][0] = position.x;
+  inverse_view_matrix_[3][1] = position.y;
+  inverse_view_matrix_[1][0] = v.x;
+  inverse_view_matrix_[3][2] = position.z;
 }
 }  // namespace vulkeng

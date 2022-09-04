@@ -127,6 +127,7 @@ namespace vulkeng {
                 GlobalUbo ubo;
                 ubo.projection = camera.projection_matrix();
                 ubo.view = camera.view_matrix();
+                ubo.inv_view = camera.inverse_view_matrix();
                 point_light_system.Update(frame_info, ubo);
                 // perlin_render_system.Update(frame_info, ubo);
                 uniform_buffers[frame_index]->WriteToBuffer(&ubo);
@@ -137,7 +138,7 @@ namespace vulkeng {
                 // perlin_render_system.Render(frame_info);
                 render_system.RenderGameObjects(frame_info);
                 line_render_system.RenderGameObjects(frame_info);
-                point_light_system.Render(frame_info);
+                point_light_system.Render(frame_info); // Must be rendered last for transparency
                 renderer_->EndSwapChainRenderPass(command_buffer);
                 renderer_->EndFrame();
             }

@@ -18,6 +18,9 @@ endif()
 # set the project name 
 project(${NAME} VERSION 0.0.01)
 
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup()
+
 # 1. Set VULKAN_SDK_PATH in .env.cmake to target specific vulkan version
 if (DEFINED VULKAN_SDK_PATH)
   set(Vulkan_INCLUDE_DIRS "${VULKAN_SDK_PATH}/Include") # 1.1 Make sure this include path is correct
@@ -54,6 +57,8 @@ else()
     message(STATUS "Using glfw lib at: ${GLFW_LIB}")
 endif()
 
+find_package(imgui)
+
 include_directories(external)
 
 # If TINYOBJ_PATH not specified in .env.cmake, try fetching from git repo
@@ -71,8 +76,12 @@ file(GLOB_RECURSE VULKENG_DIR
   ${PROJECT_SOURCE_DIR}/vulkeng/*.cpp
   ${PROJECT_SOURCE_DIR}/vulkeng/*.hpp
 )
+file(GLOB_RECURSE GLSL_SOURCE_FILES
+  "${PROJECT_SOURCE_DIR}/shaders/*.frag"
+  "${PROJECT_SOURCE_DIR}/shaders/*.vert"
+)
 
-add_executable(${PROJECT_NAME} main.cpp ${VULKENG_DIR})
+add_executable(${PROJECT_NAME} main.cpp ${VULKENG_DIR} ${GLSL_SOURCE_FILES})
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 
@@ -101,7 +110,7 @@ if (WIN32)
 
   target_link_directories(${PROJECT_NAME} PUBLIC ${GLFW_LIB} ${Vulkan_LIBRARIES})
 
-  target_link_libraries(${PROJECT_NAME} glfw3 vulkan-1 nurbs_cpp)
+  target_link_libraries(${PROJECT_NAME} glfw3 vulkan-1 nurbs_cpp imgui)
 elseif (UNIX)
     message(STATUS "CREATING BUILD FOR UNIX")
     target_include_directories(${PROJECT_NAME}
@@ -109,7 +118,7 @@ elseif (UNIX)
       ${PROJECT_SOURCE_DIR}
       ${TINYOBJ_PATH}
     )
-    target_link_libraries(${PROJECT_NAME} glfw ${Vulkan_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} glfw ${Vulkan_LIBRARIES} imgui)
 endif()
 
 ############## Build SHADERS #######################
@@ -118,11 +127,6 @@ endif()
 # taken from VBlancos vulkan tutorial
 # https://github.com/vblanco20-1/vulkan-guide/blob/all-chapters/CMakeLists.txt
 find_program(GLSL_VALIDATOR glslangValidator HINTS /usr/bin /usr/local/bin $ENV{VULKAN_SDK}/Bin/ $ENV{VULKAN_SDK}/Bin32/)
-
-file(GLOB_RECURSE GLSL_SOURCE_FILES
-  "${PROJECT_SOURCE_DIR}/shaders/*.frag"
-  "${PROJECT_SOURCE_DIR}/shaders/*.vert"
-)
 
 foreach(GLSL ${GLSL_SOURCE_FILES})
   message(STATUS "BUILDING SHADER")
@@ -143,19 +147,6 @@ add_custom_target(
 
 add_dependencies(${NAME} Shaders)
 
-### Testing Includes ###
-# GTest
-include(FetchContent)
-FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/609281088cfefc76f9d0ce82e1ff6c30cc3591e5.zip
-)
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
-
-### End Testing Includes ###
-
 enable_testing()
 
 # nc1 => NURBS Chapter 1
@@ -163,6 +154,8 @@ add_executable(nurbs_tests
   tests/nc1_bezier_tests.cpp
   tests/nc1_parametric_tests.cpp
   tests/nc1_power_basis_tests.cpp
+  tests/nc2_basis_tests.cpp
+  tests/nc3_b_spline_tests.cpp
 )
 
 target_include_directories(nurbs_tests PUBLIC
@@ -170,7 +163,7 @@ target_include_directories(nurbs_tests PUBLIC
 )
 
 target_link_libraries(nurbs_tests
-    gtest_main
+    ${CONAN_LIBS}
     nurbs_cpp
 )
 

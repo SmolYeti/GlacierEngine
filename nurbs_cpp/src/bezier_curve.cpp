@@ -51,18 +51,6 @@ glm::dvec2 BezierCurve2D::EvaluateCurve(double u) const {
     return DeCasteljau(u);
 }
 
-std::vector<glm::dvec2> BezierCurve2D::EvaluateCurvePoints(
-    uint32_t point_count) const {
-    std::vector<glm::dvec2> points(point_count);
-    const double div = (interval_.y - interval_.x) /          //
-                 static_cast<double>(point_count - 1);  //
-    for (uint32_t i = 0; i < point_count; ++i) {
-        double u = interval_.x + (static_cast<double>(i) * div);
-        points[i] = EvaluateCurve(u);
-    }
-    return points;
-}
-
 // Chaper 1, Equation 1.9 derivative of a Bezier curve, p22
 glm::vec2 BezierCurve2D::Derivative(double u) const {
     const std::vector<double> berstein =
@@ -119,18 +107,6 @@ BezierCurve3D::BezierCurve3D(std::vector<glm::dvec3> control_points,
 
 glm::dvec3 BezierCurve3D::EvaluateCurve(double u) const {
     return DeCasteljau(u);
-}
-
-std::vector<glm::dvec3> BezierCurve3D::EvaluateCurvePoints(
-    uint32_t point_count) const {
-    std::vector<glm::dvec3> points(point_count);
-    double div = (interval_.y - interval_.x) /          //
-                 static_cast<double>(point_count - 1);  //
-    for (uint32_t i = 0; i < point_count; ++i) {
-        double u = interval_.x + (static_cast<double>(i) * div);
-        points[i] = EvaluateCurve(u);
-    }
-    return points;
 }
 
 // Chaper 1, Equation 1.9 derivative of a Bezier curve, p22

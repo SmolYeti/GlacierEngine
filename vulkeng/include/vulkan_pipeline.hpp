@@ -46,6 +46,8 @@ class VulkanPipeline {
 
     static void DefaultPipelineConfigInfo(PipelineConfigInfo& config_info);
 
+    static void EnableAlphaBlending(PipelineConfigInfo& config_info);
+
    private:
     static std::vector<char> ReadFile(const std::string& file_path);
 

@@ -21,14 +21,13 @@ class BezierCurveUtil {
   // of berstein polynomial + 1 u - input value to berstain polynomial
   static std::vector<double> AllBernstein(size_t n, double u);
 };
+
 class BezierCurve2D : public Curve2D {
  public:
   BezierCurve2D(std::vector<glm::dvec2> control_points,
                 glm::dvec2 interval = {0.0, 1.0});
 
   glm::dvec2 EvaluateCurve(double u) const override;
-  std::vector<glm::dvec2> EvaluateCurvePoints(
-      uint32_t point_count) const override;
 
   glm::vec2 Derivative(double u)const ;
 
@@ -45,8 +44,6 @@ class BezierCurve3D : public Curve3D {
                 glm::dvec2 interval = {0.0, 1.0});
 
   glm::dvec3 EvaluateCurve(double u) const override;
-  std::vector<glm::dvec3> EvaluateCurvePoints(
-      uint32_t point_count) const override;
 
   glm::vec3 Derivative(double u) const;
 
