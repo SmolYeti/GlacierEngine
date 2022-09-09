@@ -10,6 +10,7 @@ VulkanWindow::VulkanWindow(int width, int height, std::string name)
 }
 
 VulkanWindow::~VulkanWindow() {
+
   glfwDestroyWindow(window_);
   glfwTerminate();
 }

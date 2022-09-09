@@ -57,7 +57,7 @@ else()
     message(STATUS "Using glfw lib at: ${GLFW_LIB}")
 endif()
 
-find_package(imgui)
+#find_package(imgui)
 
 include_directories(external)
 
@@ -76,12 +76,18 @@ file(GLOB_RECURSE VULKENG_DIR
   ${PROJECT_SOURCE_DIR}/vulkeng/*.cpp
   ${PROJECT_SOURCE_DIR}/vulkeng/*.hpp
 )
+
+file(GLOB_RECURSE IMGUI_DIR
+  ${PROJECT_SOURCE_DIR}/bindings/*.hpp
+  ${PROJECT_SOURCE_DIR}/bindings/*.cpp
+)
+
 file(GLOB_RECURSE GLSL_SOURCE_FILES
   "${PROJECT_SOURCE_DIR}/shaders/*.frag"
   "${PROJECT_SOURCE_DIR}/shaders/*.vert"
 )
 
-add_executable(${PROJECT_NAME} main.cpp ${VULKENG_DIR} ${GLSL_SOURCE_FILES})
+add_executable(${PROJECT_NAME} main.cpp ${VULKENG_DIR} ${IMGUI_DIR} ${GLSL_SOURCE_FILES})
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 
@@ -102,6 +108,7 @@ if (WIN32)
   target_include_directories(${PROJECT_NAME} PUBLIC
     ${PROJECT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/nurbs_cpp
+    ${PROJECT_SOURCE_DIR}/bindings
     ${Vulkan_INCLUDE_DIRS}
     ${TINYOBJ_PATH}
     ${GLFW_INCLUDE_DIRS}

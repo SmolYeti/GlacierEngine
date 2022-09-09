@@ -1,6 +1,7 @@
 #pragma once
 
 // vulkeng
+#include "gui.hpp"
 #include "vulkan_descriptors.hpp"
 #include "vulkan_device.hpp"
 #include "vulkan_game_object.hpp"

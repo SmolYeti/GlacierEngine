@@ -76,6 +76,10 @@ class VulkanDescriptorPool {
 
   void ResetPool();
 
+  VkDescriptorPool pool() {
+      return descriptor_pool_;
+  }
+
  private:
   VulkanDevice *device_;
   VkDescriptorPool descriptor_pool_;

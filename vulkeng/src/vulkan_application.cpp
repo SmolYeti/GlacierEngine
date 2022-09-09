@@ -49,10 +49,13 @@ namespace vulkeng {
             .AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                 VulkanSwapChain::MAX_FRAMES_IN_FLIGHT)
             .Build();
+
         LoadGameObjects();
     }
 
     void VulkanApplication::Run() {
+        GUI gui(window_.get(), device_.get(), renderer_.get());
+
         std::vector<std::unique_ptr<VulkanBuffer>> uniform_buffers(
             VulkanSwapChain::MAX_FRAMES_IN_FLIGHT);
         for (size_t i = 0; i < uniform_buffers.size(); ++i) {
@@ -116,6 +119,9 @@ namespace vulkeng {
             camera.SetPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 100.f);
 
             if (auto command_buffer = renderer_->BeginFrame()) {
+                // tell imgui that we're starting a new frame
+                gui.NewFrame();
+
                 int frame_index = renderer_->FrameIndex();
                 FrameInfo frame_info{ frame_index,
                                      frame_time,
@@ -135,10 +141,13 @@ namespace vulkeng {
 
                 // Render
                 renderer_->BeginSwapChainRenderPass(command_buffer);
+
                 // perlin_render_system.Render(frame_info);
                 render_system.RenderGameObjects(frame_info);
                 line_render_system.RenderGameObjects(frame_info);
                 point_light_system.Render(frame_info); // Must be rendered last for transparency
+                gui.runExample();
+                gui.Render(command_buffer);
                 renderer_->EndSwapChainRenderPass(command_buffer);
                 renderer_->EndFrame();
             }

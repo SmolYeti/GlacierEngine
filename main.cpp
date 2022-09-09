@@ -1,9 +1,5 @@
 #include "vulkeng/include/vulkan_application.hpp"
 
-#include "imgui.h"
-#//include "imgui_impl_glfw.h"
-//#include "imgui_impl_vulkan.h"
-
 // STD
 #include <cstdlib>
 #include <iostream>

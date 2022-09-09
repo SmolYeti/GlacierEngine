@@ -23,11 +23,11 @@ struct SwapChainSupportDetails {
 };
 
 struct QueueFamilyIndices {
-    std::optional<uint32_t> graphicsFamily;
-    std::optional<uint32_t> presentFamily;
+    std::optional<uint32_t> graphics_family;
+    std::optional<uint32_t> present_family;
 
     bool isComplete() {
-        return graphicsFamily.has_value() && presentFamily.has_value();
+        return graphics_family.has_value() && present_family.has_value();
     }
 };
 
@@ -53,6 +53,9 @@ class VulkanDevice {
     VkSurfaceKHR surface() { return surface_; }
     VkQueue graphics_queue() { return graphics_queue_; }
     VkQueue present_queue() { return present_queue_; }
+    VkInstance instance() { return instance_; }
+    uint32_t graphics_family() { return indices_.graphics_family.value(); }
+    QueueFamilyIndices indices() { return indices_; }
 
     VkPhysicalDevice physical_device() { return physical_device_; }
 
@@ -107,7 +110,7 @@ class VulkanDevice {
     // Variables
     VulkanWindow* window_ = nullptr;
 
-    VkInstance vk_instance_ = VK_NULL_HANDLE;
+    VkInstance instance_ = VK_NULL_HANDLE;
     VkDebugUtilsMessengerEXT debug_messenger_ = VK_NULL_HANDLE;
 
     VkPhysicalDevice physical_device_ = VK_NULL_HANDLE;
@@ -115,6 +118,8 @@ class VulkanDevice {
 
     VkSurfaceKHR surface_;
     VkCommandPool command_pool_;
+
+    QueueFamilyIndices indices_;
 
     VkQueue graphics_queue_ = nullptr;
     VkQueue present_queue_ = nullptr;
