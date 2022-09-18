@@ -6,6 +6,7 @@
 namespace nurbs {
     namespace der_knots {
         std::vector<double> BasisFuns(uint32_t i, double u, uint32_t degree, std::vector<uint32_t> knots) {
+            u = std::min(u, static_cast<double>(knots[knots.size() - 1]));
             std::vector<double> bases(degree + 1, 0);
             if (i >= static_cast<uint32_t>(knots.size()) - (degree + 1)) {
                 bases[degree] = 1.0;
@@ -29,6 +30,7 @@ namespace nurbs {
             if (knots.empty()) {
                 return {};
             }
+            u = std::min(u, static_cast<double>(knots[knots.size() - 1]));
 
             if (i + degree == static_cast<uint32_t>(knots.size() - 1)) {
                 std::vector<std::vector<double>> derivatives(n + 1);
@@ -123,6 +125,7 @@ namespace nurbs {
         }
 
         double OneBasisFun(uint32_t degree, std::vector<uint32_t> knots, uint32_t i, double u) {
+            u = std::min(u, static_cast<double>(knots[knots.size() - 1]));
             if ((i == 0 && u <= static_cast<double>(knots[0]) + std::numeric_limits<double>::epsilon()) ||
                 (i == (static_cast<uint32_t>(knots.size()) - degree - 2) &&
                     u >= static_cast<double>(knots[knots.size() - 1]) - std::numeric_limits<double>::epsilon())) {
@@ -164,6 +167,7 @@ namespace nurbs {
         }
 
         std::vector<double> DersOneBasisFun(uint32_t degree, std::vector<uint32_t> knots, uint32_t i, double u, uint32_t n) {
+            u = std::min(u, static_cast<double>(knots[knots.size() - 1]));
             // Local property
             if (u < static_cast<double>(knots[i]) - std::numeric_limits<double>::epsilon() ||
                 static_cast<size_t>(i + degree + 1) >= knots.size() ||

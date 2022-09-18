@@ -123,6 +123,7 @@ add_executable(nurbs_tests
   tests/nc1_power_basis_tests.cpp
   tests/nc2_basis_tests.cpp
   tests/nc3_b_spline_tests.cpp
+  tests/nc4_nurbs_tests.cpp
 )
 
 target_include_directories(nurbs_tests PUBLIC

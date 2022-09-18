@@ -9,9 +9,9 @@
 
 // TODO - Don't make these hardcoded paths
 const std::string VERTEX_PATH =
-    "C:/Users/WJSSn/Documents/GitRepos/VulkanGrowProject/shaders/triangle.vert.spv";
+    "C:/Users/WJSSn/Documents/GitRepos/GlacierEngine/shaders/triangle.vert.spv";
 const std::string FRAGMENT_PATH =
-    "C:/Users/WJSSn/Documents/GitRepos/VulkanGrowProject/shaders/triangle.frag.spv";
+    "C:/Users/WJSSn/Documents/GitRepos/GlacierEngine/shaders/triangle.frag.spv";
 
 namespace vulkeng {
 struct SimplePushConstantData {
@@ -33,7 +33,7 @@ SimpleRenderSystem::~SimpleRenderSystem() {
 
 void SimpleRenderSystem::CreatePipelineLayout(
     VkDescriptorSetLayout global_set_layout) {
-    VkPushConstantRange push_constant_range;
+    VkPushConstantRange push_constant_range = {};
     push_constant_range.stageFlags =
         VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
     push_constant_range.offset = 0;

@@ -10,9 +10,9 @@
 
 // TODO - Don't make these hardcoded paths
 const std::string VERTEX_PATH =
-    "C:/Users/WJSSn/Documents/GitRepos/VulkanGrowProject/shaders/perlin_noise.vert.spv";
+    "C:/Users/WJSSn/Documents/GitRepos/GlacierEngine/shaders/perlin_noise.vert.spv";
 const std::string FRAGMENT_PATH =
-    "C:/Users/WJSSn/Documents/GitRepos/VulkanGrowProject/shaders/perlin_noise.frag.spv";
+    "C:/Users/WJSSn/Documents/GitRepos/GlacierEngine/shaders/perlin_noise.frag.spv";
 
 namespace vulkeng {
 struct SimplePushConstantData {

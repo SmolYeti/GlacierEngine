@@ -18,10 +18,10 @@ struct GlobalUbo {
   glm::mat4 projection{1.f};
   glm::mat4 view{1.f};
   glm::mat4 inv_view{1.f};
-  glm::vec4 ambient_light_color{1.f, 1.f, 1.f, 0.02f};
+  glm::vec4 ambient_light_color{1.f, 1.f, 1.f, 0.1f};
   PointLight lights[MAX_LIGHTS];
   float offset{0.0f};
-  int active_lights;
+  int active_lights{0};
 };
 
 struct FrameInfo {

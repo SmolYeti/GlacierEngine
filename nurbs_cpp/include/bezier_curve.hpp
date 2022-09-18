@@ -29,12 +29,12 @@ class BezierCurve2D : public Curve2D {
 
   glm::dvec2 EvaluateCurve(double u) const override;
 
-  glm::vec2 Derivative(double u)const ;
+  glm::dvec2 Derivative(double u)const ;
 
- private:
   glm::dvec2 PointOnBezierCurve(double u) const;
   glm::dvec2 DeCasteljau(double u) const;
 
+private:
   std::vector<glm::dvec2> control_points_;
 };
 
@@ -47,10 +47,10 @@ class BezierCurve3D : public Curve3D {
 
   glm::vec3 Derivative(double u) const;
 
- private:
   glm::dvec3 PointOnBezierCurve(double u) const;
   glm::dvec3 DeCasteljau(double u) const;
 
+private:
   std::vector<glm::dvec3> control_points_;
 };
 }  // namespace nurbs
