@@ -14,9 +14,6 @@ namespace nurbs {
 
         glm::dvec3 EvaluatePoint(glm::dvec2 uv) const override;
 
-        std::vector<glm::dvec3> EvaluatePoints(
-            uint32_t u_sample_count, uint32_t v_sample_count) const override;
-
     private:
         const std::array<std::function<double(glm::dvec2)>, 3> functions_;
     };

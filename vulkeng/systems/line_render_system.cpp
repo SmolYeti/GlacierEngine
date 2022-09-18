@@ -9,9 +9,9 @@
 
 // TODO - Don't make these hardcoded paths
 const std::string VERTEX_PATH =
-    "C:/Users/WJSSn/Documents/GitRepos/VulkanGrowProject/shaders/line.vert.spv";
+    "C:/Users/WJSSn/Documents/GitRepos/GlacierEngine/shaders/line.vert.spv";
 const std::string FRAGMENT_PATH =
-    "C:/Users/WJSSn/Documents/GitRepos/VulkanGrowProject/shaders/line.frag.spv";
+    "C:/Users/WJSSn/Documents/GitRepos/GlacierEngine/shaders/line.frag.spv";
 
 namespace vulkeng {
 struct SimplePushConstantData {
@@ -65,7 +65,7 @@ void LineRenderSystem::CreatePipeline(VkRenderPass render_pass) {
     pipeline_config.pipeline_layout = pipeline_layout_;
 
     pipeline_config.input_assembly_info.topology =
-        VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;  // Topology type
+        VK_PRIMITIVE_TOPOLOGY_LINE_STRIP_WITH_ADJACENCY;  // Topology type
     pipeline_config.input_assembly_info.primitiveRestartEnable = VK_TRUE;
 
     pipeline_config.rasterization_info.polygonMode = VK_POLYGON_MODE_LINE;

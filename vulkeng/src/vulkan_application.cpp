@@ -17,6 +17,8 @@
 #include "nurbs_cpp/include/parametric_surface.hpp"
 #include "vulkeng/experiment/curve_model.hpp"
 #include "vulkeng/experiment/surface_model.hpp"
+#include "nurbs_cpp/include/b_spline_curve.hpp"
+#include "nurbs_cpp/include/b_spline_surface.hpp"
 
 // Math Constants
 #define _USE_MATH_DEFINES
@@ -166,82 +168,51 @@ namespace vulkeng {
 
     void VulkanApplication::LoadGameObjects() {
         // Curve Model
-        /* {
-            std::function<double(double)> x_curve = [](double u) {
-                return std::cos(u);
-            };
-            std::function<double(double)> y_curve = [](double u) {
-                return std::sin(u);
-            };
-            std::array<std::function<double(double)>, 2> curve_funcs = { x_curve,
-                                                                        y_curve };
-            nurbs::ParametricCurve2D curve_2d(curve_funcs, { 0.0, 6.28 });
-            auto curve = CurveModel::ModelFromCurve2D(device_.get(), curve_2d);
+        {
+            std::vector<glm::dvec2> control_points = { {0,0}, {0,1}, {0.5,-1},{1,1}, {1, 0} };
+            nurbs::BSplineCurve2D b_spline(3, control_points, { 0,0,0,0,1, 2,2,2,2 }, { 0, 2 });
+            auto curve = CurveModel::ModelFromCurve2D(device_.get(), b_spline);
 
             auto parametric_curve = VulkanGameObject::CreateVulkanGameObject();
             parametric_curve.line_model_ = curve;
             parametric_curve.transform_.translation = { 0.f, -1.f, 0.f };
             parametric_curve.transform_.scale = { 0.75f, 0.75f, 0.75f };
             game_objects_.emplace(parametric_curve.id(), std::move(parametric_curve));
-        }*/
+        }
         // Surface Model
         {
-            std::array<std::function<double(glm::dvec2)>, 3> functions;
-            std::vector<nurbs::BezierCurve3D> curves;
-            {
-                std::vector<glm::dvec3> control_points;
-                control_points.push_back({ 0, -1, 0 });
-                control_points.push_back({ 0, 2, 1 });
-                control_points.push_back({ 0, 2, 2 });
-                control_points.push_back({ 0, 1, 3 });
-                curves.push_back(control_points);
-            }
-            {
-                std::vector<glm::dvec3> control_points;
-                control_points.push_back({ 1, 0, 0 });
-                control_points.push_back({ 1, 4, 1 });
-                control_points.push_back({ 1, 3, 2 });
-                control_points.push_back({ 1, 2, 3 });
-                curves.push_back(control_points);
-            }
-            {
-                std::vector<glm::dvec3> control_points;
-                control_points.push_back({ 2, 2, 0 });
-                control_points.push_back({ 2, 1, 1 });
-                control_points.push_back({ 2, 0, 2 });
-                control_points.push_back({ 2, -1, 3 });
-                curves.push_back(control_points);
-            }
-            {
-                std::vector<glm::dvec3> control_points;
-                control_points.push_back({ 3, 3, 0 });
-                control_points.push_back({ 3, -2, 1 });
-                control_points.push_back({ 3, -4, 2 });
-                control_points.push_back({ 3, 0, 3 });
-                curves.push_back(control_points);
-            }
-            const nurbs::BezierSurface b_surface(curves);
+            uint32_t degree = 3;
+            std::vector<uint32_t> u_knots = { 0, 0, 0, 0, 1, 2, 2, 2, 2 };
+            std::vector<uint32_t> v_knots = { 0, 0, 0, 0, 1, 2, 2, 2, 2 };
+            std::vector<std::vector<glm::dvec3>> control_points = {
+                {{-1, 0, -1},    {-0.33, 0.1, -1.33},{0.33, 0.1, -1.33}, {0.87, 0, -0.87}, {1, -0.1, -1}},   //
+                {{-1.33, -0.25, -0.33},{-0.33, 0, -0.33},  {0.33, 0.0, -0.33},{1.33, -0.25, -0.33},{2, -0.5, -0.63}},   //
+                {{-1.33, -0.75, 0.33}, {-0.33, 0.0, 0.33},{0.33, 0.0, 0.33}, {1.33, -0.75, 0.33},   {2, -1, 0.63}},   //
+                {{-0.87, -2, 0.87},    {-0.33, 0.0, 1.33},{0.33, 0.0, 1.33}, {0.87, -2, 0.87}, {1, -2.5, 1}},   //
+                {{-1, -2.5, 1},    {-0.33, 0.0, 2},{0.33, 0.0, 1.63}, {0.87, -2, 1}, {1, -3, 1.5}},   //
+            };
+            nurbs::BSplineSurface b_surface(degree, degree, u_knots, v_knots, control_points, { 0, 2 }, { 0, 2 });
             auto surface = SurfaceModel::ModelFromSurface(
                 device_.get(), b_surface);
 
 
-            auto parametric_surface = VulkanGameObject::CreateVulkanGameObject();
-            parametric_surface.model_ = surface;
-            parametric_surface.transform_.translation = { 0.f, -1.f, 0.f };
-            parametric_surface.transform_.scale = { 0.5f, 0.5f, 0.5f };
-            game_objects_.emplace(parametric_surface.id(), std::move(parametric_surface));
+            auto surf_obj = VulkanGameObject::CreateVulkanGameObject();
+            surf_obj.model_ = surface;
+            surf_obj.transform_.translation = { 0.0f, 0.5f, 0.0f };
+            surf_obj.transform_.scale = { 3.0f, 1.0f, 3.0f };
+            game_objects_.emplace(surf_obj.id(), std::move(surf_obj));
         }
 
         // Current Tutorial Objects:
         {
             std::shared_ptr<TriangleModel> model = TriangleModel::CreateModelFromFile(
                 device_.get(),
-                "C:/Users/WJSSn/Documents/GitRepos/VulkanGrowProject/models/"
+                "C:/Users/WJSSn/Documents/GitRepos/GlacierEngine/models/"
                 "flat_vase.obj");
 
             auto flat_vase = VulkanGameObject::CreateVulkanGameObject();
             flat_vase.model_ = model;
-            flat_vase.transform_.translation = { -0.5f, 0.5f, 0.f };
+            flat_vase.transform_.translation = { -0.5f, 0.35f, 0.f };
             flat_vase.transform_.scale = { 3.0f, 1.f, 3.f };
             game_objects_.emplace(flat_vase.id(), std::move(flat_vase));
         }
@@ -249,19 +220,19 @@ namespace vulkeng {
         {
             std::shared_ptr<TriangleModel> model = TriangleModel::CreateModelFromFile(
                 device_.get(),
-                "C:/Users/WJSSn/Documents/GitRepos/VulkanGrowProject/models/"
+                "C:/Users/WJSSn/Documents/GitRepos/GlacierEngine/models/"
                 "smooth_vase.obj");
 
             auto smooth_vase = VulkanGameObject::CreateVulkanGameObject();
             smooth_vase.model_ = model;
-            smooth_vase.transform_.translation = { 0.5f, 0.5f, 0.f };
+            smooth_vase.transform_.translation = { 0.5f, 0.35f, 0.f };
             smooth_vase.transform_.scale = { 3.0f, 1.f, 3.f };
             game_objects_.emplace(smooth_vase.id(), std::move(smooth_vase));
         }
-        {
+        /*{
             std::shared_ptr<TriangleModel> model = TriangleModel::CreateModelFromFile(
                 device_.get(),
-                "C:/Users/WJSSn/Documents/GitRepos/VulkanGrowProject/models/"
+                "C:/Users/WJSSn/Documents/GitRepos/GlacierEngine/models/"
                 "quad.obj");
 
             auto floor = VulkanGameObject::CreateVulkanGameObject();
@@ -269,7 +240,7 @@ namespace vulkeng {
             floor.transform_.translation = { 0.f, 0.5f, 0.f };
             floor.transform_.scale = { 3.0f, 1.f, 3.f };
             game_objects_.emplace(floor.id(), std::move(floor));
-        }
+        }*/
 
         {
             std::vector<glm::vec3> light_colors = { {1.0f, 0.1f, 0.1f},   //

@@ -11,17 +11,17 @@ namespace nurbs {
         // u - input value along the curve/knot vector
         // U - Knot vector
         // Returns - span index of u
-        int FindSpan(uint32_t degree, double u, std::vector<uint32_t> knots) {
-            int n = static_cast<int>(knots.size()) - static_cast<int>(degree) - 1;
-            if (u >= static_cast<double>(knots[n])) {
+        uint32_t FindSpan(uint32_t degree, double u, std::vector<uint32_t> knots) {
+            uint32_t n = static_cast<uint32_t>(knots.size()) - degree - 2;
+            if (u >= static_cast<double>(knots[n + 1])) {
                 return n;
             }
             if (u <= static_cast<double>(knots[degree])) {
-                return static_cast<int>(degree);
+                return degree;
             }
-            int low = static_cast<int>(degree);
-            int high = n + 1;
-            int mid = (low + high) / 2;
+            uint32_t low = degree;
+            uint32_t high = n + 1;
+            uint32_t mid = (low + high) / 2;
             while (u < static_cast<double>(knots[mid]) ||
                 u >= static_cast<double>(knots[mid + 1])) {
                 if (u < static_cast<double>(knots[mid])) {
@@ -42,14 +42,11 @@ namespace nurbs {
         // U - Knot vector
         // N - Returned basis vector
         std::vector<double> BasisFuns(uint32_t i, double u, uint32_t degree, std::vector<uint32_t> knots) {
+            u = std::min(u, static_cast<double>(knots[knots.size() - 1]));
             std::vector<double> bases(degree + 1, 0);
-            if (i >= static_cast<uint32_t>(knots.size()) - (degree + 1)) {
-                bases[degree] = 1.0;
-                return bases;
-            }
             bases[0] = 1.0;
             std::vector<double> left(degree + 1), right(degree + 1);
-            for (uint8_t j = 1; j <= degree; ++j) {
+            for (uint32_t j = 1; j <= degree; ++j) {
                 left[j] = u - static_cast<double>(knots[i + 1 - j]);
                 right[j] = static_cast<double>(knots[i + j]) - u;
                 double saved = 0.0;
@@ -67,10 +64,13 @@ namespace nurbs {
         // Same as above
         // n - nth derivative calculated (max)
         // ders - Returned basis derivative vector
-        std::vector<std::vector<double>> DersBasisFuns(uint32_t i, double u, uint32_t degree, uint32_t n, std::vector<uint32_t> knots) {
+        std::vector<std::vector<double>> DersBasisFuns(uint32_t i, double u, uint32_t degree,
+            uint32_t n, std::vector<uint32_t> knots) {
             if (knots.empty()) {
                 return {};
             }
+
+            u = std::min(u, static_cast<double>(knots[knots.size() - 1]));
 
             if (i + degree == static_cast<uint32_t>(knots.size() - 1)) {
                 std::vector<std::vector<double>> derivatives(n + 1);
@@ -85,7 +85,7 @@ namespace nurbs {
 
             std::vector<std::vector<double>> ndu(degree + 1);
             for (auto& vect : ndu) {
-                vect.resize(degree + 1);
+                vect.resize(degree + 1, 0);
             }
             ndu[0][0] = 1.0;
             std::vector<double> left(degree + 1), right(degree + 1);
@@ -115,17 +115,17 @@ namespace nurbs {
 
             /* This section computes the derivatives */
             std::array<std::vector<double>, 2> a;
-            a[0].resize(degree + 1);
-            a[1].resize(degree + 1);
+            a[0].resize(static_cast<size_t>(degree) + 1);
+            a[1].resize(static_cast<size_t>(degree) + 1);
 
             for (int r = 0; r <= static_cast<int>(degree); ++r) {
                 uint32_t s1 = 0, s2 = 1;
                 a[0][0] = 1.0;
-                for (uint32_t k = 1; k <= n; ++k) {
+                for (int k = 1; k <= static_cast<int>(n); ++k) {
                     double d = 0.0;
-                    int rk = r - static_cast<int>(k);
-                    int pk = static_cast<int>(degree) - static_cast<int>(k);
-                    if (rk >= 0) {
+                    int rk = r - k;
+                    int pk = static_cast<int>(degree) - k;
+                    if (r >= k) {
                         a[s2][0] = a[s1][0] / ndu[pk + 1][rk];
                         d = a[s2][0] * ndu[rk][pk];
                     }
@@ -137,7 +137,7 @@ namespace nurbs {
                         j1 = -rk;
                     }
                     if (r - 1 <= pk) {
-                        j2 = static_cast<int>(k) - 1;
+                        j2 = k - 1;
                     }
                     else {
                         j2 = static_cast<int>(degree) - r;
@@ -174,6 +174,7 @@ namespace nurbs {
         // i - ith basis value
         // u - input value along the curve/knot vector
         double OneBasisFun(uint32_t degree, std::vector<uint32_t> knots, uint32_t i, double u) {
+            u = std::min(u, static_cast<double>(knots[knots.size() - 1]));
             if ((i == 0 && u <= static_cast<double>(knots[0]) + std::numeric_limits<double>::epsilon()) ||
                 (i == (static_cast<uint32_t>(knots.size()) - degree - 2) &&
                     u >= static_cast<double>(knots[knots.size() - 1]) - std::numeric_limits<double>::epsilon())) {
@@ -223,10 +224,11 @@ namespace nurbs {
         // n - nth derivative calculated(max)
         //ders - Returned basis derivative vector for only the ith basis
         std::vector<double> DersOneBasisFun(uint32_t degree, std::vector<uint32_t> knots, uint32_t i, double u, uint32_t n) {
+            u = std::min(u, static_cast<double>(knots[knots.size() - 1]));
             // Local property
             if (u < static_cast<double>(knots[i]) - std::numeric_limits<double>::epsilon() ||
-                static_cast<size_t>(i + degree + 1) >= knots.size() || 
-                u >= static_cast<double>(knots[i + degree + 1]) - std::numeric_limits<double>::epsilon()) {
+                static_cast<size_t>(i + degree + 1) >= knots.size() /*||
+                u >= static_cast<double>(knots[i + degree + 1]) - std::numeric_limits<double>::epsilon()*/) {
                 return std::vector<double>(n + 1, 0.0);
             }
             std::vector<std::vector<double>> N(degree + 1);
@@ -301,6 +303,40 @@ namespace nurbs {
                 derivatives[k] = ND[0];
             }
             return derivatives;
+        }
+
+        // ALGORITHM  ALLBasisFuns(i,u,p,U,N) p99
+        // i - Span index (From find span)
+        // u - input value along the curve/knot vector
+        // p - degree
+        // U - Knot vector
+        // N - Returned basis vector
+        // Blurb:
+        /* We assume a routine, AllBasisFuns, which is a simple
+           modification of Basis Funs (Algorithm A2. 2), to return all nonzero basis functions of all degrees from 0 up top.
+           In particular, N[j] [i] is the value of the
+           ith-degree basis function, Nspan-i+j,i(u), where 0<=i<=p and 0<=j<=i. */
+        // This has not been tested or used, Though it likely doesn't work
+        std::vector<std::vector<double>> AllBasisFuns(uint32_t span, double u, uint32_t degree, std::vector<uint32_t> knots) {
+            u = std::min(u, static_cast<double>(knots[knots.size() - 1]));
+            std::vector<std::vector<double>> bases(degree + 1);
+            for (auto& vect : bases) {
+                vect.resize(degree + 1, 0);
+            }
+            bases[0][0] = 1.0;
+            std::vector<double> left(degree + 1), right(degree + 1);
+            for (uint8_t j = 1; j <= degree; ++j) {
+                left[j] = u - static_cast<double>(knots[span + 1 - j]);
+                right[j] = static_cast<double>(knots[span + j]) - u;
+                double saved = 0.0;
+                for (uint8_t r = 0; r < j; ++r) {
+                    double temp = bases[j - 1][r] / (right[r + 1] + left[j - r]);
+                    bases[j][r] = saved + (right[r + 1] * temp);
+                    saved = left[j - r] * temp;
+                }
+                bases[j][j] = saved;
+            }
+            return bases;
         }
     }
 }

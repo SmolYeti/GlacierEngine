@@ -3,19 +3,32 @@
 // NURBS_CPP
 #include "include/bezier_curve.hpp"
 #include "include/bezier_surface.hpp"
+// STD
+#include <numeric>
 
 namespace nurbs {
+    TEST(NURBS_Chapter1, BernsteinVsAll) {
+
+        constexpr double div = 1.0 / 99.0;
+        for (uint32_t i = 0; i < 100; ++i) {
+            const double u = static_cast<double>(i) * div;
+            const std::vector<double> all_bern = BezierCurveUtil::AllBernstein(2, u);
+            const double bern_0 = BezierCurveUtil::Bernstein(0, 2, u);
+            const double bern_1 = BezierCurveUtil::Bernstein(1, 2, u);
+            const double bern_2 = BezierCurveUtil::Bernstein(2, 2, u);
+            EXPECT_DOUBLE_EQ(all_bern[0], bern_0);
+            EXPECT_DOUBLE_EQ(all_bern[1], bern_1);
+            EXPECT_DOUBLE_EQ(all_bern[2], bern_2);
+        }
+    }
+
     TEST(NURBS_Chapter1, Bezier2DConstruct) {
         const std::vector<glm::dvec2> control_points;
         const BezierCurve2D bezier(control_points);
     }
 
     TEST(NURBS_Chapter1, Bezier2DPoint) {
-        std::vector<glm::dvec2> control_points;
-        control_points.push_back({ 0, 0 });
-        control_points.push_back({ 1, 0 });
-        control_points.push_back({ 1, 1 });
-        control_points.push_back({ 0, 1 });
+        std::vector<glm::dvec2> control_points = { {0,0}, {1, 0}, {1,1}, {0, 1} };
         const BezierCurve2D bezier(control_points);
 
         const glm::dvec2 point = bezier.EvaluateCurve(0.5);
@@ -34,11 +47,7 @@ namespace nurbs {
     }
 
     TEST(NURBS_Chapter1, Bezier2DPoints) {
-        std::vector<glm::dvec2> control_points;
-        control_points.push_back({ 0, 0 });
-        control_points.push_back({ 1, 0 });
-        control_points.push_back({ 1, 1 });
-        control_points.push_back({ 0, 1 });
+        std::vector<glm::dvec2> control_points = { {0,0}, {1, 0}, {1,1}, {0, 1} };
         constexpr glm::dvec2 interval = { 0.0, 1.0 };
         const BezierCurve2D bezier(control_points, interval);
 
@@ -59,6 +68,61 @@ namespace nurbs {
 
             EXPECT_DOUBLE_EQ(test_points[0].x, points[i].x);
             EXPECT_DOUBLE_EQ(test_points[0].y, points[i].y);
+        }
+    }
+
+    TEST(NURBS_Chapter1, BernsteinVsDeCasteljau2D) {
+        const std::vector<glm::dvec2> control_points = { {0,0}, {0, 1}, {1, 1}, {1, 0} };
+        const BezierCurve2D bezier(control_points);
+        constexpr double div = 1.0 / 99.0;
+        for (uint32_t i = 0; i < 100; ++i) {
+            const double u = static_cast<double>(i) * div;
+            const glm::dvec2 bern = bezier.PointOnBezierCurve(u);
+            const glm::dvec2 cast = bezier.DeCasteljau(u);
+            EXPECT_DOUBLE_EQ(bern.x, cast.x);
+            EXPECT_DOUBLE_EQ(bern.y, cast.y);
+        }
+    }
+
+    TEST(NURBS_Chapter1, Bezier2DPolynomialCompareEx1_6) {
+        const std::vector<glm::dvec2> control_points = { {0,0}, {0, 1}, {1, 1}, {1, 0} };
+        const BezierCurve2D bezier(control_points);
+        constexpr double div = 1.0 / 99.0;
+        for (uint32_t i = 0; i < 100; ++i) {
+            const double u = static_cast<double>(i) * div;
+            // Bezier
+            const glm::dvec2 point_b = bezier.EvaluateCurve(u);
+
+            // Cubic Bezier Polynomial
+            const double u_i = 1.0 - u;
+            glm::dvec2 point_p = std::pow(u_i, 3) * control_points[0];
+            point_p += 3 * u * std::pow(u_i, 2) * control_points[1];
+            point_p += 3 * std::pow(u, 2) * u_i * control_points[2];
+            point_p += std::pow(u, 3) * control_points[3];
+
+            EXPECT_DOUBLE_EQ(point_b.x, point_p.x);
+            EXPECT_DOUBLE_EQ(point_b.y, point_p.y);
+        }
+    }
+
+    TEST(NURBS_Chapter1, Bezier2DPolynomialCompareDerivEx1_6) {
+        const std::vector<glm::dvec2> control_points = { {0,0}, {0, 1}, {1, 1}, {1, 0} };
+        const BezierCurve2D bezier(control_points);
+        constexpr double div = 1.0 / 99.0;
+        for (uint32_t i = 0; i < 100; ++i) {
+            // Bezier
+            const double u = static_cast<double>(i) * div;
+            const glm::dvec2 deriv_b = bezier.Derivative(u);
+
+            // Cubic Bezier Polynomial
+            const double u_i = 1.0 - u;
+            glm::dvec2 deriv_p = std::pow(u, 2) * (control_points[3] - control_points[2]);
+            deriv_p += (2.0 * u_i * u * (control_points[2] - control_points[1]));
+            deriv_p += (std::pow(u_i, 2) * (control_points[1] - control_points[0]));
+            deriv_p *= 3.0;
+
+            EXPECT_DOUBLE_EQ(deriv_b.x, deriv_p.x);
+            EXPECT_DOUBLE_EQ(deriv_b.y, deriv_p.y);
         }
     }
 
@@ -118,6 +182,66 @@ namespace nurbs {
             EXPECT_DOUBLE_EQ(test_points[0].x, points[i].x);
             EXPECT_DOUBLE_EQ(test_points[0].y, points[i].y);
             EXPECT_DOUBLE_EQ(test_points[0].z, points[i].z);
+        }
+    }
+
+    TEST(NURBS_Chapter1, BernsteinVsDeCasteljau3D) {
+        const std::vector<glm::dvec3> control_points = { {0,0, 0}, {0, 1, 1}, {1, 1, 2}, {1, 0, 1} };
+        const BezierCurve3D bezier(control_points);
+        constexpr double div = 1.0 / 99.0;
+        for (uint32_t i = 0; i < 100; ++i) {
+            const double u = static_cast<double>(i) * div;
+            const glm::dvec3 bern = bezier.PointOnBezierCurve(u);
+            const glm::dvec3 cast = bezier.DeCasteljau(u);
+            EXPECT_DOUBLE_EQ(bern.x, cast.x);
+            EXPECT_DOUBLE_EQ(bern.y, cast.y);
+            EXPECT_DOUBLE_EQ(bern.z, cast.z);
+        }
+    }
+
+    TEST(NURBS_Chapter1, Bezier3DPolynomialCompareEx1_6) {
+        const std::vector<glm::dvec3> control_points = { {0,0, 0}, {0, 1, 1}, {1, 1, 2}, {1, 0, 1} };
+        const BezierCurve3D bezier(control_points);
+        constexpr double div = 1.0 / 99.0;
+        for (uint32_t i = 0; i < 100; ++i) {
+            const double u = static_cast<double>(i) * div;
+            // Bezier
+            const glm::dvec3 point_b = bezier.EvaluateCurve(u);
+
+            // Cubic Bezier Polynomial
+            const double u_i = 1.0 - u;
+            glm::dvec3 point_p = std::pow(u_i, 3) * control_points[0];
+            point_p += 3 * u * std::pow(u_i, 2) * control_points[1];
+            point_p += 3 * std::pow(u, 2) * u_i * control_points[2];
+            point_p += std::pow(u, 3) * control_points[3];
+
+            EXPECT_DOUBLE_EQ(point_b.x, point_p.x);
+            EXPECT_DOUBLE_EQ(point_b.y, point_p.y);
+            EXPECT_DOUBLE_EQ(point_b.z, point_p.z);
+        }
+    }
+
+    TEST(NURBS_Chapter1, Bezier3DPolynomialCompareDerivEx1_6) {
+        const std::vector<glm::dvec3> control_points = { {0,0, 0}, {0, 1, 1}, {1, 1, 2}, {1, 0, 1} };
+        const BezierCurve3D bezier(control_points);
+        constexpr double div = 1.0 / 99.0;
+        for (uint32_t i = 0; i < 100; ++i) {
+            // Bezier
+            const double u = static_cast<double>(i) * div;
+            const glm::dvec3 deriv_b = bezier.Derivative(u);
+
+            // Cubic Bezier Polynomial
+            const double u_i = 1.0 - u;
+            glm::dvec3 deriv_p = std::pow(u, 2) * (control_points[3] - control_points[2]);
+            deriv_p += (2.0 * u_i * u * (control_points[2] - control_points[1]));
+            deriv_p += (std::pow(u_i, 2) * (control_points[1] - control_points[0]));
+            deriv_p *= 3.0;
+            // The percision is really just not here with this calculation...
+            // I think the generic bezier calculation is more incorrect becuase I can't factor things out,
+            // but either way this is a really imprecise calculation
+            EXPECT_NEAR(deriv_b.x, deriv_p.x, std::numeric_limits<float>::epsilon() * 10);
+            EXPECT_NEAR(deriv_b.y, deriv_p.y, std::numeric_limits<float>::epsilon() * 10);
+            EXPECT_NEAR(deriv_b.z, deriv_p.z, std::numeric_limits<float>::epsilon() * 10);
         }
     }
 

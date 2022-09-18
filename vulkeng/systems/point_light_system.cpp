@@ -12,10 +12,10 @@
 
 // TODO - Don't make these hardcoded paths
 const std::string PL_VERTEX_PATH =
-"C:/Users/WJSSn/Documents/GitRepos/VulkanGrowProject/shaders/"
+"C:/Users/WJSSn/Documents/GitRepos/GlacierEngine/shaders/"
 "point_light.vert.spv";
 const std::string PL_FRAGMENT_PATH =
-"C:/Users/WJSSn/Documents/GitRepos/VulkanGrowProject/shaders/"
+"C:/Users/WJSSn/Documents/GitRepos/GlacierEngine/shaders/"
 "point_light.frag.spv";
 
 namespace vulkeng {

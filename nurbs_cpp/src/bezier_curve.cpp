@@ -6,27 +6,27 @@ namespace nurbs {
 ///
 
 // Chaper 1, Algorithm A1.2 Bernstein, p20
-double BezierCurveUtil::Bernstein(size_t i, size_t n, double u) {
-    std::vector<double> temp(n, 0);
-    temp[n - i] = 1.0;
+double BezierCurveUtil::Bernstein(size_t index, size_t n, double u) {
+    std::vector<double> temp(n + 1, 0);
+    temp[n - index] = 1.0;
     double u_inverse = 1.0 - u;
-    for (size_t j = 1; j < n; ++j) {
-        for (size_t k = n - 1; k >= j; --k) {
-            temp[k] = (u_inverse * temp[k]) + (u * temp[k - 1]);
+    for (size_t i = 1; i <= n; ++i) {
+        for (size_t j = n; j >= i; --j) {
+            temp[j] = (u_inverse * temp[j]) + (u * temp[j - 1]);
         }
     }
-    return temp[n - 1];
+    return temp[n];
 }
 
 // Chaper 1, Algorithm A1.3 AllBernstein, p21
 std::vector<double> BezierCurveUtil::AllBernstein(size_t n, double u) {
-    std::vector<double> bernstein(n);
+    std::vector<double> bernstein(n + 1);
 
     bernstein[0] = 1.0;
     const double u_inverse = 1.0 - u;
     double saved, temp;
 
-    for (size_t i = 1; i < n; ++i) {
+    for (size_t i = 1; i <= n; ++i) {
         saved = 0.0;
         for (size_t j = 0; j < i; ++j) {
             temp = bernstein[j];
@@ -48,18 +48,23 @@ BezierCurve2D::BezierCurve2D(std::vector<glm::dvec2> control_points,
     : Curve2D(interval), control_points_(control_points) {}
 
 glm::dvec2 BezierCurve2D::EvaluateCurve(double u) const {
+    if (u < interval_.x) { u = interval_.x; }
+    if (u > interval_.y) { u = interval_.y; }
     return DeCasteljau(u);
 }
 
 // Chaper 1, Equation 1.9 derivative of a Bezier curve, p22
-glm::vec2 BezierCurve2D::Derivative(double u) const {
+// This is probably wrong
+glm::dvec2 BezierCurve2D::Derivative(double u) const {
+    if (u < interval_.x) { u = interval_.x; }
+    if (u > interval_.y) { u = interval_.y; }
     const std::vector<double> berstein =
-        BezierCurveUtil::AllBernstein(control_points_.size() - 1, u);
+        BezierCurveUtil::AllBernstein(control_points_.size() - 2, u);
 
-    glm::vec2 derivative = {0.0, 0.0};
+    glm::dvec2 derivative = {0.0, 0.0};
 
     for (size_t i = 0; i < berstein.size(); ++i) {
-        derivative = berstein[i] * (control_points_[i + 1] - control_points_[i]);
+        derivative += berstein[i] * (control_points_[i + 1] - control_points_[i]);
     }
 
     derivative *= static_cast<double>(berstein.size());
@@ -70,7 +75,7 @@ glm::vec2 BezierCurve2D::Derivative(double u) const {
 // Chaper 1, Algorithm A1.4 PointOnBezierCurv, p22
 glm::dvec2 BezierCurve2D::PointOnBezierCurve(double u) const {
     const std::vector<double> berstein =
-        BezierCurveUtil::AllBernstein(control_points_.size(), u);
+        BezierCurveUtil::AllBernstein(control_points_.size() - 1, u);
     glm::dvec2 point = {0.0, 0.0};
 
     for (size_t i = 0; i < control_points_.size(); ++i) {
@@ -106,18 +111,22 @@ BezierCurve3D::BezierCurve3D(std::vector<glm::dvec3> control_points,
     : Curve3D(interval), control_points_(control_points) {}
 
 glm::dvec3 BezierCurve3D::EvaluateCurve(double u) const {
+    if (u < interval_.x) { u = interval_.x; }
+    if (u > interval_.y) { u = interval_.y; }
     return DeCasteljau(u);
 }
 
 // Chaper 1, Equation 1.9 derivative of a Bezier curve, p22
 glm::vec3 BezierCurve3D::Derivative(double u) const {
+    if (u < interval_.x) { u = interval_.x; }
+    if (u > interval_.y) { u = interval_.y; }
     const std::vector<double> berstein =
-        BezierCurveUtil::AllBernstein(control_points_.size() - 1, u);
+        BezierCurveUtil::AllBernstein(control_points_.size() - 2, u);
 
     glm::vec3 derivative = {0.0, 0.0, 0.0};
 
     for (size_t i = 0; i < berstein.size(); ++i) {
-        derivative = berstein[i] * (control_points_[i + 1] - control_points_[i]);
+        derivative += berstein[i] * (control_points_[i + 1] - control_points_[i]);
     }
 
     derivative *= static_cast<double>(berstein.size());
@@ -128,7 +137,7 @@ glm::vec3 BezierCurve3D::Derivative(double u) const {
 // Chaper 1, Algorithm A1.4 PointOnBezierCurv, p22
 glm::dvec3 BezierCurve3D::PointOnBezierCurve(double u) const {
     const std::vector<double> berstein =
-        BezierCurveUtil::AllBernstein(control_points_.size(), u);
+        BezierCurveUtil::AllBernstein(control_points_.size() - 1, u);
     glm::dvec3 point = {0.0, 0.0, 0.0};
 
     for (size_t i = 0; i < control_points_.size(); ++i) {
