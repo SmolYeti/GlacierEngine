@@ -8,7 +8,6 @@
 *.slo
 *.lo
 *.o
-*.obj
 *.spv
 
 # Precompiled Headers
