@@ -4,6 +4,8 @@
 #include "include/knot_utility_functions.hpp"
 #include "include/derived_knot_funcs.hpp"
 
+constexpr bool PRINT_DEBUG_INFO = false;
+
 namespace nurbs {
     namespace knots {
 
@@ -172,6 +174,419 @@ namespace nurbs {
             EXPECT_EQ(basis_ders[2].size(), 3);
             EXPECT_DOUBLE_EQ(basis_ders[1][2], 1.0 / 2.0);
             EXPECT_DOUBLE_EQ(basis_ders[2][2], 1.0);
+        }
+
+        TEST(NURBS_Chapter2, BasisDerivsEx) {
+            const std::vector<uint32_t> knots = { 0, 0, 0, 0, 1, 2, 3, 3, 4, 4, 4, 4 };
+            constexpr uint32_t degree = 3;
+            constexpr uint32_t degree_1 = 1;
+            constexpr uint32_t degree_2 = 2;
+            constexpr uint32_t degree_3 = 3;
+            {
+                constexpr double u_value = 0.0;
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << "U: " << u_value << std::endl;
+                // Degree 1, Derivitive 0
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << " - p=1, k=0 " << std::endl;
+                int span_index = FindSpan(degree, u_value, knots);
+                EXPECT_EQ(span_index, 3);
+                std::vector<std::vector<double>> basis_ders = DersBasisFuns(span_index, u_value, degree_1, 0, knots);
+                ASSERT_EQ(basis_ders.size(), 1);
+                ASSERT_EQ(basis_ders[0].size(), 2);
+                EXPECT_DOUBLE_EQ(basis_ders[0][0], 1.0);
+                EXPECT_DOUBLE_EQ(basis_ders[0][1], 0.0);
+                // Degree 2, Derivitive 1
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << " - p=2, k=1 " << std::endl;
+                basis_ders = DersBasisFuns(span_index, u_value, degree_2, 1, knots);
+                ASSERT_EQ(basis_ders.size(), 2);
+                ASSERT_EQ(basis_ders[0].size(), 3);
+                EXPECT_DOUBLE_EQ(basis_ders[0][0], 1.0);
+                EXPECT_DOUBLE_EQ(basis_ders[0][1], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[0][2], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][0], -2.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][1], 2.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][2], 0.0);
+                // Degree 3, Derivitive 2
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << " - p=3, k=2 " << std::endl;
+                basis_ders = DersBasisFuns(span_index, u_value, degree_3, 2, knots);
+                ASSERT_EQ(basis_ders.size(), 3);
+                ASSERT_EQ(basis_ders[0].size(), 4);
+                EXPECT_DOUBLE_EQ(basis_ders[0][0], 1.0);
+                EXPECT_DOUBLE_EQ(basis_ders[0][1], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[0][2], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[0][3], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][0], -3.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][1], 3.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][2], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][3], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[2][0], 6.0);
+                EXPECT_DOUBLE_EQ(basis_ders[2][1], -9.0);
+                EXPECT_DOUBLE_EQ(basis_ders[2][2], 3.0);
+                EXPECT_DOUBLE_EQ(basis_ders[2][3], 0.0);
+            }
+            {
+                constexpr double u_value = 0.5;
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << "U: " << u_value << std::endl;
+                // Degree 1, Derivitive 0
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << " - p=1, k=0 " << std::endl;
+                int span_index = FindSpan(degree, u_value, knots);
+                EXPECT_EQ(span_index, 3);
+                std::vector<std::vector<double>> basis_ders = DersBasisFuns(span_index, u_value, degree_1, 0, knots);
+                ASSERT_EQ(basis_ders.size(), 1);
+                ASSERT_EQ(basis_ders[0].size(), 2);
+                EXPECT_DOUBLE_EQ(basis_ders[0][0], 0.5);
+                EXPECT_DOUBLE_EQ(basis_ders[0][1], 0.5);
+                // Degree 2, Derivitive 1
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << " - p=2, k=1 " << std::endl;
+                basis_ders = DersBasisFuns(span_index, u_value, degree_2, 1, knots);
+                ASSERT_EQ(basis_ders.size(), 2);
+                ASSERT_EQ(basis_ders[0].size(), 3);
+                EXPECT_DOUBLE_EQ(basis_ders[0][0], 0.25);
+                EXPECT_DOUBLE_EQ(basis_ders[0][1], 0.625);
+                EXPECT_DOUBLE_EQ(basis_ders[0][2], 0.125);
+                EXPECT_DOUBLE_EQ(basis_ders[1][0], -1.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][1], 0.5);
+                EXPECT_DOUBLE_EQ(basis_ders[1][2], 0.5);
+                // Degree 3, Derivitive 2
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << " - p=3, k=2 " << std::endl;
+                basis_ders = DersBasisFuns(span_index, u_value, degree_3, 2, knots);
+                ASSERT_EQ(basis_ders.size(), 3);
+                ASSERT_EQ(basis_ders[0].size(), 4);
+                EXPECT_DOUBLE_EQ(basis_ders[0][0], 0.125);
+                EXPECT_DOUBLE_EQ(basis_ders[0][1], 0.59375);
+                EXPECT_DOUBLE_EQ(basis_ders[0][2], 0.26041666666666663);
+                EXPECT_DOUBLE_EQ(basis_ders[0][3], 0.020833333333333332);
+                EXPECT_DOUBLE_EQ(basis_ders[1][0], -0.75);
+                EXPECT_DOUBLE_EQ(basis_ders[1][1], -0.1875);
+                EXPECT_DOUBLE_EQ(basis_ders[1][2], 0.8125);
+                EXPECT_DOUBLE_EQ(basis_ders[1][3], 0.125);
+                EXPECT_DOUBLE_EQ(basis_ders[2][0], 3.0);
+                EXPECT_DOUBLE_EQ(basis_ders[2][1], -3.75);
+                EXPECT_DOUBLE_EQ(basis_ders[2][2], 0.25);
+                EXPECT_DOUBLE_EQ(basis_ders[2][3], 0.5);
+            }
+            {
+                constexpr double u_value = 1.0;
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << "U: " << u_value << std::endl;
+                // Degree 1, Derivitive 0
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << " - p=1, k=0 " << std::endl;
+                int span_index = FindSpan(degree, u_value, knots);
+                EXPECT_EQ(span_index, 4);
+                std::vector<std::vector<double>> basis_ders = DersBasisFuns(span_index, u_value, degree_1, 0, knots);
+                ASSERT_EQ(basis_ders.size(), 1);
+                ASSERT_EQ(basis_ders[0].size(), 2);
+                EXPECT_DOUBLE_EQ(basis_ders[0][0], 1.0);
+                EXPECT_DOUBLE_EQ(basis_ders[0][1], 0.0);
+                // Degree 2, Derivitive 1
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << " - p=2, k=1 " << std::endl;
+                basis_ders = DersBasisFuns(span_index, u_value, degree_2, 1, knots);
+                ASSERT_EQ(basis_ders.size(), 2);
+                ASSERT_EQ(basis_ders[0].size(), 3);
+                EXPECT_DOUBLE_EQ(basis_ders[0][0], 0.5);
+                EXPECT_DOUBLE_EQ(basis_ders[0][1], 0.5);
+                EXPECT_DOUBLE_EQ(basis_ders[0][2], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][0], -1.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][1], 1.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][2], 0.0);
+                // Degree 3, Derivitive 2
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << " - p=3, k=2 " << std::endl;
+                basis_ders = DersBasisFuns(span_index, u_value, degree_3, 2, knots);
+                ASSERT_EQ(basis_ders.size(), 3);
+                ASSERT_EQ(basis_ders[0].size(), 4);
+                EXPECT_DOUBLE_EQ(basis_ders[0][0], 0.25);
+                EXPECT_DOUBLE_EQ(basis_ders[0][1], 0.58333333333333326);
+                EXPECT_DOUBLE_EQ(basis_ders[0][2], 0.16666666666666666);
+                EXPECT_DOUBLE_EQ(basis_ders[0][3], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][0], -0.75);
+                EXPECT_DOUBLE_EQ(basis_ders[1][1], 0.25);
+                EXPECT_DOUBLE_EQ(basis_ders[1][2], 0.5);
+                EXPECT_DOUBLE_EQ(basis_ders[1][3], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[2][0], 1.5);
+                EXPECT_DOUBLE_EQ(basis_ders[2][1], -2.5);
+                EXPECT_DOUBLE_EQ(basis_ders[2][2], 1.0);
+                EXPECT_DOUBLE_EQ(basis_ders[2][3], 0.0);
+            }
+            {
+                constexpr double u_value = 1.5;
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << "U: " << u_value << std::endl;
+                // Degree 1, Derivitive 0
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << " - p=1, k=0 " << std::endl;
+                int span_index = FindSpan(degree, u_value, knots);
+                EXPECT_EQ(span_index, 4);
+                std::vector<std::vector<double>> basis_ders = DersBasisFuns(span_index, u_value, degree_1, 0, knots);
+                ASSERT_EQ(basis_ders.size(), 1);
+                ASSERT_EQ(basis_ders[0].size(), 2);
+                EXPECT_DOUBLE_EQ(basis_ders[0][0], 0.5);
+                EXPECT_DOUBLE_EQ(basis_ders[0][1], 0.5);
+                // Degree 2, Derivitive 1
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << " - p=2, k=1 " << std::endl;
+                basis_ders = DersBasisFuns(span_index, u_value, degree_2, 1, knots);
+                ASSERT_EQ(basis_ders.size(), 2);
+                ASSERT_EQ(basis_ders[0].size(), 3);
+                EXPECT_DOUBLE_EQ(basis_ders[0][0], 0.125);
+                EXPECT_DOUBLE_EQ(basis_ders[0][1], 0.75);
+                EXPECT_DOUBLE_EQ(basis_ders[0][2], 0.125);
+                EXPECT_DOUBLE_EQ(basis_ders[1][0], -0.5);
+                EXPECT_DOUBLE_EQ(basis_ders[1][1], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][2], 0.5);
+                // Degree 3, Derivitive 2
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << " - p=3, k=2 " << std::endl;
+                basis_ders = DersBasisFuns(span_index, u_value, degree_3, 2, knots);
+                ASSERT_EQ(basis_ders.size(), 3);
+                ASSERT_EQ(basis_ders[0].size(), 4);
+                EXPECT_DOUBLE_EQ(basis_ders[0][0], 0.03125);
+                EXPECT_DOUBLE_EQ(basis_ders[0][1], 0.46875);
+                EXPECT_DOUBLE_EQ(basis_ders[0][2], 0.46875);
+                EXPECT_DOUBLE_EQ(basis_ders[0][3], 0.03125);
+                EXPECT_DOUBLE_EQ(basis_ders[1][0], -0.1875);
+                EXPECT_DOUBLE_EQ(basis_ders[1][1], -0.5625);
+                EXPECT_DOUBLE_EQ(basis_ders[1][2], 0.5625);
+                EXPECT_DOUBLE_EQ(basis_ders[1][3], 0.1875);
+                EXPECT_DOUBLE_EQ(basis_ders[2][0], 0.75);
+                EXPECT_DOUBLE_EQ(basis_ders[2][1], -0.75);
+                EXPECT_DOUBLE_EQ(basis_ders[2][2], -0.75);
+                EXPECT_DOUBLE_EQ(basis_ders[2][3], 0.75);
+            }
+            {
+                constexpr double u_value = 2.0;
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << "U: " << u_value << std::endl;
+                // Degree 1, Derivitive 0
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << " - p=1, k=0 " << std::endl;
+                int span_index = FindSpan(degree, u_value, knots);
+                EXPECT_EQ(span_index, 5);
+                std::vector<std::vector<double>> basis_ders = DersBasisFuns(span_index, u_value, degree_1, 0, knots);
+                ASSERT_EQ(basis_ders.size(), 1);
+                ASSERT_EQ(basis_ders[0].size(), 2);
+                EXPECT_DOUBLE_EQ(basis_ders[0][0], 1.0);
+                EXPECT_DOUBLE_EQ(basis_ders[0][1], 0.0);
+                // Degree 2, Derivitive 1
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << " - p=2, k=1 " << std::endl;
+                basis_ders = DersBasisFuns(span_index, u_value, degree_2, 1, knots);
+                ASSERT_EQ(basis_ders.size(), 2);
+                ASSERT_EQ(basis_ders[0].size(), 3);
+                EXPECT_DOUBLE_EQ(basis_ders[0][0], 0.5);
+                EXPECT_DOUBLE_EQ(basis_ders[0][1], 0.5);
+                EXPECT_DOUBLE_EQ(basis_ders[0][2], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][0], -1.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][1], 1.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][2], 0.0);
+                // Degree 3, Derivitive 2
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << " - p=3, k=2 " << std::endl;
+                basis_ders = DersBasisFuns(span_index, u_value, degree_3, 2, knots);
+                ASSERT_EQ(basis_ders.size(), 3);
+                ASSERT_EQ(basis_ders[0].size(), 4);
+                EXPECT_DOUBLE_EQ(basis_ders[0][0], 0.16666666666666666);
+                EXPECT_DOUBLE_EQ(basis_ders[0][1], 0.58333333333333326);
+                EXPECT_DOUBLE_EQ(basis_ders[0][2], 0.25);
+                EXPECT_DOUBLE_EQ(basis_ders[0][3], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][0], -0.5);
+                EXPECT_DOUBLE_EQ(basis_ders[1][1], -0.25);
+                EXPECT_DOUBLE_EQ(basis_ders[1][2], 0.75);
+                EXPECT_DOUBLE_EQ(basis_ders[1][3], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[2][0], 1.0);
+                EXPECT_DOUBLE_EQ(basis_ders[2][1], -2.5);
+                EXPECT_DOUBLE_EQ(basis_ders[2][2], 1.5);
+                EXPECT_DOUBLE_EQ(basis_ders[2][3], 0.0);
+            }
+            {
+                constexpr double u_value = 2.5;
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << "U: " << u_value << std::endl;
+                // Degree 1, Derivitive 0
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << " - p=1, k=0 " << std::endl;
+                int span_index = FindSpan(degree, u_value, knots);
+                EXPECT_EQ(span_index, 5);
+                std::vector<std::vector<double>> basis_ders = DersBasisFuns(span_index, u_value, degree_1, 0, knots);
+                ASSERT_EQ(basis_ders.size(), 1);
+                ASSERT_EQ(basis_ders[0].size(), 2);
+                EXPECT_DOUBLE_EQ(basis_ders[0][0], 0.5);
+                EXPECT_DOUBLE_EQ(basis_ders[0][1], 0.5);
+                // Degree 2, Derivitive 1
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << " - p=2, k=1 " << std::endl;
+                basis_ders = DersBasisFuns(span_index, u_value, degree_2, 1, knots);
+                ASSERT_EQ(basis_ders.size(), 2);
+                ASSERT_EQ(basis_ders[0].size(), 3);
+                EXPECT_DOUBLE_EQ(basis_ders[0][0], 0.125);
+                EXPECT_DOUBLE_EQ(basis_ders[0][1], 0.625);
+                EXPECT_DOUBLE_EQ(basis_ders[0][2], 0.25);
+                EXPECT_DOUBLE_EQ(basis_ders[1][0], -0.5);
+                EXPECT_DOUBLE_EQ(basis_ders[1][1], -0.5);
+                EXPECT_DOUBLE_EQ(basis_ders[1][2], 1.0);
+                // Degree 3, Derivitive 2
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << " - p=3, k=2 " << std::endl;
+                basis_ders = DersBasisFuns(span_index, u_value, degree_3, 2, knots);
+                ASSERT_EQ(basis_ders.size(), 3);
+                ASSERT_EQ(basis_ders[0].size(), 4);
+                EXPECT_DOUBLE_EQ(basis_ders[0][0], 0.020833333333333332);
+                EXPECT_DOUBLE_EQ(basis_ders[0][1], 0.26041666666666663);
+                EXPECT_DOUBLE_EQ(basis_ders[0][2], 0.65625);
+                EXPECT_DOUBLE_EQ(basis_ders[0][3], 0.0625);
+                EXPECT_DOUBLE_EQ(basis_ders[1][0], -0.125);
+                EXPECT_DOUBLE_EQ(basis_ders[1][1], -0.8125);
+                EXPECT_DOUBLE_EQ(basis_ders[1][2], 0.5625);
+                EXPECT_DOUBLE_EQ(basis_ders[1][3], 0.375);
+                EXPECT_DOUBLE_EQ(basis_ders[2][0], 0.5);
+                EXPECT_DOUBLE_EQ(basis_ders[2][1], 0.25);
+                EXPECT_DOUBLE_EQ(basis_ders[2][2], -2.25);
+                EXPECT_DOUBLE_EQ(basis_ders[2][3], 1.5);
+            }
+            {
+                constexpr double u_value = 3.0;
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << "U: " << u_value << std::endl;
+                // Degree 1, Derivitive 0
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << " - p=1, k=0 " << std::endl;
+                int span_index = FindSpan(degree, u_value, knots);
+                EXPECT_EQ(span_index, 7);
+                std::vector<std::vector<double>> basis_ders = DersBasisFuns(span_index, u_value, degree_1, 0, knots);
+                ASSERT_EQ(basis_ders.size(), 1);
+                ASSERT_EQ(basis_ders[0].size(), 2);
+                EXPECT_DOUBLE_EQ(basis_ders[0][0], 1.0);
+                EXPECT_DOUBLE_EQ(basis_ders[0][1], 0.0);
+                // Degree 2, Derivitive 1
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << " - p=2, k=1 " << std::endl;
+                basis_ders = DersBasisFuns(span_index, u_value, degree_2, 1, knots);
+                ASSERT_EQ(basis_ders.size(), 2);
+                ASSERT_EQ(basis_ders[0].size(), 3);
+                EXPECT_DOUBLE_EQ(basis_ders[0][0], 1.0);
+                EXPECT_DOUBLE_EQ(basis_ders[0][1], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[0][2], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][0], -2.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][1], 2.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][2], 0.0);
+                // Degree 3, Derivitive 2
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << " - p=3, k=2 " << std::endl;
+                basis_ders = DersBasisFuns(span_index, u_value, degree_3, 2, knots);
+                ASSERT_EQ(basis_ders.size(), 3);
+                ASSERT_EQ(basis_ders[0].size(), 4);
+                EXPECT_DOUBLE_EQ(basis_ders[0][0], 0.5);
+                EXPECT_DOUBLE_EQ(basis_ders[0][1], 0.5);
+                EXPECT_DOUBLE_EQ(basis_ders[0][2], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[0][3], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][0], -1.5);
+                EXPECT_DOUBLE_EQ(basis_ders[1][1], 1.5);
+                EXPECT_DOUBLE_EQ(basis_ders[1][2], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][3], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[2][0], 3.0);
+                EXPECT_DOUBLE_EQ(basis_ders[2][1], -9.0);
+                EXPECT_DOUBLE_EQ(basis_ders[2][2], 6.0);
+                EXPECT_DOUBLE_EQ(basis_ders[2][3], 0.0);
+            }
+            {
+                constexpr double u_value = 3.5;
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << "U: " << u_value << std::endl;
+                // Degree 1, Derivitive 0
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << " - p=1, k=0 " << std::endl;
+                int span_index = FindSpan(degree, u_value, knots);
+                EXPECT_EQ(span_index, 7);
+                std::vector<std::vector<double>> basis_ders = DersBasisFuns(span_index, u_value, degree_1, 0, knots);
+                ASSERT_EQ(basis_ders.size(), 1);
+                ASSERT_EQ(basis_ders[0].size(), 2);
+                EXPECT_DOUBLE_EQ(basis_ders[0][0], 0.5);
+                EXPECT_DOUBLE_EQ(basis_ders[0][1], 0.5);
+                // Degree 2, Derivitive 1
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << " - p=2, k=1 " << std::endl;
+                basis_ders = DersBasisFuns(span_index, u_value, degree_2, 1, knots);
+                ASSERT_EQ(basis_ders.size(), 2);
+                ASSERT_EQ(basis_ders[0].size(), 3);
+                EXPECT_DOUBLE_EQ(basis_ders[0][0], 0.25);
+                EXPECT_DOUBLE_EQ(basis_ders[0][1], 0.5);
+                EXPECT_DOUBLE_EQ(basis_ders[0][2], 0.25);
+                EXPECT_DOUBLE_EQ(basis_ders[1][0], -1.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][1], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][2], 1.0);
+                // Degree 3, Derivitive 2
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << " - p=3, k=2 " << std::endl;
+                basis_ders = DersBasisFuns(span_index, u_value, degree_3, 2, knots);
+                ASSERT_EQ(basis_ders.size(), 3);
+                ASSERT_EQ(basis_ders[0].size(), 4);
+                EXPECT_DOUBLE_EQ(basis_ders[0][0], 0.0625);
+                EXPECT_DOUBLE_EQ(basis_ders[0][1], 0.4375);
+                EXPECT_DOUBLE_EQ(basis_ders[0][2], 0.375);
+                EXPECT_DOUBLE_EQ(basis_ders[0][3], 0.125);
+                EXPECT_DOUBLE_EQ(basis_ders[1][0], -0.375);
+                EXPECT_DOUBLE_EQ(basis_ders[1][1], -1.125);
+                EXPECT_DOUBLE_EQ(basis_ders[1][2], 0.75);
+                EXPECT_DOUBLE_EQ(basis_ders[1][3], 0.75);
+                EXPECT_DOUBLE_EQ(basis_ders[2][0], 1.5);
+                EXPECT_DOUBLE_EQ(basis_ders[2][1], -1.5);
+                EXPECT_DOUBLE_EQ(basis_ders[2][2], -3.0);
+                EXPECT_DOUBLE_EQ(basis_ders[2][3], 3.0);
+            }
+            {
+                constexpr double u_value = 4;
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << "U: " << u_value << std::endl;
+                // Degree 1, Derivitive 0
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << " - p=1, k=0 " << std::endl;
+                int span_index = FindSpan(degree, u_value, knots);
+                EXPECT_EQ(span_index, 7);
+                std::vector<std::vector<double>> basis_ders = DersBasisFuns(span_index, u_value, degree_1, 0, knots);
+                ASSERT_EQ(basis_ders.size(), 1);
+                ASSERT_EQ(basis_ders[0].size(), 2);
+                EXPECT_DOUBLE_EQ(basis_ders[0][0], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[0][1], 1.0);
+                // Degree 2, Derivitive 1
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << " - p=2, k=1 " << std::endl;
+                basis_ders = DersBasisFuns(span_index, u_value, degree_2, 1, knots);
+                ASSERT_EQ(basis_ders.size(), 2);
+                ASSERT_EQ(basis_ders[0].size(), 3);
+                EXPECT_DOUBLE_EQ(basis_ders[0][0], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[0][1], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[0][2], 1.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][0], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][1], -2.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][2], 2.0);
+                // Degree 3, Derivitive 2
+                if constexpr (PRINT_DEBUG_INFO)
+                    std::cout << " - p=3, k=2 " << std::endl;
+                basis_ders = DersBasisFuns(span_index, u_value, degree_3, 2, knots);
+                ASSERT_EQ(basis_ders.size(), 3);
+                ASSERT_EQ(basis_ders[0].size(), 4);
+                EXPECT_DOUBLE_EQ(basis_ders[0][0], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[0][1], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[0][2], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[0][3], 1.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][0], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][1], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][2], -3.0);
+                EXPECT_DOUBLE_EQ(basis_ders[1][3], 3.0);
+                EXPECT_DOUBLE_EQ(basis_ders[2][0], 0.0);
+                EXPECT_DOUBLE_EQ(basis_ders[2][1], 6.0);
+                EXPECT_DOUBLE_EQ(basis_ders[2][2], -12.0);
+                EXPECT_DOUBLE_EQ(basis_ders[2][3], 6.0);
+            }
         }
 
         TEST(NURBS_Chapter2, BasisDerivativeMin) {

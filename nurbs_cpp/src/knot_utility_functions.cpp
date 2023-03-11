@@ -11,7 +11,7 @@ namespace nurbs {
         // u - input value along the curve/knot vector
         // U - Knot vector
         // Returns - span index of u
-        uint32_t FindSpan(uint32_t degree, double u, std::vector<uint32_t> knots) {
+        uint32_t FindSpan(uint32_t degree, double u, const std::vector<uint32_t>& knots) {
             uint32_t n = static_cast<uint32_t>(knots.size()) - degree - 2;
             if (u >= static_cast<double>(knots[n + 1])) {
                 return n;
@@ -41,14 +41,20 @@ namespace nurbs {
         // p - degree
         // U - Knot vector
         // N - Returned basis vector
-        std::vector<double> BasisFuns(uint32_t i, double u, uint32_t degree, std::vector<uint32_t> knots) {
+        std::vector<double> BasisFuns(uint32_t span, double u, uint32_t degree, const std::vector<uint32_t>& knots) {
             u = std::min(u, static_cast<double>(knots[knots.size() - 1]));
             std::vector<double> bases(degree + 1, 0);
-            bases[0] = 1.0;
+            if (span >= static_cast<uint32_t>(knots.size()) - degree - 2 || (u >= static_cast<double>(knots[span]) - std::numeric_limits<double>::epsilon() &&
+                u < static_cast<double>(knots[span + 1]) - std::numeric_limits<double>::epsilon())) {
+                bases[0] = 1.0;
+            }
+            else {
+                bases[0] = 0.0;
+            }
             std::vector<double> left(degree + 1), right(degree + 1);
             for (uint32_t j = 1; j <= degree; ++j) {
-                left[j] = u - static_cast<double>(knots[i + 1 - j]);
-                right[j] = static_cast<double>(knots[i + j]) - u;
+                left[j] = u - static_cast<double>(knots[span + 1 - j]);
+                right[j] = static_cast<double>(knots[span + j]) - u;
                 double saved = 0.0;
                 for (uint8_t r = 0; r < j; ++r) {
                     double temp = bases[r] / (right[r + 1] + left[j - r]);
@@ -65,7 +71,7 @@ namespace nurbs {
         // n - nth derivative calculated (max)
         // ders - Returned basis derivative vector
         std::vector<std::vector<double>> DersBasisFuns(uint32_t i, double u, uint32_t degree,
-            uint32_t n, std::vector<uint32_t> knots) {
+            uint32_t n, const std::vector<uint32_t>& knots) {
             if (knots.empty()) {
                 return {};
             }
@@ -173,7 +179,7 @@ namespace nurbs {
         // U - Knot vector
         // i - ith basis value
         // u - input value along the curve/knot vector
-        double OneBasisFun(uint32_t degree, std::vector<uint32_t> knots, uint32_t i, double u) {
+        double OneBasisFun(uint32_t degree, const std::vector<uint32_t>& knots, uint32_t i, double u) {
             u = std::min(u, static_cast<double>(knots[knots.size() - 1]));
             if ((i == 0 && u <= static_cast<double>(knots[0]) + std::numeric_limits<double>::epsilon()) ||
                 (i == (static_cast<uint32_t>(knots.size()) - degree - 2) &&
@@ -223,7 +229,7 @@ namespace nurbs {
         // u - input value along the curve / knot vector
         // n - nth derivative calculated(max)
         //ders - Returned basis derivative vector for only the ith basis
-        std::vector<double> DersOneBasisFun(uint32_t degree, std::vector<uint32_t> knots, uint32_t i, double u, uint32_t n) {
+        std::vector<double> DersOneBasisFun(uint32_t degree, const std::vector<uint32_t>& knots, uint32_t i, double u, uint32_t n) {
             u = std::min(u, static_cast<double>(knots[knots.size() - 1]));
             // Local property
             if (u < static_cast<double>(knots[i]) - std::numeric_limits<double>::epsilon() ||
@@ -316,27 +322,53 @@ namespace nurbs {
            modification of Basis Funs (Algorithm A2. 2), to return all nonzero basis functions of all degrees from 0 up top.
            In particular, N[j] [i] is the value of the
            ith-degree basis function, Nspan-i+j,i(u), where 0<=i<=p and 0<=j<=i. */
-        // This has not been tested or used, Though it likely doesn't work
-        std::vector<std::vector<double>> AllBasisFuns(uint32_t span, double u, uint32_t degree, std::vector<uint32_t> knots) {
+           // This has not been tested or used, Though it likely doesn't work
+        std::vector<std::vector<double>> AllBasisFuns(uint32_t span, double u, uint32_t degree, const std::vector<uint32_t>& knots) {
             u = std::min(u, static_cast<double>(knots[knots.size() - 1]));
             std::vector<std::vector<double>> bases(degree + 1);
             for (auto& vect : bases) {
                 vect.resize(degree + 1, 0);
             }
-            bases[0][0] = 1.0;
-            std::vector<double> left(degree + 1), right(degree + 1);
-            for (uint8_t j = 1; j <= degree; ++j) {
-                left[j] = u - static_cast<double>(knots[span + 1 - j]);
-                right[j] = static_cast<double>(knots[span + j]) - u;
-                double saved = 0.0;
-                for (uint8_t r = 0; r < j; ++r) {
-                    double temp = bases[j - 1][r] / (right[r + 1] + left[j - r]);
-                    bases[j][r] = saved + (right[r + 1] * temp);
-                    saved = left[j - r] * temp;
+            // Initalize basis values
+            // Initialize zero-degree functs
+            for (uint32_t i = 0; i <= degree; ++i) {
+                if (u >= static_cast<double>(knots[span + i]) - std::numeric_limits<double>::epsilon() &&
+                    u < static_cast<double>(knots[span + i + 1]) - std::numeric_limits<double>::epsilon()) {
+                    bases[i][0] = 1.0;
                 }
-                bases[j][j] = saved;
+                else {
+                    bases[i][0] = 0.0;
+                }
+            }
+            std::vector<double> left(degree * 2), right(degree + 2);
+            for (uint8_t i = 0; i < degree * 2; ++i) {
+                left[i] = u - static_cast<double>(knots[span + degree - 1 - i]);
+            }
+            for (uint8_t j = 1; j <= degree; ++j) {
+                right[j] = static_cast<double>(knots[span + j]) - u;
+                bases[0][j] = 0.0;
+                for (uint8_t r = 0; r < degree; ++r) {
+                    double temp = bases[r][j - 1] / (right[r + 1] + left[j - r + degree - 2]);
+                    bases[r][j] = bases[r][j] + (right[r + 1] * temp);
+                    bases[r + 1][j] = left[j - r + degree - 2] * temp;
+                }
             }
             return bases;
+        }
+
+        // - https://en.wikipedia.org/wiki/Binomial_coefficient
+        // - ->bin(n, k) = (n * (n - 1) * ... * (n - k + 1) / (k * (k - 1) * ...
+        // * 1)
+        std::vector<std::vector<double>> BinomialCoefficients(uint32_t n,
+                                                              uint32_t k) {
+          std::vector<std::vector<double>> bin(n + 1,
+                                               std::vector<double>(k + 1, 1));
+          for (uint32_t i = 1; i <= n; ++i) {
+            for (uint32_t j = 1; j <= k; ++j) {
+              bin[i][j] = bin[i - 1][j - 1] + bin[i - 1][j];
+            }
+          }
+          return bin;
         }
     }
 }
