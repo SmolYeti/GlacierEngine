@@ -7,5 +7,8 @@ The Glacier Engine is the start of a game engine that will constantly be changin
 
 This is a project to practice and grow my Vulkan library and knowledge. Plan is for this to being a somewhat compitent game engine or etc, but we will see.
 
+Game engine code is mainly from Brendan Galea's 'Vulkan Game Engine Tutorial' series on Youtube. 
+NURBS coded is from 'The NURBS Book'.
+
 # To build on Windows
 Run the `build.bat` file
