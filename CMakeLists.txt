@@ -31,10 +31,16 @@ endif()
 include_directories(external)
 
 # If TINYOBJ_PATH not specified in .env.cmake, try fetching from git repo
-if (NOT TINYOBJ_PATH)
-  message(STATUS "TINYOBJ_PATH not specified in .env.cmake, using external/tinyobjloader")
-  set(TINYOBJ_PATH external/tinyobjloader)
-endif()
+#if (NOT TINYOBJ_PATH)
+#  message(STATUS "TINYOBJ_PATH not specified in .env.cmake, using external/tinyobjloader")
+#  set(TINYOBJ_PATH external/tinyobjloader)
+#endif()
+
+# External Dependencies
+file(GLOB_RECURSE EXTERNAL_DIR
+  ${PROJECT_SOURCE_DIR}/external/*.h
+  ${PROJECT_SOURCE_DIR}/vulkeng/*.hpp
+)
 
 configure_file(MainConfig.h.in MainConfig.h)
 
@@ -70,7 +76,7 @@ if (WIN32)
     ${PROJECT_SOURCE_DIR}/nurbs_cpp
     ${PROJECT_SOURCE_DIR}/bindings
     ${Vulkan_INCLUDE_DIRS}
-    ${TINYOBJ_PATH}
+    ${EXTERNAL_DIR}
     ${GLFW_INCLUDE_DIRS}
     ${GLM_PATH}
   )
@@ -83,7 +89,7 @@ elseif (UNIX)
     target_include_directories(${PROJECT_NAME}
     PUBLIC
       ${PROJECT_SOURCE_DIR}
-      ${TINYOBJ_PATH}
+      ${EXTERNAL_DIR}
     )
     target_link_libraries(${PROJECT_NAME} glfw ${Vulkan_LIBRARIES} imgui)
 endif()
@@ -124,6 +130,7 @@ add_executable(nurbs_tests
   tests/nc2_basis_tests.cpp
   tests/nc3_b_spline_tests.cpp
   tests/nc4_nurbs_tests.cpp
+  tests/nc5_knot_tests.cpp
 )
 
 target_include_directories(nurbs_tests PUBLIC

@@ -36,7 +36,7 @@ class VulkanDevice {
 #ifdef NDEBUG
     const bool enableValidationLayers = false;
 #else
-    // const bool enableValidationLayers = true;
+    //const bool enableValidationLayers = true;
     const bool enableValidationLayers = false;
 #endif
 

@@ -32,10 +32,10 @@ namespace nurbs {
         }
 
         void u_interval(glm::dvec2 interval) { u_interval_ = interval; }
-        glm::dvec2 u_interval() { return u_interval_; }
+        glm::dvec2 u_interval() const { return u_interval_; }
 
         void v_interval(glm::dvec2 interval) { v_interval_ = interval; }
-        glm::dvec2 v_interval() { return v_interval_; }
+        glm::dvec2 v_interval() const { return v_interval_; }
 
     protected:
         glm::dvec2 u_interval_;
