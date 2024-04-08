@@ -8,7 +8,9 @@
 
 namespace nurbs {
 class NURBSSurface : public Surface {
- public:
+public:
+  static constexpr double kTolerance = std::numeric_limits<double>::epsilon();
+
   NURBSSurface(uint32_t u_degree, uint32_t v_degree,
                std::vector<uint32_t> u_knots, std::vector<uint32_t> v_knots,
                std::vector<std::vector<glm::dvec4>> control_polygon,
@@ -21,6 +23,9 @@ class NURBSSurface : public Surface {
        uint32_t u_sample_count, uint32_t v_sample_count) const override;*/
   std::vector<std::vector<glm::dvec3>> Derivatives(
       glm::dvec2 uv, uint32_t max_derivative) const;
+
+  enum SurfaceDirection{kU_Dir, kV_Dir};
+  NURBSSurface KnotInsert(SurfaceDirection dir, uint32_t knot, uint32_t times);
 
  private:
   uint32_t u_degree_;

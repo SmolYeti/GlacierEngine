@@ -6,26 +6,22 @@
 namespace nurbs {
 
 BSplineSurface::BSplineSurface(
-    uint32_t u_degree, uint32_t v_degree, const std::vector<uint32_t>& u_knots,
-    const std::vector<uint32_t>& v_knots,
-    const std::vector<std::vector<glm::dvec3>>& control_polygon,
+    uint32_t u_degree, uint32_t v_degree, const std::vector<uint32_t> &u_knots,
+    const std::vector<uint32_t> &v_knots,
+    const std::vector<std::vector<glm::dvec3>> &control_polygon,
     glm::dvec2 u_interval, glm::dvec2 v_interval)
-    : Surface(u_interval, v_interval),
-      u_degree_(u_degree),
-      v_degree_(v_degree),
-      u_knots_(u_knots),
-      v_knots_(v_knots),
-      control_polygon_(control_polygon) {}
+    : Surface(u_interval, v_interval), u_degree_(u_degree), v_degree_(v_degree),
+      u_knots_(u_knots), v_knots_(v_knots), control_polygon_(control_polygon) {}
 
 // Chaper 3, ALGORITHM A3.5: SSurfacePoint(n,p,U,m,q,V,P,u,v,S) p103
 glm::dvec3 BSplineSurface::EvaluatePoint(glm::dvec2 uv) const {
-  uint32_t u_span = knots::FindSpan(u_degree_, uv.x, u_knots_);
+  uint32_t u_span = knots::FindSpanParam(u_degree_, u_knots_, uv.x, kTolerance);
   std::vector<double> u_bases =
-      knots::BasisFuns(u_span, uv.x, u_degree_, u_knots_);
+      knots::BasisFuns(u_span, uv.x, u_degree_, u_knots_, kTolerance);
   uint32_t u_ind = u_span - u_degree_;
-  uint32_t v_span = knots::FindSpan(v_degree_, uv.y, v_knots_);
+  uint32_t v_span = knots::FindSpanParam(v_degree_, v_knots_, uv.y, kTolerance);
   std::vector<double> v_bases =
-      knots::BasisFuns(v_span, uv.y, v_degree_, v_knots_);
+      knots::BasisFuns(v_span, uv.y, v_degree_, v_knots_, kTolerance);
   glm::dvec3 point{0, 0, 0};
   for (uint32_t i = 0; i <= v_degree_; ++i) {
     glm::dvec3 temp = {0.0, 0.0, 0.0};
@@ -38,8 +34,9 @@ glm::dvec3 BSplineSurface::EvaluatePoint(glm::dvec2 uv) const {
   return point;
 }
 
-std::vector<glm::dvec3> BSplineSurface::EvaluatePoints(
-    uint32_t u_sample_count, uint32_t v_sample_count) const {
+std::vector<glm::dvec3>
+BSplineSurface::EvaluatePoints(uint32_t u_sample_count,
+                               uint32_t v_sample_count) const {
   std::vector<glm::dvec3> points(u_sample_count * v_sample_count, {0, 0, 0});
   double u_div =
       (u_interval_.y - u_interval_.x) / static_cast<double>(u_sample_count - 1);
@@ -47,15 +44,17 @@ std::vector<glm::dvec3> BSplineSurface::EvaluatePoints(
       (v_interval_.y - v_interval_.x) / static_cast<double>(v_sample_count - 1);
   for (uint32_t u_i = 0; u_i < u_sample_count; ++u_i) {
     glm::dvec2 uv = {u_interval_.x + static_cast<double>(u_i) * u_div, 0};
-    uint32_t u_span = knots::FindSpan(u_degree_, uv.x, u_knots_);
+    uint32_t u_span =
+        knots::FindSpanParam(u_degree_, u_knots_, uv.x, kTolerance);
     std::vector<double> u_bases =
-        knots::BasisFuns(u_span, uv.x, u_degree_, u_knots_);
+        knots::BasisFuns(u_span, uv.x, u_degree_, u_knots_, kTolerance);
     uint32_t u_ind = u_span - u_degree_;
     for (uint32_t v_i = 0; v_i < v_sample_count; ++v_i) {
       uv.y = v_interval_.x + static_cast<double>(v_i) * v_div;
-      uint32_t v_span = knots::FindSpan(v_degree_, uv.y, v_knots_);
+      uint32_t v_span =
+          knots::FindSpanParam(v_degree_, v_knots_, uv.y, kTolerance);
       std::vector<double> v_bases =
-          knots::BasisFuns(v_span, uv.y, v_degree_, v_knots_);
+          knots::BasisFuns(v_span, uv.y, v_degree_, v_knots_, kTolerance);
       for (uint32_t i = 0; i <= v_degree_; ++i) {
         glm::dvec3 temp = {0.0, 0.0, 0.0};
         uint32_t v_ind = v_span - v_degree_ + i;
@@ -71,18 +70,18 @@ std::vector<glm::dvec3> BSplineSurface::EvaluatePoints(
 
 // Chaper 3, ALGORITHM A3.6: SurfaceDerivsA1g1(n, p, U, m, q, V, P, u, v, d,
 // SKL) p111
-std::vector<std::vector<glm::dvec3>> BSplineSurface::Derivative(
-    glm::dvec2 uv, uint32_t max_derivative) const {
+std::vector<std::vector<glm::dvec3>>
+BSplineSurface::Derivative(glm::dvec2 uv, uint32_t max_derivative) const {
   uint32_t max_deriv_u = std::min(u_degree_, max_derivative);
   uint32_t max_deriv_v = std::min(v_degree_, max_derivative);
   std::vector<std::vector<glm::dvec3>> derivs(max_derivative + 1);
-  for (auto& vec : derivs) {
+  for (auto &vec : derivs) {
     vec = std::vector<glm::dvec3>(max_derivative + 1, {0, 0, 0});
   }
-  uint32_t u_span = knots::FindSpan(u_degree_, uv.x, u_knots_);
+  uint32_t u_span = knots::FindSpanParam(u_degree_, u_knots_, uv.x, kTolerance);
   std::vector<std::vector<double>> u_derivs =
       knots::DersBasisFuns(u_span, uv.x, u_degree_, max_deriv_u, u_knots_);
-  uint32_t v_span = knots::FindSpan(v_degree_, uv.y, v_knots_);
+  uint32_t v_span = knots::FindSpanParam(v_degree_, v_knots_, uv.y, kTolerance);
   std::vector<std::vector<double>> v_derivs =
       knots::DersBasisFuns(v_span, uv.y, v_degree_, max_deriv_v, v_knots_);
   for (uint32_t i = 0; i <= max_deriv_u; ++i) {
@@ -126,11 +125,11 @@ BSplineSurface::SurfaceDerivCpts(uint32_t d, uint32_t r_start, uint32_t r_end,
   uint32_t s_total = s_end - s_start;
   std::vector<std::vector<std::vector<std::vector<glm::dvec3>>>> PKL;
   PKL.resize(du + 1);
-  for (auto& vec_0 : PKL) {
+  for (auto &vec_0 : PKL) {
     vec_0.resize(dv + 1);
-    for (auto& vec_1 : vec_0) {
+    for (auto &vec_1 : vec_0) {
       vec_1.resize(r_total + 1);
-      for (auto& vec_2 : vec_1) {
+      for (auto &vec_2 : vec_1) {
         vec_2 = std::vector<glm::dvec3>(s_total + 1, {0.0, 0.0, 0.0});
       }
     }
@@ -173,10 +172,10 @@ BSplineSurface::SurfaceDerivCpts(uint32_t d, uint32_t r_start, uint32_t r_end,
 }
 
 // Chapter 3: ALGORITHM A3.8: SurfaceDerivsA1g2(n,p,U,m,q,V,P,u,v,d,SKL) p115
-std::vector<std::vector<glm::dvec3>> BSplineSurface::Derivatives2(
-    glm::dvec2 uv, uint32_t max_derivative) const {
+std::vector<std::vector<glm::dvec3>>
+BSplineSurface::Derivatives2(glm::dvec2 uv, uint32_t max_derivative) const {
   std::vector<std::vector<glm::dvec3>> derivatives(max_derivative + 1);
-  for (std::vector<glm::dvec3>& vec_d : derivatives) {
+  for (std::vector<glm::dvec3> &vec_d : derivatives) {
     vec_d.resize(max_derivative + 1);
   }
   uint32_t du = std::min(max_derivative, u_degree_);
@@ -192,10 +191,10 @@ std::vector<std::vector<glm::dvec3>> BSplineSurface::Derivatives2(
     }
   }
 
-  uint32_t u_span = knots::FindSpan(u_degree_, uv.x, u_knots_);
+  uint32_t u_span = knots::FindSpanParam(u_degree_, u_knots_, uv.x, kTolerance);
   std::vector<std::vector<double>> u_basis =
       knots::AllBasisFuns(u_span, uv.x, u_degree_, u_knots_);
-  uint32_t v_span = knots::FindSpan(v_degree_, uv.y, v_knots_);
+  uint32_t v_span = knots::FindSpanParam(v_degree_, v_knots_, uv.y, kTolerance);
   std::vector<std::vector<double>> v_basis =
       knots::AllBasisFuns(v_span, uv.y, v_degree_, v_knots_);
 
@@ -218,4 +217,4 @@ std::vector<std::vector<glm::dvec3>> BSplineSurface::Derivatives2(
 
   return derivatives;
 }
-}  // namespace nurbs
+} // namespace nurbs

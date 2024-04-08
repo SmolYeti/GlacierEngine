@@ -5,7 +5,9 @@
 namespace nurbs {
 // Nonrational B-Spline Surface
 class BSplineSurface : public Surface {
- public:
+public:
+  static constexpr double kTolerance = std::numeric_limits<double>::epsilon();
+
   BSplineSurface(uint32_t u_degree, uint32_t v_degree,
                  const std::vector<uint32_t> &u_knots,
                  const std::vector<uint32_t> &v_knots,

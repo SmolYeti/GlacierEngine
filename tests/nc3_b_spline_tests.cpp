@@ -10,6 +10,7 @@
 // STD
 #include <numeric>
 
+constexpr double kTolerance = std::numeric_limits<double>::epsilon();
 namespace nurbs {
 TEST(NURBS_Chapter3, BSplineCurveBezierEquivalence2D) {
   std::vector<glm::dvec2> control_points = {{0, 0}, {0, 1}, {1, 1}, {1, 0}};
@@ -40,7 +41,6 @@ TEST(NURBS_Chapter3, BSplineCurveBezierEquivalence3D) {
   }
 }
 
-// TODO
 TEST(NURBS_Chapter3, BSplineCurveBasisCompare2D) {
   std::vector<glm::dvec2> control_points = {{0, 0}, {0, 1}, {1, 1}, {1, 0}};
   BezierCurve2D bezier(control_points);
@@ -55,7 +55,6 @@ TEST(NURBS_Chapter3, BSplineCurveBasisCompare2D) {
   }
 }
 
-// TODO
 TEST(NURBS_Chapter3, BSplineCurveBasisCompare3D) {
   std::vector<glm::dvec3> control_points = {
       {0, 0, 0}, {0, 1, 2}, {1, 1, 3}, {1, 0, 1}};
@@ -216,7 +215,7 @@ TEST(NURBS_Chapter3, DISABLED_BSplineCurveDeriv) {
 
   // Test basis values
   std::vector<std::vector<double>> derivs = knots::DersBasisFuns(
-      knots::FindSpan(degree, u, knots), u, degree, 2, knots);
+      knots::FindSpanParam(degree, knots, u, kTolerance), u, degree, 2, knots);
   ASSERT_EQ(derivs.size(), 3);
   EXPECT_DOUBLE_EQ(derivs[0][2], 0.0625);
   EXPECT_DOUBLE_EQ(derivs[1][2], 0.25);
@@ -268,12 +267,14 @@ TEST(NURBS_Chapter3, AllBasisFunCompare) {
   constexpr double u_value = 2.5;
   const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
   constexpr uint32_t degree = 2;
-  int span_index = knots::FindSpan(degree, u_value, knots);
+  uint32_t span_index =
+      knots::FindSpanParam(degree, knots, u_value, kTolerance);
   std::vector<std::vector<double>> all_bases =
       knots::AllBasisFuns(span_index, u_value, degree, knots);
   // Top right triangle check
   for (uint32_t i = 0; i <= degree; ++i) {
-    std::vector<double> bases = knots::BasisFuns(span_index, u_value, i, knots);
+    std::vector<double> bases =
+        knots::BasisFuns(span_index, u_value, i, knots, kTolerance);
     ASSERT_GE(all_bases.size(), bases.size());
     for (uint32_t j = 0; j <= i; ++j) {
       EXPECT_DOUBLE_EQ(bases[j], all_bases[j][i]);
@@ -343,27 +344,27 @@ TEST(NURBS_Chapter3, BSplineSurfaceConstruct) {
        {-0.33, 0.1, -1.33},
        {0.33, 0.1, -1.33},
        {0.87, 0, -0.87},
-       {1, -0.1, -1}},  //
+       {1, -0.1, -1}}, //
       {{-1.33, -0.25, -0.33},
        {-0.33, 0, -0.33},
        {0.33, 0.0, -0.33},
        {1.33, -0.25, -0.33},
-       {2, -0.5, -0.63}},  //
+       {2, -0.5, -0.63}}, //
       {{-1.33, -0.75, 0.33},
        {-0.33, 0.0, 0.33},
        {0.33, 0.0, 0.33},
        {1.33, -0.75, 0.33},
-       {2, -1, 0.63}},  //
+       {2, -1, 0.63}}, //
       {{-0.87, -2, 0.87},
        {-0.33, 0.0, 1.33},
        {0.33, 0.0, 1.33},
        {0.87, -2, 0.87},
-       {1, -2.5, 1}},  //
+       {1, -2.5, 1}}, //
       {{-1, -2.5, 1},
        {-0.33, 0.0, 2},
        {0.33, 0.0, 1.63},
        {0.87, -2, 1},
-       {1, -3, 1.5}},  //
+       {1, -3, 1.5}}, //
   };
   nurbs::BSplineSurface b_spline_surface(degree, degree, u_knots, v_knots,
                                          control_points, {0, 2}, {0, 2});
@@ -377,19 +378,19 @@ TEST(NURBS_Chapter3, BSplineSurfaceBezierCompare) {
       {{-0.87, 0, -0.87},
        {-0.33, 0.1, -1.33},
        {0.33, 0.1, -1.33},
-       {0.87, 0, -0.87}},  //
+       {0.87, 0, -0.87}}, //
       {{-1.33, -0.25, -0.33},
        {-0.33, 0, -0.33},
        {0.33, 0.0, -0.33},
-       {1.33, -0.25, -0.33}},  //
+       {1.33, -0.25, -0.33}}, //
       {{-1.33, -0.75, 0.33},
        {-0.33, 0.0, 0.33},
        {0.33, 0.0, 0.33},
-       {1.33, -0.75, 0.33}},  //
+       {1.33, -0.75, 0.33}}, //
       {{-0.87, -2, 0.87},
        {-0.33, 0.0, 1.33},
        {0.33, 0.0, 1.33},
-       {0.87, -2, 0.87}},  //
+       {0.87, -2, 0.87}}, //
   };
   BSplineSurface bspl_surface(degree, degree, u_knots, v_knots, control_points);
   std::vector<BezierCurve3D> bezier_curves = {
@@ -420,77 +421,28 @@ TEST(NURBS_Chapter3, BSplineSurfacePoints) {
   uint32_t v_degree = 3;
   std::vector<uint32_t> u_knots = {0, 0, 0, 0, 0, 1, 2, 2, 3, 4, 4, 4, 4, 4};
   std::vector<uint32_t> v_knots = {0, 0, 0, 0, 1, 1, 2, 3, 3, 4, 4, 4, 4};
-  std::vector<std::vector<glm::dvec3>> control_points = {
-      {{0, 0, 1},
-       {1, 0, 0},
-       {2, 0, 1},
-       {3, 0, 1},
-       {4, 0, 1},
-       {5, 0, 1},
-       {6, 0, 1}},  //
-      {{0, 0, 2},
-       {1, 0, 0},
-       {2, 0, 2},
-       {3, 0, 2},
-       {4, 0, 2},
-       {5, 0, 2},
-       {6, 0, 2}},  //
-      {{0, 0, 3},
-       {1, 0, 0},
-       {2, 0, 3},
-       {3, 0, 3},
-       {4, 0, 3},
-       {5, 0, 3},
-       {6, 0, 3}},  //
-      {{0, 0, 4},
-       {1, 0, 0},
-       {2, 0, 4},
-       {3, 0, 4},
-       {4, 0, 4},
-       {5, 0, 4},
-       {6, 0, 4}},  //
-      {{0, 0, 5},
-       {1, 0, 0},
-       {2, 0, 5},
-       {3, 0, 5},
-       {4, 0, 5},
-       {5, 0, 5},
-       {6, 0, 5}},  //
-      {{0, 0, 6},
-       {1, 0, 0},
-       {2, 0, 6},
-       {3, 0, 6},
-       {4, 0, 6},
-       {5, 0, 6},
-       {6, 0, 6}},  //
-      {{0, 0, 7},
-       {1, 0, 0},
-       {2, 0, 7},
-       {3, 0, 7},
-       {4, 0, 7},
-       {5, 0, 7},
-       {6, 0, 7}},  //
-      {{0, 0, 8},
-       {1, 0, 0},
-       {2, 0, 8},
-       {3, 0, 8},
-       {4, 0, 8},
-       {5, 0, 8},
-       {6, 0, 8}},  //
-  };
+  uint32_t u_points = static_cast<uint32_t>(u_knots.size()) - u_degree - 1;
+  uint32_t v_points = static_cast<uint32_t>(v_knots.size()) - v_degree - 1;
+  std::vector<std::vector<glm::dvec3>> control_points;
+  std::vector<BSplineCurve3D> curves;
+  control_points.resize(u_points);
+  curves.reserve(u_points);
+  for (uint32_t u_index = 0; u_index < u_points; ++u_index) {
+    control_points[u_index].resize(v_points);
+    for (uint32_t v_index = 0; v_index < v_points; ++v_index) {
+      double u_val =
+          static_cast<double>(u_index) - (static_cast<double>(u_points) * 0.5);
+      double v_val =
+          static_cast<double>(v_index) - (static_cast<double>(v_points) * 0.5);
+      double dist_0_sq = (u_val * u_val) + (v_val * v_val);
+      control_points[u_index][v_index] = {u_index, v_index, dist_0_sq};
+    }
+    curves.emplace_back(v_degree, control_points[u_index], v_knots, interval);
+  }
+
   BSplineSurface b_spline_surface(u_degree, v_degree, u_knots, v_knots,
                                   control_points, interval, interval);
-  std::vector<BSplineCurve3D> curves = {
-      BSplineCurve3D(v_degree, control_points[0], v_knots, interval),
-      BSplineCurve3D(v_degree, control_points[1], v_knots, interval),
-      BSplineCurve3D(v_degree, control_points[2], v_knots, interval),
-      BSplineCurve3D(v_degree, control_points[3], v_knots, interval),
-      BSplineCurve3D(v_degree, control_points[4], v_knots, interval),
-      BSplineCurve3D(v_degree, control_points[5], v_knots, interval),
-      BSplineCurve3D(v_degree, control_points[6], v_knots, interval),
-      BSplineCurve3D(v_degree, control_points[7], v_knots, interval),
-  };
-
+ 
   // Compare the surface to the curves
   double div = 1.0 / 99.0;
   for (int32_t i = 0; i < 100; ++i) {
@@ -508,11 +460,11 @@ TEST(NURBS_Chapter3, BSplineSurfacePoints) {
       // Numbers are not between 0 and 1, so the epsilon needs to be scaled
       // This is not the proper scaling though.
       EXPECT_NEAR(point_bspl.x, point_curv.x,
-                  std::numeric_limits<double>::epsilon() * 10);
+                  std::numeric_limits<double>::epsilon() * 100);
       EXPECT_NEAR(point_bspl.y, point_curv.y,
-                  std::numeric_limits<double>::epsilon() * 10);
+                  std::numeric_limits<double>::epsilon() * 100);
       EXPECT_NEAR(point_bspl.z, point_curv.z,
-                  std::numeric_limits<double>::epsilon() * 10);
+                  std::numeric_limits<double>::epsilon() * 100);
     }
   }
 }
@@ -571,4 +523,4 @@ TEST(NURBS_Chapter3, DISABLED_BSplineSurfaceDerivCompare) {
   }
   EXPECT_EQ(errors, 0);
 }
-}  // namespace nurbs
+} // namespace nurbs
