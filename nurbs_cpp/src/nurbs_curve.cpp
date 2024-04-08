@@ -16,7 +16,7 @@ NURBSCurve2D::NURBSCurve2D(uint32_t degree,
                            std::vector<uint32_t> knots, glm::dvec2 interval)
     : Curve2D(interval), degree_(degree), control_points_(control_points),
       knots_(knots) {
-  internal_interval_ = 1.0;
+  internal_interval_ = interval.y - interval.x;
   if (!knots_.empty()) {
     internal_interval_ = static_cast<double>(knots[knots.size() - 1]);
   }
@@ -101,7 +101,7 @@ std::vector<glm::dvec2> NURBSCurve2D::EvaluateDerivative(double param,
     weights.push_back(cpt.z);
   }
   BSplineCurve2D b_spline(degree_, bspl_cpts, knots_, interval_);
-  auto a_derivs = b_spline.Derivatives(in_param, d);
+  auto a_derivs = b_spline.Derivatives(param, d);
 
   std::vector<std::vector<double>> bin = knots::BinomialCoefficients(d, d);
   // Build the wieght derivatives
@@ -308,7 +308,7 @@ std::vector<glm::dvec3> NURBSCurve3D::EvaluateDerivative(double param,
     weights.push_back(cpt.w);
   }
   BSplineCurve3D b_spline(degree_, bspl_cpts, knots_, interval_);
-  auto a_derivs = b_spline.Derivatives(in_param, d);
+  auto a_derivs = b_spline.Derivatives(param, d);
 
   std::vector<std::vector<double>> bin = knots::BinomialCoefficients(d, d);
   // Build the wieght derivatives

@@ -19,8 +19,7 @@ BSplineCurve2D::BSplineCurve2D(uint32_t degree,
       knots_(knots) {
   internal_interval_ = interval.y - interval.x;
   if (!knots_.empty()) {
-    internal_interval_ = static_cast<double>(knots[knots.size() - 1]) -
-                         static_cast<double>(knots[0]);
+    internal_interval_ = static_cast<double>(knots[knots.size() - 1]);
   }
   if (knots.size() != control_points.size() + degree + 1) {
     throw std::exception("Invalid BSplineCruve2D");
@@ -131,8 +130,7 @@ BSplineCurve3D::BSplineCurve3D(uint32_t degree,
       knots_(knots) {
   internal_interval_ = interval.y - interval.x;
   if (!knots_.empty()) {
-    internal_interval_ = static_cast<double>(knots[knots.size() - 1]) -
-                         static_cast<double>(knots[0]);
+    internal_interval_ = static_cast<double>(knots[knots.size() - 1]);
   }
   if (knots.size() != control_points.size() + degree + 1) {
     throw std::exception("Invalid BSplineCruve3D");
