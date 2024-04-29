@@ -10,7 +10,7 @@ public:
   static constexpr double kTolerance = std::numeric_limits<double>::epsilon();
 
   NURBSCurve2D(uint32_t degree, std::vector<glm::dvec3> control_points,
-               std::vector<uint32_t> knots, glm::dvec2 interval = {0.0, 1.0});
+               std::vector<double> knots, glm::dvec2 interval = {0.0, 1.0});
 
   glm::dvec2 EvaluateCurve(double parameter) const override;
 
@@ -24,7 +24,7 @@ public:
   // - time: The number of times to insert the knot
   // Returns:
   // A copy of the curve with the knots inserted
-  NURBSCurve2D KnotInsertion(uint32_t knot, uint32_t times) const;
+  NURBSCurve2D KnotInsertion(double knot, uint32_t times) const;
 
   // Method to get a point on the curve by intersecting knots to corner cut the curve
   // Parameters:
@@ -33,13 +33,12 @@ public:
   // A point on the curve
   glm::dvec2 PointByCornerCut(double parameter) const;
 
-  const std::vector<uint32_t> &knots() const { return knots_; }
+  const std::vector<double> &knots() const { return knots_; }
 
 private:
   uint32_t degree_;
-  std::vector<uint32_t> knots_;
+  std::vector<double> knots_;
   std::vector<glm::dvec3> control_points_;
-  double internal_interval_;
 };
 
 class NURBSCurve3D : public Curve3D {
@@ -47,7 +46,7 @@ public:
   static constexpr double kTolerance = std::numeric_limits<double>::epsilon();
 
   NURBSCurve3D(uint32_t degree, std::vector<glm::dvec4> control_points,
-               std::vector<uint32_t> knots, glm::dvec2 interval = {0.0, 1.0});
+               std::vector<double> knots, glm::dvec2 interval = {0.0, 1.0});
 
   glm::dvec3 EvaluateCurve(double parameter) const override;
 
@@ -61,7 +60,7 @@ public:
   // - time: The number of times to insert the knot
   // Returns:
   // A copy of the curve with the knots inserted
-  NURBSCurve3D KnotInsertion(uint32_t knot, uint32_t times) const;
+  NURBSCurve3D KnotInsertion(double knot, uint32_t times) const;
 
   // Method to get a point on the curve by intersecting knots to corner cut the
   // curve Parameters:
@@ -70,12 +69,11 @@ public:
   // A point on the curve
   glm::dvec3 PointByCornerCut(double parameter) const;
 
-  const std::vector<uint32_t> &knots() const { return knots_; }
+  const std::vector<double> &knots() const { return knots_; }
 
 private:
   uint32_t degree_;
-  std::vector<uint32_t> knots_;
+  std::vector<double> knots_;
   std::vector<glm::dvec4> control_points_;
-  double internal_interval_;
 };
 } // namespace nurbs

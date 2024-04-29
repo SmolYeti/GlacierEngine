@@ -34,22 +34,22 @@ uint32_t FindSpanKnot(uint32_t degree, const std::vector<uint32_t> &knots,
   return mid;
 }
 
-uint32_t FindSpanParam(uint32_t degree, const std::vector<uint32_t> &knots,
+uint32_t FindSpanParam(uint32_t degree, const std::vector<double> &knots,
                        double param, double tolerance) {
   uint32_t n = static_cast<uint32_t>(knots.size()) - degree - 2;
-  if (param >= static_cast<double>(knots[n + 1]) - tolerance) {
+  if (param >= knots[n + 1] - tolerance) {
     return n;
   }
-  if (param <= static_cast<double>(knots[degree]) + tolerance) {
+  if (param <= knots[degree] + tolerance) {
     return degree;
   }
   uint32_t low = degree;
   uint32_t high = n + 1;
   uint32_t mid = (low + high) / 2;
-  while ((param < static_cast<double>(knots[mid]) - tolerance ||
-          param >= static_cast<double>(knots[mid + 1]) - tolerance) &&
-         low < high) {
-    if (param < static_cast<double>(knots[mid]) - tolerance) {
+  while (
+      (param < knots[mid] - tolerance || param >= knots[mid + 1] - tolerance) &&
+      low < high) {
+    if (param < knots[mid] - tolerance) {
       high = mid;
     } else {
       low = mid;
@@ -86,13 +86,13 @@ uint32_t FindStartKnot(uint32_t degree, const std::vector<uint32_t> &knots,
   return mid;
 }
 
-uint32_t FindStartParam(uint32_t degree, const std::vector<uint32_t> &knots,
+uint32_t FindStartParam(uint32_t degree, const std::vector<double> &knots,
                         double u, double tolerance) {
   uint32_t n = static_cast<uint32_t>(knots.size()) - degree - 1;
-  if (u >= static_cast<double>(knots[n + 1]) - tolerance) {
+  if (u >= knots[n + 1] - tolerance) {
     return n;
   }
-  if (u <= static_cast<double>(knots[degree]) + tolerance) {
+  if (u <= knots[degree] + tolerance) {
     return 0;
   }
   uint32_t low = degree + 1;
@@ -100,12 +100,11 @@ uint32_t FindStartParam(uint32_t degree, const std::vector<uint32_t> &knots,
   uint32_t mid = (low + high) / 2;
   // The final u value should be less than or equal to mid + 1, and greater than
   // mid - 1
-  while (!(u > static_cast<double>(knots[mid - 1]) + tolerance &&
-           u <= static_cast<double>(knots[mid]) + tolerance) &&
+  while (!(u > knots[mid - 1] + tolerance && u <= knots[mid] + tolerance) &&
          low < high) {
-    if (u <= static_cast<double>(knots[mid]) + tolerance) {
+    if (u <= knots[mid] + tolerance) {
       high = mid;
-    } else if (u >= static_cast<double>(knots[mid + 1]) - tolerance) {
+    } else if (u >= knots[mid + 1] - tolerance) {
       low = mid + 1;
     } else {
       low = mid;
@@ -122,21 +121,20 @@ uint32_t FindStartParam(uint32_t degree, const std::vector<uint32_t> &knots,
 // U - Knot vector
 // N - Returned basis vector
 std::vector<double> BasisFuns(uint32_t span, double u, uint32_t degree,
-                              const std::vector<uint32_t> &knots,
+                              const std::vector<double> &knots,
                               double tolerance) {
-  u = std::min(u, static_cast<double>(knots[knots.size() - 1]));
+  u = std::min(u, knots[knots.size() - 1]);
   std::vector<double> bases(degree + 1, 0);
   if (span >= static_cast<uint32_t>(knots.size()) - degree - 2 ||
-      (u >= static_cast<double>(knots[span]) - tolerance &&
-       u < static_cast<double>(knots[span + 1]) - tolerance)) {
+      (u >= knots[span] - tolerance && u < knots[span + 1] - tolerance)) {
     bases[0] = 1.0;
   } else {
     bases[0] = 0.0;
   }
   std::vector<double> left(degree + 1), right(degree + 1);
   for (uint32_t j = 1; j <= degree; ++j) {
-    left[j] = u - static_cast<double>(knots[span + 1 - j]);
-    right[j] = static_cast<double>(knots[span + j]) - u;
+    left[j] = u - knots[span + 1 - j];
+    right[j] = knots[span + j] - u;
     double saved = 0.0;
     for (uint8_t r = 0; r < j; ++r) {
       double temp = bases[r] / (right[r + 1] + left[j - r]);
@@ -154,12 +152,12 @@ std::vector<double> BasisFuns(uint32_t span, double u, uint32_t degree,
 // ders - Returned basis derivative vector
 std::vector<std::vector<double>>
 DersBasisFuns(uint32_t i, double u, uint32_t degree, uint32_t n,
-              const std::vector<uint32_t> &knots) {
+              const std::vector<double> &knots) {
   if (knots.empty()) {
     return {};
   }
 
-  u = std::min(u, static_cast<double>(knots[knots.size() - 1]));
+  u = std::min(u, knots[knots.size() - 1]);
 
   if (i + degree == static_cast<uint32_t>(knots.size() - 1)) {
     std::vector<std::vector<double>> derivatives(n + 1);
@@ -179,8 +177,8 @@ DersBasisFuns(uint32_t i, double u, uint32_t degree, uint32_t n,
   ndu[0][0] = 1.0;
   std::vector<double> left(degree + 1), right(degree + 1);
   for (uint32_t j = 1; j <= degree; ++j) {
-    left[j] = u - static_cast<double>(knots[i + 1 - j]);
-    right[j] = static_cast<double>(knots[i + j]) - u;
+    left[j] = u - knots[i + 1 - j];
+    right[j] = knots[i + j] - u;
 
     double saved = 0.0;
     for (uint32_t r = 0; r < j; ++r) {
@@ -260,26 +258,21 @@ DersBasisFuns(uint32_t i, double u, uint32_t degree, uint32_t n,
 // U - Knot vector
 // i - ith basis value
 // u - input value along the curve/knot vector
-double OneBasisFun(uint32_t degree, const std::vector<uint32_t> &knots,
+double OneBasisFun(uint32_t degree, const std::vector<double> &knots,
                    uint32_t i, double u) {
   u = std::min(u, static_cast<double>(knots[knots.size() - 1]));
-  if ((i == 0 && u <= static_cast<double>(knots[0]) +
-                          std::numeric_limits<double>::epsilon()) ||
+  if ((i == 0 && u <= knots[0] + std::numeric_limits<double>::epsilon()) ||
       (i == (static_cast<uint32_t>(knots.size()) - degree - 2) &&
-       u >= static_cast<double>(knots[knots.size() - 1]) -
-                std::numeric_limits<double>::epsilon())) {
+       u >= knots[knots.size() - 1] - std::numeric_limits<double>::epsilon())) {
     return 1.0;
   }
-  if (u < static_cast<double>(knots[i]) ||
-      u >= static_cast<double>(knots[i + degree + 1])) {
+  if (u < knots[i] || u >= knots[i + degree + 1]) {
     return 0.0;
   }
   std::vector<double> N(degree + 1);
   for (uint32_t j = 0; j <= degree; ++j) {
-    if (u >= static_cast<double>(knots[i + j]) -
-                 std::numeric_limits<double>::epsilon() &&
-        u < static_cast<double>(knots[i + j + 1]) -
-                std::numeric_limits<double>::epsilon()) {
+    if (u >= knots[i + j] - std::numeric_limits<double>::epsilon() &&
+        u < knots[i + j + 1] - std::numeric_limits<double>::epsilon()) {
       N[j] = 1.0;
     } else {
       N[j] = 0.0;
@@ -288,12 +281,11 @@ double OneBasisFun(uint32_t degree, const std::vector<uint32_t> &knots,
   for (uint32_t k = 1; k <= degree; ++k) {
     double saved = 0.0;
     if (std::abs(N[0]) > std::numeric_limits<double>::epsilon()) {
-      saved = ((u - static_cast<double>(knots[i])) * N[0]) /
-              (static_cast<double>(knots[i + k] - knots[i]));
+      saved = ((u - knots[i]) * N[0]) / (knots[i + k] - knots[i]);
     }
     for (uint32_t j = 0; j < degree + 1 - k; ++j) {
-      double u_left = static_cast<double>(knots[i + j + 1]);
-      double u_right = static_cast<double>(knots[i + j + k + 1]);
+      double u_left = knots[i + j + 1];
+      double u_right = knots[i + j + k + 1];
       if (std::abs(N[j + 1]) <= std::numeric_limits<double>::epsilon()) {
         N[j] = saved;
         saved = 0.0;
@@ -316,11 +308,11 @@ double OneBasisFun(uint32_t degree, const std::vector<uint32_t> &knots,
 // n - nth derivative calculated(max)
 // ders - Returned basis derivative vector for only the ith basis
 std::vector<double> DersOneBasisFun(uint32_t degree,
-                                    const std::vector<uint32_t> &knots,
+                                    const std::vector<double> &knots,
                                     uint32_t i, double u, uint32_t n) {
-  u = std::min(u, static_cast<double>(knots[knots.size() - 1]));
+  u = std::min(u, knots[knots.size() - 1]);
   // Local property
-  if (u < static_cast<double>(knots[i]) - std::numeric_limits<double>::epsilon() ||
+  if (u < knots[i] - std::numeric_limits<double>::epsilon() ||
                 static_cast<size_t>(i + degree + 1) >= knots.size() /*||
                 u >= static_cast<double>(knots[i + degree + 1]) - std::numeric_limits<double>::epsilon()*/) {
     return std::vector<double>(n + 1, 0.0);
@@ -332,10 +324,8 @@ std::vector<double> DersOneBasisFun(uint32_t degree,
 
   // Initialize zero-degree functs
   for (uint32_t j = 0; j <= degree; ++j) {
-    if (u >= static_cast<double>(knots[i + j]) -
-                 std::numeric_limits<double>::epsilon() &&
-        u < static_cast<double>(knots[i + j + 1]) -
-                std::numeric_limits<double>::epsilon()) {
+    if (u >= knots[i + j] - std::numeric_limits<double>::epsilon() &&
+        u < knots[i + j + 1] - std::numeric_limits<double>::epsilon()) {
       N[j][0] = 1.0;
     } else {
       N[j][0] = 0.0;
@@ -346,12 +336,11 @@ std::vector<double> DersOneBasisFun(uint32_t degree,
   for (uint32_t k = 1; k <= degree; ++k) {
     double saved = 0.0;
     if (std::abs(N[0][k - 1]) > std::numeric_limits<double>::epsilon()) {
-      saved = ((u - static_cast<double>(knots[i])) * N[0][k - 1]) /
-              (static_cast<double>(knots[i + k] - knots[i]));
+      saved = ((u - knots[i]) * N[0][k - 1]) / (knots[i + k] - knots[i]);
     }
     for (uint32_t j = 0; j < degree + 1 - k; ++j) {
-      double left = static_cast<double>(knots[i + j + 1]);
-      double right = static_cast<double>(knots[i + j + k + 1]);
+      double left = knots[i + j + 1];
+      double right = knots[i + j + k + 1];
       if (std::abs(N[j + 1][k - 1]) <= std::numeric_limits<double>::epsilon()) {
         N[j][k] = saved;
         saved = 0.0;
@@ -376,14 +365,13 @@ std::vector<double> DersOneBasisFun(uint32_t degree,
     for (uint32_t jj = 1; jj <= k; ++jj) {
       double saved = 0.0;
       if (std::abs(ND[0]) > std::numeric_limits<double>::epsilon()) {
-        saved = ND[0] /
-                (static_cast<double>(knots[i + degree + jj - k] - knots[i]));
+        saved = ND[0] / (knots[i + degree + jj - k] - knots[i]);
       }
       for (uint32_t j = 0; j < k + 1 - jj; ++j) {
-        double left = static_cast<double>(knots[i + j + 1]);
-        double right = static_cast<double>(knots[knots.size() - 1]);
+        double left = knots[i + j + 1];
+        double right = knots[knots.size() - 1];
         if (static_cast<size_t>(i + j + degree + jj + 1) < knots.size()) {
-          right = static_cast<double>(knots[i + j + degree + jj + 1]);
+          right = knots[i + j + degree + jj + 1];
         }
         if (std::abs(ND[j + 1]) <= std::numeric_limits<double>::epsilon()) {
           ND[j] = static_cast<double>(degree + jj - k) * saved;
@@ -415,8 +403,8 @@ std::vector<double> DersOneBasisFun(uint32_t degree,
 // This has not been tested or used, Though it likely doesn't work
 std::vector<std::vector<double>>
 AllBasisFuns(uint32_t span, double u, uint32_t degree,
-             const std::vector<uint32_t> &knots) {
-  u = std::min(u, static_cast<double>(knots[knots.size() - 1]));
+             const std::vector<double> &knots) {
+  u = std::min(u, knots[knots.size() - 1]);
   std::vector<std::vector<double>> bases(degree + 1);
   for (auto &vect : bases) {
     vect.resize(degree + 1, 0);
@@ -424,10 +412,8 @@ AllBasisFuns(uint32_t span, double u, uint32_t degree,
   // Initalize basis values
   // Initialize zero-degree functs
   for (uint32_t i = 0; i <= degree; ++i) {
-    if (u >= static_cast<double>(knots[span + i]) -
-                 std::numeric_limits<double>::epsilon() &&
-        u < static_cast<double>(knots[span + i + 1]) -
-                std::numeric_limits<double>::epsilon()) {
+    if (u >= knots[span + i] - std::numeric_limits<double>::epsilon() &&
+        u < knots[span + i + 1] - std::numeric_limits<double>::epsilon()) {
       bases[i][0] = 1.0;
     } else {
       bases[i][0] = 0.0;
@@ -435,10 +421,10 @@ AllBasisFuns(uint32_t span, double u, uint32_t degree,
   }
   std::vector<double> left(degree * 2), right(degree + 2);
   for (uint8_t i = 0; i < degree * 2; ++i) {
-    left[i] = u - static_cast<double>(knots[span + degree - 1 - i]);
+    left[i] = u - knots[span + degree - 1 - i];
   }
   for (uint8_t j = 1; j <= degree; ++j) {
-    right[j] = static_cast<double>(knots[span + j]) - u;
+    right[j] = knots[span + j] - u;
     bases[0][j] = 0.0;
     for (uint8_t r = 0; r < degree; ++r) {
       double temp = bases[r][j - 1] / (right[r + 1] + left[j - r + degree - 2]);
@@ -482,7 +468,7 @@ uint32_t MultiplicityKnotU(int32_t degree, const std::vector<uint32_t> &knots,
   return mult;
 }
 
-uint32_t MultiplicityParam(int32_t degree, const std::vector<uint32_t> &knots,
+uint32_t MultiplicityParam(int32_t degree, const std::vector<double> &knots,
                            double param, double tolerance) {
   uint32_t mult = 0;
   auto index = knots::FindStartParam(degree, knots, param, tolerance);

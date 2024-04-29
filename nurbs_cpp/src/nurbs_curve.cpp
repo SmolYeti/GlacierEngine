@@ -4,21 +4,14 @@
 #include "include/knot_utility_functions.hpp"
 
 namespace nurbs {
-namespace {
-double CorrectParameter(double param, double internal_scale,
-                        glm::dvec2 interval) {
-  double interval_scale = interval.y - interval.x;
-  return ((param / interval_scale) + interval.x) * internal_scale;
-}
-} // namespace
 NURBSCurve2D::NURBSCurve2D(uint32_t degree,
                            std::vector<glm::dvec3> control_points,
-                           std::vector<uint32_t> knots, glm::dvec2 interval)
+                           std::vector<double> knots, glm::dvec2 interval)
     : Curve2D(interval), degree_(degree), control_points_(control_points),
       knots_(knots) {
-  internal_interval_ = interval.y - interval.x;
   if (!knots_.empty()) {
-    internal_interval_ = static_cast<double>(knots[knots.size() - 1]);
+    internal_interval_ = {static_cast<double>(knots[0]),
+                          static_cast<double>(knots[knots.size() - 1])};
   }
 
   if (knots.size() != control_points.size() + degree + 1) {
@@ -34,7 +27,7 @@ glm::dvec2 NURBSCurve2D::EvaluateCurve(double param) const {
   if (param > interval_.y) {
     param = interval_.y;
   }
-  double in_param = CorrectParameter(param, internal_interval_, interval_);
+  double in_param = InternalParameter(param);
   uint32_t span = static_cast<uint32_t>(
       knots::FindSpanParam(degree_, knots_, in_param, kTolerance));
   std::vector<double> bases =
@@ -67,7 +60,7 @@ glm::dvec2 NURBSCurve2D::EvaluateCurve(double param) const {
 // should just use a b_spline surface to calculate this.
 
 std::vector<double> CurveWeightDerivatives(double param, uint32_t degree,
-                                           const std::vector<uint32_t> &knots,
+                                           const std::vector<double> &knots,
                                            const std::vector<double> &weights,
                                            uint32_t max_derivative,
                                            double tolerance) {
@@ -92,7 +85,7 @@ std::vector<glm::dvec2> NURBSCurve2D::EvaluateDerivative(double param,
     param = interval_.y;
   }
   d = std::min(degree_, d);
-  double in_param = CorrectParameter(param, internal_interval_, interval_);
+  double in_param = InternalParameter(param);
 
   std::vector<glm::dvec2> bspl_cpts;
   std::vector<double> weights;
@@ -122,7 +115,7 @@ std::vector<glm::dvec2> NURBSCurve2D::EvaluateDerivative(double param,
 }
 
 // ALGORITHM A5.1 CurveKnotins(np, p, UP, Pw, u, k, s, r, nq, UQ, Qw) p.151
-NURBSCurve2D NURBSCurve2D::KnotInsertion(uint32_t knot, uint32_t times) const {
+NURBSCurve2D NURBSCurve2D::KnotInsertion(double knot, uint32_t times) const {
   // Compute new curve from knot insertion
   // Input: np,p,UP,Pw,u,k,s,r
   // np - Number of control points before insertion
@@ -137,8 +130,8 @@ NURBSCurve2D NURBSCurve2D::KnotInsertion(uint32_t knot, uint32_t times) const {
   auto UP = knots_;
   auto Pw = control_points_;
   auto u = knot;
-  auto k = knots::FindSpanKnot(p, UP, knot);
-  auto s = knots::MultiplicityKnotU(p, UP, knot);
+  auto k = knots::FindSpanParam(p, UP, knot, kTolerance);
+  auto s = knots::MultiplicityParam(p, UP, knot, kTolerance);
   auto r = times;
 
   // Max value of r is (p + 1) - s
@@ -148,7 +141,7 @@ NURBSCurve2D NURBSCurve2D::KnotInsertion(uint32_t knot, uint32_t times) const {
   // nq - Number of control points after insertion
   // UQ - Knot vector after insertion
   // Qw - Control points after insertion
-  std::vector<uint32_t> UQ;
+  std::vector<double> UQ;
   std::vector<glm::dvec3> Qw;
 
   UQ.resize(UP.size() + r);
@@ -213,7 +206,7 @@ glm::dvec2 NURBSCurve2D::PointByCornerCut(double param) const {
   const auto &Pw = control_points_;
 
   // Update u to be in the bounds of the knots
-  double in_param = CorrectParameter(param, internal_interval_, interval_);
+  double in_param = InternalParameter(param);
 
   // Output
   // C - point on the curve
@@ -255,12 +248,12 @@ glm::dvec2 NURBSCurve2D::PointByCornerCut(double param) const {
 
 NURBSCurve3D::NURBSCurve3D(uint32_t degree,
                            std::vector<glm::dvec4> control_points,
-                           std::vector<uint32_t> knots, glm::dvec2 interval)
+                           std::vector<double> knots, glm::dvec2 interval)
     : Curve3D(interval), degree_(degree), control_points_(control_points),
       knots_(knots) {
-  internal_interval_ = 1.0;
   if (!knots_.empty()) {
-    internal_interval_ = static_cast<double>(knots[knots.size() - 1]);
+    internal_interval_ = {static_cast<double>(knots[0]),
+                          static_cast<double>(knots[knots.size() - 1])};
   }
 
   if (knots.size() != control_points.size() + degree + 1) {
@@ -276,7 +269,7 @@ glm::dvec3 NURBSCurve3D::EvaluateCurve(double param) const {
   if (param > interval_.y) {
     param = interval_.y;
   }
-  double in_param = CorrectParameter(param, internal_interval_, interval_);
+  double in_param = InternalParameter(param);
   uint32_t span = static_cast<uint32_t>(
       knots::FindSpanParam(degree_, knots_, in_param, kTolerance));
   std::vector<double> bases =
@@ -299,7 +292,7 @@ std::vector<glm::dvec3> NURBSCurve3D::EvaluateDerivative(double param,
     param = interval_.y;
   }
   d = std::min(degree_, d);
-  double in_param = CorrectParameter(param, internal_interval_, interval_);
+  double in_param = InternalParameter(param);
 
   std::vector<glm::dvec3> bspl_cpts;
   std::vector<double> weights;
@@ -329,7 +322,7 @@ std::vector<glm::dvec3> NURBSCurve3D::EvaluateDerivative(double param,
 }
 
 // ALGORITHM A5.1 CurveKnotins(np, p, UP, Pw, u, k, s, r, nq, UQ, Qw) p.151
-NURBSCurve3D NURBSCurve3D::KnotInsertion(uint32_t knot, uint32_t times) const {
+NURBSCurve3D NURBSCurve3D::KnotInsertion(double knot, uint32_t times) const {
   // Compute new curve from knot insertion
   // Input: np,p,UP,Pw,u,k,s,r
   // np - Number of control points before insertion
@@ -344,8 +337,8 @@ NURBSCurve3D NURBSCurve3D::KnotInsertion(uint32_t knot, uint32_t times) const {
   auto UP = knots_;
   auto Pw = control_points_;
   auto u = knot;
-  auto k = knots::FindSpanKnot(p, UP, knot);
-  auto s = knots::MultiplicityKnotU(p, UP, knot);
+  auto k = knots::FindSpanParam(p, UP, knot, kTolerance);
+  auto s = knots::MultiplicityParam(p, UP, knot, kTolerance);
   auto r = times;
 
   // Max value of r is (p + 1) - s
@@ -355,7 +348,7 @@ NURBSCurve3D NURBSCurve3D::KnotInsertion(uint32_t knot, uint32_t times) const {
   // nq - Number of control points after insertion
   // UQ - Knot vector after insertion
   // Qw - Control points after insertion
-  std::vector<uint32_t> UQ;
+  std::vector<double> UQ;
   std::vector<glm::dvec4> Qw;
 
   UQ.resize(UP.size() + r);
@@ -420,7 +413,7 @@ glm::dvec3 NURBSCurve3D::PointByCornerCut(double param) const {
   const auto &Pw = control_points_;
 
   // Update u to be in the bounds of the knots
-  double in_param = CorrectParameter(param, internal_interval_, interval_);
+  double in_param = InternalParameter(param);
 
   // Output
   // C - point on the curve

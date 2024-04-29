@@ -12,7 +12,7 @@ namespace knots {
 // Pw - control points
 // u - parameter point to extract
 // C - point on curve returned
-void CurvePntByCornerCut(uint32_t n, uint32_t p, std::vector<uint32_t> U,
+void CurvePntByCornerCut(uint32_t n, uint32_t p, std::vector<double> U,
                          std::vector<double> Pw, uint32_t u, double &C) {
   // Compute point on rational B-spline curve
   // Input: n,p,U,Pw,u

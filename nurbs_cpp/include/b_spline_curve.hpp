@@ -10,7 +10,7 @@ public:
   static constexpr double kTolerance = std::numeric_limits<double>::epsilon();
 
   BSplineCurve2D(uint32_t degree, const std::vector<glm::dvec2>& control_points,
-                 const std::vector<uint32_t>& knots,
+                 const std::vector<double> &knots,
                  glm::dvec2 interval = {0.0, 1.0});
 
   glm::dvec2 EvaluateCurve(double parameter) const override;
@@ -28,9 +28,8 @@ public:
       uint32_t max_deriv, uint32_t start, size_t end) const;
 
   uint32_t degree_;
-  std::vector<uint32_t> knots_;
+  std::vector<double> knots_;
   std::vector<glm::dvec2> control_points_;
-  double internal_interval_;
 };
 
 class BSplineCurve3D : public Curve3D {
@@ -38,7 +37,7 @@ public:
   static constexpr double kTolerance = std::numeric_limits<double>::epsilon();
 
   BSplineCurve3D(uint32_t degree, const std::vector<glm::dvec3>& control_points,
-                 const std::vector<uint32_t>& knots,
+                 const std::vector<double> &knots,
                  glm::dvec2 interval = {0.0, 1.0});
 
   glm::dvec3 EvaluateCurve(double parameter) const override;
@@ -55,8 +54,7 @@ public:
 
  private:
   uint32_t degree_;
-  std::vector<uint32_t> knots_;
+   std::vector<double> knots_;
   std::vector<glm::dvec3> control_points_;
-  double internal_interval_;
 };
 }  // namespace nurbs

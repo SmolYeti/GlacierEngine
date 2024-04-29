@@ -199,8 +199,8 @@ void VulkanApplication::LoadGameObjects() {
   // Surface Model
   {
     uint32_t degree = 3;
-    std::vector<uint32_t> u_knots = {0, 0, 0, 0, 1, 2, 2, 2, 2};
-    std::vector<uint32_t> v_knots = {0, 0, 0, 0, 1, 2, 2, 2, 2};
+    std::vector<double> u_knots = {0, 0, 0, 0, 1, 2, 2, 2, 2};
+    std::vector<double> v_knots = {0, 0, 0, 0, 1, 2, 2, 2, 2};
     std::vector<std::vector<glm::dvec3>> control_points = {
         {{-1, 0, -1},
          {-0.33, 0.1, -1.33},

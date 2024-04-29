@@ -12,6 +12,69 @@
 
 constexpr double kTolerance = std::numeric_limits<double>::epsilon();
 namespace nurbs {
+TEST(NURBS_Chapter3, Curve2DIntervalEqual) {
+  std::vector<glm::dvec2> control_points = {{0, 0}, {0, 1}, {1, 1}, {1, 0}};
+  std::vector<double> knots = {0, 0, 0, 0, 1, 1, 1, 1};
+  BSplineCurve2D b_spline(3, control_points, knots);
+  for (double in_param = -0.01; in_param < 1.02; in_param += 0.01) {
+    double out_param = b_spline.InternalParameter(in_param);
+    EXPECT_DOUBLE_EQ(in_param, out_param);
+  }
+}
+
+TEST(NURBS_Chapter3, Curve2DIntervalShiftKnots) {
+  std::vector<glm::dvec2> control_points = {{0, 0}, {0, 1}, {1, 1}, {1, 0}};
+  std::vector<double> knots = {1, 1, 1, 1, 5, 5, 5, 5};
+  BSplineCurve2D b_spline(3, control_points, knots);
+  for (double in_param = -0.01; in_param < 1.02; in_param += 0.01) {
+    double out_param = b_spline.InternalParameter(in_param);
+    EXPECT_DOUBLE_EQ(out_param, (in_param * 4.0) + 1.0);
+  }
+}
+
+TEST(NURBS_Chapter3, Curve2DIntervalShiftInterval) {
+  std::vector<glm::dvec2> control_points = {{0, 0}, {0, 1}, {1, 1}, {1, 0}};
+  std::vector<double> knots = {1, 1, 1, 1, 5, 5, 5, 5};
+  BSplineCurve2D b_spline(3, control_points, knots, {-1.0, 1.0});
+  for (double in_param = -1.01; in_param < 1.02; in_param += 0.1) {
+    double out_param = b_spline.InternalParameter(in_param);
+    EXPECT_DOUBLE_EQ(out_param, ((in_param + 1.0) * 2.0) + 1.0);
+  }
+}
+
+TEST(NURBS_Chapter3, Curve3DIntervalEqual) {
+  std::vector<glm::dvec3> control_points = {
+      {0, 0, 0.0}, {0, 1, -1.0}, {1, 1, 2.0}, {1, 0, 0.0}};
+  std::vector<double> knots = {0, 0, 0, 0, 1, 1, 1, 1};
+  BSplineCurve3D b_spline(3, control_points, knots);
+  for (double in_param = -0.01; in_param < 1.02; in_param += 0.01) {
+    double out_param = b_spline.InternalParameter(in_param);
+    EXPECT_DOUBLE_EQ(in_param, out_param);
+  }
+}
+
+TEST(NURBS_Chapter3, Curve3DIntervalShiftKnots) {
+  std::vector<glm::dvec3> control_points = {
+      {0, 0, 0.0}, {0, 1, -1.0}, {1, 1, 2.0}, {1, 0, 0.0}};
+  std::vector<double> knots = {1, 1, 1, 1, 5, 5, 5, 5};
+  BSplineCurve3D b_spline(3, control_points, knots);
+  for (double in_param = -0.01; in_param < 1.02; in_param += 0.01) {
+    double out_param = b_spline.InternalParameter(in_param);
+    EXPECT_DOUBLE_EQ(out_param, (in_param * 4.0) + 1.0);
+  }
+}
+
+TEST(NURBS_Chapter3, Curve3DIntervalShiftInterval) {
+  std::vector<glm::dvec3> control_points = {
+      {0, 0, 0.0}, {0, 1, -1.0}, {1, 1, 2.0}, {1, 0, 0.0}};
+  std::vector<double> knots = {1, 1, 1, 1, 5, 5, 5, 5};
+  BSplineCurve3D b_spline(3, control_points, knots, {-1.0, 1.0});
+  for (double in_param = -1.01; in_param < 1.02; in_param += 0.1) {
+    double out_param = b_spline.InternalParameter(in_param);
+    EXPECT_DOUBLE_EQ(out_param, ((in_param + 1.0) * 2.0) + 1.0);
+  }
+}
+
 TEST(NURBS_Chapter3, BSplineCurveBezierEquivalence2D) {
   std::vector<glm::dvec2> control_points = {{0, 0}, {0, 1}, {1, 1}, {1, 0}};
   BezierCurve2D bezier(control_points);
@@ -208,7 +271,7 @@ TEST(NURBS_Chapter3, BSplineCurveMax3D) {
 TEST(NURBS_Chapter3, DISABLED_BSplineCurveDeriv) {
   std::vector<glm::dvec2> control_points = {{0, 0}, {0, 1}, {0.5, 0.5},
                                             {1, 1}, {1, 0}, {2, 0}};
-  std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 4, 4, 5, 5, 5};
+  std::vector<double> knots = {0, 0, 0, 1, 2, 4, 4, 5, 5, 5};
   uint32_t degree = 2;
   const double u = 2.5;
   BSplineCurve2D b_spline(degree, control_points, knots, {0, 5});
@@ -265,7 +328,7 @@ TEST(NURBS_Chapter3, BSplineCurveDeriv3DEx3_1) {
 
 TEST(NURBS_Chapter3, AllBasisFunCompare) {
   constexpr double u_value = 2.5;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
   constexpr uint32_t degree = 2;
   uint32_t span_index =
       knots::FindSpanParam(degree, knots, u_value, kTolerance);
@@ -337,8 +400,8 @@ TEST(NURBS_Chapter3, BSplineCurveDerivCompare3D) {
 
 TEST(NURBS_Chapter3, BSplineSurfaceConstruct) {
   uint32_t degree = 3;
-  std::vector<uint32_t> u_knots = {0, 0, 0, 0, 1, 2, 2, 2, 2};
-  std::vector<uint32_t> v_knots = {0, 0, 0, 0, 1, 2, 2, 2, 2};
+  std::vector<double> u_knots = {0, 0, 0, 0, 1, 2, 2, 2, 2};
+  std::vector<double> v_knots = {0, 0, 0, 0, 1, 2, 2, 2, 2};
   std::vector<std::vector<glm::dvec3>> control_points = {
       {{-1, 0, -1},
        {-0.33, 0.1, -1.33},
@@ -372,8 +435,8 @@ TEST(NURBS_Chapter3, BSplineSurfaceConstruct) {
 
 TEST(NURBS_Chapter3, BSplineSurfaceBezierCompare) {
   uint32_t degree = 3;
-  std::vector<uint32_t> u_knots = {0, 0, 0, 0, 1, 1, 1, 1};
-  std::vector<uint32_t> v_knots = {0, 0, 0, 0, 1, 1, 1, 1};
+  std::vector<double> u_knots = {0, 0, 0, 0, 1, 1, 1, 1};
+  std::vector<double> v_knots = {0, 0, 0, 0, 1, 1, 1, 1};
   std::vector<std::vector<glm::dvec3>> control_points = {
       {{-0.87, 0, -0.87},
        {-0.33, 0.1, -1.33},
@@ -419,8 +482,8 @@ TEST(NURBS_Chapter3, BSplineSurfacePoints) {
   glm::dvec2 interval = {0, 4};
   uint32_t u_degree = 4;
   uint32_t v_degree = 3;
-  std::vector<uint32_t> u_knots = {0, 0, 0, 0, 0, 1, 2, 2, 3, 4, 4, 4, 4, 4};
-  std::vector<uint32_t> v_knots = {0, 0, 0, 0, 1, 1, 2, 3, 3, 4, 4, 4, 4};
+  std::vector<double> u_knots = {0, 0, 0, 0, 0, 1, 2, 2, 3, 4, 4, 4, 4, 4};
+  std::vector<double> v_knots = {0, 0, 0, 0, 1, 1, 2, 3, 3, 4, 4, 4, 4};
   uint32_t u_points = static_cast<uint32_t>(u_knots.size()) - u_degree - 1;
   uint32_t v_points = static_cast<uint32_t>(v_knots.size()) - v_degree - 1;
   std::vector<std::vector<glm::dvec3>> control_points;
@@ -442,7 +505,7 @@ TEST(NURBS_Chapter3, BSplineSurfacePoints) {
 
   BSplineSurface b_spline_surface(u_degree, v_degree, u_knots, v_knots,
                                   control_points, interval, interval);
- 
+
   // Compare the surface to the curves
   double div = 1.0 / 99.0;
   for (int32_t i = 0; i < 100; ++i) {
@@ -482,8 +545,8 @@ TEST(NURBS_Chapter3, DISABLED_BSplineSurfaceDerivCompare) {
       {{0, 1, 7}, {0, 2, 7}, {0.5, 1.5, 7}, {1, 0, 7}, {1, 1, 7}, {2, -2, 7}},
       {{0, 0, 8}, {0, 1, 8}, {0.5, 0.5, 8}, {1, 1, 8}, {1, 0, 8}, {2, -1, 8}},
   };
-  std::vector<uint32_t> u_knots = {0, 0, 0, 0, 1, 2, 2, 2, 2};
-  std::vector<uint32_t> v_knots = {0, 0, 0, 0, 1, 1, 2, 3, 3, 3, 4, 4, 4, 4};
+  std::vector<double> u_knots = {0, 0, 0, 0, 1, 2, 2, 2, 2};
+  std::vector<double> v_knots = {0, 0, 0, 0, 1, 1, 2, 3, 3, 3, 4, 4, 4, 4};
   BSplineSurface b_spline(3, 3, u_knots, v_knots, control_polygon, {0, 2},
                           {0, 4});
   size_t errors = 0;

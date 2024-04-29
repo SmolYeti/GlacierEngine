@@ -13,13 +13,13 @@ double CorrectParameter(double param, double internal_scale,
 
 BSplineCurve2D::BSplineCurve2D(uint32_t degree,
                                const std::vector<glm::dvec2> &control_points,
-                               const std::vector<uint32_t> &knots,
+                               const std::vector<double> &knots,
                                glm::dvec2 interval)
     : Curve2D(interval), degree_(degree), control_points_(control_points),
       knots_(knots) {
-  internal_interval_ = interval.y - interval.x;
   if (!knots_.empty()) {
-    internal_interval_ = static_cast<double>(knots[knots.size() - 1]);
+    internal_interval_ = {static_cast<double>(knots[0]),
+                          static_cast<double>(knots[knots.size() - 1])};
   }
   if (knots.size() != control_points.size() + degree + 1) {
     throw std::exception("Invalid BSplineCruve2D");
@@ -34,7 +34,7 @@ glm::dvec2 BSplineCurve2D::EvaluateCurve(double param) const {
   if (param > interval_.y) {
     param = interval_.y;
   }
-  double in_param = CorrectParameter(param, internal_interval_, interval_);
+  double in_param = InternalParameter(param);
   uint32_t span = knots::FindSpanParam(degree_, knots_, in_param, kTolerance);
   std::vector<double> bases =
       knots::BasisFuns(span, in_param, degree_, knots_, kTolerance);
@@ -54,7 +54,7 @@ BSplineCurve2D::Derivatives(double param, uint32_t max_derivative) const {
   if (param > interval_.y) {
     param = interval_.y;
   }
-  double in_param = CorrectParameter(param, internal_interval_, interval_);
+  double in_param = InternalParameter(param);
   uint32_t max_deriv = std::min(degree_, max_derivative);
   std::vector<glm::dvec2> derivs(max_deriv + 1, {0, 0});
   uint32_t span = knots::FindSpanParam(degree_, knots_, in_param, kTolerance);
@@ -79,7 +79,7 @@ BSplineCurve2D::Derivatives2(double param, uint32_t max_derivative) const {
   if (param > interval_.y) {
     param = interval_.y;
   }
-  double in_param = CorrectParameter(param, internal_interval_, interval_);
+  double in_param = InternalParameter(param);
   uint32_t max_deriv = std::min(degree_, max_derivative);
   std::vector<glm::dvec2> derivs(max_deriv + 1, {0, 0});
   uint32_t span = knots::FindSpanParam(degree_, knots_, in_param, kTolerance);
@@ -124,13 +124,13 @@ BSplineCurve2D::DerivativeControlPoints(uint32_t max_deriv, uint32_t start,
 
 BSplineCurve3D::BSplineCurve3D(uint32_t degree,
                                const std::vector<glm::dvec3> &control_points,
-                               const std::vector<uint32_t> &knots,
+                               const std::vector<double> &knots,
                                glm::dvec2 interval)
     : Curve3D(interval), degree_(degree), control_points_(control_points),
       knots_(knots) {
-  internal_interval_ = interval.y - interval.x;
   if (!knots_.empty()) {
-    internal_interval_ = static_cast<double>(knots[knots.size() - 1]);
+    internal_interval_ = {static_cast<double>(knots[0]),
+                          static_cast<double>(knots[knots.size() - 1])};
   }
   if (knots.size() != control_points.size() + degree + 1) {
     throw std::exception("Invalid BSplineCruve3D");
@@ -145,7 +145,7 @@ glm::dvec3 BSplineCurve3D::EvaluateCurve(double param) const {
   if (param > interval_.y) {
     param = interval_.y;
   }
-  double in_param = CorrectParameter(param, internal_interval_, interval_);
+  double in_param = InternalParameter(param);
   uint32_t span = knots::FindSpanParam(degree_, knots_, in_param, kTolerance);
   std::vector<double> bases =
       knots::BasisFuns(span, in_param, degree_, knots_, kTolerance);
@@ -165,7 +165,7 @@ BSplineCurve3D::Derivatives(double param, uint32_t max_derivative) const {
   if (param > interval_.y) {
     param = interval_.y;
   }
-  double in_param = CorrectParameter(param, internal_interval_, interval_);
+  double in_param = InternalParameter(param);
   uint32_t max_deriv = std::min(degree_, max_derivative);
   std::vector<glm::dvec3> derivs(max_deriv + 1, {0, 0, 0});
   uint32_t span = knots::FindSpanParam(degree_, knots_, in_param, kTolerance);
@@ -190,7 +190,7 @@ BSplineCurve3D::Derivatives2(double param, uint32_t max_derivative) const {
   if (param > interval_.y) {
     param = interval_.y;
   }
-  double in_param = CorrectParameter(param, internal_interval_, interval_);
+  double in_param = InternalParameter(param);
   uint32_t max_deriv = std::min(degree_, max_derivative);
   std::vector<glm::dvec3> derivs(max_deriv + 1, {0, 0, 0});
   uint32_t span = knots::FindSpanParam(degree_, knots_, in_param, kTolerance);

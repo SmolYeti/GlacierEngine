@@ -6,8 +6,8 @@
 namespace nurbs {
 
 BSplineSurface::BSplineSurface(
-    uint32_t u_degree, uint32_t v_degree, const std::vector<uint32_t> &u_knots,
-    const std::vector<uint32_t> &v_knots,
+    uint32_t u_degree, uint32_t v_degree, const std::vector<double> &u_knots,
+    const std::vector<double> &v_knots,
     const std::vector<std::vector<glm::dvec3>> &control_polygon,
     glm::dvec2 u_interval, glm::dvec2 v_interval)
     : Surface(u_interval, v_interval), u_degree_(u_degree), v_degree_(v_degree),
@@ -154,7 +154,7 @@ BSplineSurface::SurfaceDerivCpts(uint32_t d, uint32_t r_start, uint32_t r_end,
   for (uint32_t k = 0; k <= du; ++k) {
     for (uint32_t i = 0; i < r_total - k; ++i) {
       uint32_t dd = std::min(d - k, dv);
-      std::vector<uint32_t> knots;
+      std::vector<double> knots;
       for (size_t knot_idx = s_start; knot_idx < v_knots_.size(); ++knot_idx) {
         knots.push_back(v_knots_[knot_idx]);
       }

@@ -9,8 +9,8 @@ public:
   static constexpr double kTolerance = std::numeric_limits<double>::epsilon();
 
   BSplineSurface(uint32_t u_degree, uint32_t v_degree,
-                 const std::vector<uint32_t> &u_knots,
-                 const std::vector<uint32_t> &v_knots,
+                 const std::vector<double> &u_knots,
+                 const std::vector<double> &v_knots,
                  const std::vector<std::vector<glm::dvec3>> &control_polygon,
                  glm::dvec2 u_interval = {0.0, 1.0},
                  glm::dvec2 v_interval = {0.0, 1.0});
@@ -33,8 +33,8 @@ public:
  private:
   uint32_t u_degree_;
   uint32_t v_degree_;
-  std::vector<uint32_t> u_knots_;
-  std::vector<uint32_t> v_knots_;
+  std::vector<double> u_knots_;
+  std::vector<double> v_knots_;
   // [u][v]
   std::vector<std::vector<glm::dvec3>> control_polygon_;
 };

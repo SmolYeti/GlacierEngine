@@ -35,7 +35,7 @@ TEST(NURBS_Chapter2, FindSpanKnotMax) {
 
 TEST(NURBS_Chapter2, FindSpanParamMin) {
   constexpr uint32_t degree = 2;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 2, 2};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 2, 2};
   uint32_t ret = FindSpanParam(degree, knots, -1.0, kTolerance);
   EXPECT_EQ(ret, 2);
   ret = FindSpanParam(degree, knots, 0.0, kTolerance);
@@ -44,7 +44,7 @@ TEST(NURBS_Chapter2, FindSpanParamMin) {
 
 TEST(NURBS_Chapter2, FindSpanParamMid) {
   constexpr uint32_t degree = 2;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 2, 2};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 2, 2};
   int ret = FindSpanParam(degree, knots, 0.5, kTolerance);
   EXPECT_EQ(ret, 2);
   ret = FindSpanParam(degree, knots, 1.0, kTolerance);
@@ -55,7 +55,7 @@ TEST(NURBS_Chapter2, FindSpanParamMid) {
 
 TEST(NURBS_Chapter2, FindSpanParamMax) {
   constexpr uint32_t degree = 2;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 2, 2};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 2, 2};
   int ret = FindSpanParam(degree, knots, 2, kTolerance);
   EXPECT_EQ(ret, 3);
   ret = FindSpanParam(degree, knots, 3, kTolerance);
@@ -82,7 +82,7 @@ TEST(NURBS_Chapter2, FindStartKnot) {
 
 TEST(NURBS_Chapter2, FindStartParam) {
   constexpr uint32_t degree = 3;
-  const std::vector<uint32_t> knots = {0, 0, 0, 0, 1, 2, 2,
+  const std::vector<double> knots = {0, 0, 0, 0, 1, 2, 2,
                                        2, 3, 3, 4, 4, 4, 4};
   
   uint32_t ret = FindStartParam(degree, knots, -1.0, kTolerance);
@@ -141,7 +141,7 @@ TEST(NURBS_Chapter2, MultiplicityKnotU) {
 
 TEST(NURBS_Chapter2, MultiplicityParam) {
   constexpr uint32_t degree = 3;
-  const std::vector<uint32_t> knots = {0, 0, 0, 0, 1, 2, 2,
+  const std::vector<double> knots = {0, 0, 0, 0, 1, 2, 2,
                                        2, 3, 3, 4, 4, 4, 4};
   
   uint32_t ret = MultiplicityParam(degree, knots, -1.0, kTolerance);
@@ -170,7 +170,7 @@ TEST(NURBS_Chapter2, MultiplicityParam) {
 
 TEST(NURBS_Chapter2, BasisEx2_3) {  
   constexpr double u_value = 2.5;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
   constexpr uint32_t degree = 2;
   uint32_t span_index = FindSpanParam(degree, knots, u_value, kTolerance);
   EXPECT_EQ(span_index, 4);
@@ -185,7 +185,7 @@ TEST(NURBS_Chapter2, BasisEx2_3) {
 TEST(NURBS_Chapter2, BasisMin) {  
   constexpr double u_value = 0.0;
   constexpr uint32_t degree = 2;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 2, 2};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 2, 2};
   uint32_t span_index = FindSpanParam(degree, knots, u_value, kTolerance);
   std::vector<double> bases =
       BasisFuns(span_index, u_value, degree, knots, kTolerance);
@@ -199,7 +199,7 @@ TEST(NURBS_Chapter2, BasisMid) {
   constexpr double u_value_0 = 1.0;
   constexpr double u_value_1 = 1.5;
   constexpr uint32_t degree = 2;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 2, 2};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 2, 2};
 
   uint32_t span_index = FindSpanParam(degree, knots, u_value_0, kTolerance);
   std::vector<double> bases =
@@ -221,7 +221,7 @@ TEST(NURBS_Chapter2, BasisMax) {
   constexpr double u_value_0 = 2.0;
   constexpr double u_value_1 = 2.5;
   constexpr uint32_t degree = 2;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 2, 2};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 2, 2};
   uint32_t span_index = FindSpanParam(degree, knots, u_value_0, kTolerance);
   std::vector<double> bases =
       BasisFuns(span_index, u_value_0, degree, knots, kTolerance);
@@ -243,7 +243,7 @@ TEST(NURBS_Chapter2, BasisMax) {
 TEST(NURBS_Chapter2, BasisMinCompare) {  
   constexpr double u_value = 0.0;
   constexpr uint32_t degree = 2;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 2, 2};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 2, 2};
   uint32_t span_index = FindSpanParam(degree, knots, u_value, kTolerance);
   std::vector<double> bases_0 =
       BasisFuns(span_index, u_value, degree, knots, kTolerance);
@@ -259,7 +259,7 @@ TEST(NURBS_Chapter2, BasisMidCompare) {
   constexpr double u_value_0 = 1.0;
   constexpr double u_value_1 = 1.5;
   constexpr uint32_t degree = 2;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 2, 2};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 2, 2};
 
   uint32_t span_index = FindSpanParam(degree, knots, u_value_0, kTolerance);
   std::vector<double> bases_0 =
@@ -284,7 +284,7 @@ TEST(NURBS_Chapter2, BasisMaxCompare) {
   constexpr double u_value_0 = 2.0;
   constexpr double u_value_1 = 2.5;
   constexpr uint32_t degree = 2;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 2, 2};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 2, 2};
   uint32_t span_index = FindSpanParam(degree, knots, u_value_0, kTolerance);
   std::vector<double> bases_0 =
       BasisFuns(span_index, u_value_0, degree, knots, kTolerance);
@@ -307,7 +307,7 @@ TEST(NURBS_Chapter2, BasisMaxCompare) {
 TEST(NURBS_Chapter2, BasisEx2_4) {
   
   constexpr double u_value = 2.5;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
   constexpr uint32_t degree = 2;
   uint32_t span_index = FindSpanParam(degree, knots, u_value, kTolerance);
   EXPECT_EQ(span_index, 4);
@@ -321,7 +321,7 @@ TEST(NURBS_Chapter2, BasisEx2_4) {
 
 TEST(NURBS_Chapter2, BasisDerivsEx) {
   
-  const std::vector<uint32_t> knots = {0, 0, 0, 0, 1, 2, 3, 3, 4, 4, 4, 4};
+  const std::vector<double> knots = {0, 0, 0, 0, 1, 2, 3, 3, 4, 4, 4, 4};
   constexpr uint32_t degree = 3;
   constexpr uint32_t degree_1 = 1;
   constexpr uint32_t degree_2 = 2;
@@ -744,7 +744,7 @@ TEST(NURBS_Chapter2, BasisDerivsEx) {
 
 TEST(NURBS_Chapter2, BasisDerivativeMin) {
   constexpr double u_value = 0.0;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
   constexpr uint32_t degree = 2;
   uint32_t span_index = FindSpanParam(degree, knots, u_value, kTolerance);
   EXPECT_EQ(span_index, 2);
@@ -768,7 +768,7 @@ TEST(NURBS_Chapter2, BasisDerivativeMin) {
 TEST(NURBS_Chapter2, BasisDerivativeMid) {
   constexpr double u_value_0 = 2.5;
   constexpr double u_value_1 = 3.0;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
   constexpr uint32_t degree = 2;
   uint32_t span_index = FindSpanParam(degree, knots, u_value_0, kTolerance);
   EXPECT_EQ(span_index, 4);
@@ -809,7 +809,7 @@ TEST(NURBS_Chapter2, BasisDerivativeMid) {
 
 TEST(NURBS_Chapter2, BasisDerivativeMax) {
   constexpr double u_value = 5.0;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
   constexpr uint32_t degree = 2;
   uint32_t span_index = FindSpanParam(degree, knots, u_value, kTolerance);
   EXPECT_EQ(span_index, 7);
@@ -835,7 +835,7 @@ TEST(NURBS_Chapter2, BasisDerivativeMax) {
 // comparisions
 TEST(NURBS_Chapter2, BasisEx2_4Compare) {
   constexpr double u_value = 2.5;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
   constexpr uint32_t degree = 2;
   uint32_t span_index = FindSpanParam(degree, knots, u_value, kTolerance);
   EXPECT_EQ(span_index, 4);
@@ -860,7 +860,7 @@ TEST(NURBS_Chapter2, BasisEx2_4Compare) {
 
 TEST(NURBS_Chapter2, BasisDerivativeMinCompare) {
   constexpr double u_value = 0.0;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
   constexpr uint32_t degree = 2;
   uint32_t span_index = FindSpanParam(degree, knots, u_value, kTolerance);
   EXPECT_EQ(span_index, 2);
@@ -886,7 +886,7 @@ TEST(NURBS_Chapter2, BasisDerivativeMinCompare) {
 TEST(NURBS_Chapter2, BasisDerivativeMidCompare) {
   constexpr double u_value_0 = 2.5;
   constexpr double u_value_1 = 3.0;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
   constexpr uint32_t degree = 2;
   uint32_t span_index = FindSpanParam(degree, knots, u_value_0, kTolerance);
   EXPECT_EQ(span_index, 4);
@@ -930,7 +930,7 @@ TEST(NURBS_Chapter2, BasisDerivativeMidCompare) {
 
 TEST(NURBS_Chapter2, BasisDerivativeMaxCompare) {
   constexpr double u_value = 5.0;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
   constexpr uint32_t degree = 2;
   uint32_t span_index = FindSpanParam(degree, knots, u_value, kTolerance);
   EXPECT_EQ(span_index, 7);
@@ -957,7 +957,7 @@ TEST(NURBS_Chapter2, BasisDerivativeMaxCompare) {
 TEST(NURBS_Chapter2, SingleBasisMin) {
   constexpr double u_value = 0.0;
   constexpr uint32_t degree = 2;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 2, 2};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 2, 2};
   const uint32_t span_index = FindSpanParam(degree, knots, u_value, kTolerance);
   const std::vector<double> bases =
       BasisFuns(span_index, u_value, degree, knots, kTolerance);
@@ -976,7 +976,7 @@ TEST(NURBS_Chapter2, SingleBasisMid) {
   constexpr double u_value_0 = 1.0;
   constexpr double u_value_1 = 1.5;
   constexpr uint32_t degree = 2;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 2, 2};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 2, 2};
 
   uint32_t span_index = FindSpanParam(degree, knots, u_value_0, kTolerance);
   std::vector<double> bases =
@@ -1002,7 +1002,7 @@ TEST(NURBS_Chapter2, SingleBasisMax) {
   constexpr double u_value_0 = 2.0;
   constexpr double u_value_1 = 2.5;
   constexpr uint32_t degree = 2;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 2, 2};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 2, 2};
   uint32_t span_index = FindSpanParam(degree, knots, u_value_0, kTolerance);
   std::vector<double> bases =
       BasisFuns(span_index, u_value_0, degree, knots, kTolerance);
@@ -1026,7 +1026,7 @@ TEST(NURBS_Chapter2, SingleBasisMax) {
 TEST(NURBS_Chapter2, SingleBasisMinCompare) {
   constexpr double u_value = 0.0;
   constexpr uint32_t degree = 2;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 2, 2};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 2, 2};
   const uint32_t span_index = FindSpanParam(degree, knots, u_value, kTolerance);
 
   double basis_0 = OneBasisFun(degree, knots, 0, u_value);
@@ -1046,7 +1046,7 @@ TEST(NURBS_Chapter2, SingleBasisMidCompare) {
   constexpr double u_value_0 = 1.0;
   constexpr double u_value_1 = 1.5;
   constexpr uint32_t degree = 2;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 2, 2};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 2, 2};
 
   uint32_t span_index = FindSpanParam(degree, knots, u_value_0, kTolerance);
   double basis_0 = OneBasisFun(degree, knots, 1, u_value_0);
@@ -1075,7 +1075,7 @@ TEST(NURBS_Chapter2, SingleBasisMaxCompare) {
   constexpr double u_value_0 = 2.0;
   constexpr double u_value_1 = 2.5;
   constexpr uint32_t degree = 2;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 2, 2};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 2, 2};
   uint32_t span_index = FindSpanParam(degree, knots, u_value_0, kTolerance);
   double basis_0 = OneBasisFun(degree, knots, 1, u_value_0);
   double basis_1 = der_knots::OneBasisFun(degree, knots, 1, u_value_0);
@@ -1102,7 +1102,7 @@ TEST(NURBS_Chapter2, SingleBasisMaxCompare) {
 // TODO - Test the single function against the multi function
 TEST(NURBS_Chapter2, SingleBasisDerivativeMin) {
   constexpr double u_value = 0.0;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
   constexpr uint32_t degree = 2;
   uint32_t span_index = FindSpanParam(degree, knots, u_value, kTolerance);
   EXPECT_EQ(span_index, 2);
@@ -1120,7 +1120,7 @@ TEST(NURBS_Chapter2, SingleBasisDerivativeMin) {
 TEST(NURBS_Chapter2, SingleBasisDerivativeMid) {
   constexpr double u_value_0 = 2.5;
   constexpr double u_value_1 = 3.0;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
   constexpr uint32_t degree = 2;
   uint32_t span_index = FindSpanParam(degree, knots, u_value_0, kTolerance);
   EXPECT_EQ(span_index, 4);
@@ -1150,7 +1150,7 @@ TEST(NURBS_Chapter2, SingleBasisDerivativeMid) {
 TEST(NURBS_Chapter2, DISABLED_SingleBasisDerivativeMax) {
   constexpr double u_value_0 = 4.9;
   constexpr double u_value_1 = 5.0;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
   constexpr uint32_t degree = 2;
   uint32_t span_index = FindSpanParam(degree, knots, u_value_0, kTolerance);
   EXPECT_EQ(span_index, 7);
@@ -1177,7 +1177,7 @@ TEST(NURBS_Chapter2, DISABLED_SingleBasisDerivativeMax) {
 
 TEST(NURBS_Chapter2, SingleBasisDerivativeMinCompare) {
   constexpr double u_value = 0.0;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
   constexpr uint32_t degree = 2;
   uint32_t span_index = FindSpanParam(degree, knots, u_value, kTolerance);
   EXPECT_EQ(span_index, 2);
@@ -1195,7 +1195,7 @@ TEST(NURBS_Chapter2, SingleBasisDerivativeMinCompare) {
 TEST(NURBS_Chapter2, SingleBasisDerivativeMidCompare) {
   constexpr double u_value_0 = 2.5;
   constexpr double u_value_1 = 3.0;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
   constexpr uint32_t degree = 2;
   uint32_t span_index = FindSpanParam(degree, knots, u_value_0, kTolerance);
   EXPECT_EQ(span_index, 4);
@@ -1223,7 +1223,7 @@ TEST(NURBS_Chapter2, SingleBasisDerivativeMidCompare) {
 TEST(NURBS_Chapter2, SingleBasisDerivativeMaxCompare) {
   constexpr double u_value_0 = 4.9;
   constexpr double u_value_1 = 5.0;
-  const std::vector<uint32_t> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
+  const std::vector<double> knots = {0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5};
   constexpr uint32_t degree = 2;
   uint32_t span_index = FindSpanParam(degree, knots, u_value_0, kTolerance);
   EXPECT_EQ(span_index, 7);

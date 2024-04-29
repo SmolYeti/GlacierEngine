@@ -9,7 +9,7 @@
 namespace nurbs {
 TEST(NURBS_Chapter4, NURBS_BSpline_Curve2D) {
   uint32_t degree = 3;
-  std::vector<uint32_t> knots = {0, 0, 0, 0, 1, 2, 2, 3, 4, 4, 5, 5, 5, 5};
+  std::vector<double> knots = {0, 0, 0, 0, 1, 2, 2, 3, 4, 4, 5, 5, 5, 5};
   // B-Spline Curve
   std::vector<glm::dvec2> control_points = {{0, 0}, {0, 1}, {1, 1}, {1, 0},
                                             {2, 0}, {2, 1}, {3, 1}, {3, 0},
@@ -35,7 +35,7 @@ TEST(NURBS_Chapter4, NURBS_BSpline_Curve2D) {
 
 TEST(NURBS_Chapter4, NURBS_BSpline_Curve3D) {
   uint32_t degree = 3;
-  std::vector<uint32_t> knots = {0, 0, 0, 0, 1, 2, 2, 3, 4, 4, 5, 5, 5, 5};
+  std::vector<double> knots = {0, 0, 0, 0, 1, 2, 2, 3, 4, 4, 5, 5, 5, 5};
   // B-Spline Curve
   std::vector<glm::dvec3> control_points = {
       {0, 0, 0}, {0, 1, 2}, {1, 1, 3}, {1, 0, 2},  {2, 0, 3},
@@ -62,10 +62,11 @@ TEST(NURBS_Chapter4, NURBS_BSpline_Curve3D) {
 
 TEST(NURBS_Chapter4, NURBS_BSplineDerivCompare2D) {
   uint32_t degree = 3;
-  std::vector<uint32_t> knots = {0, 0, 0, 0, 1, 2, 2, 3, 4, 4, 5, 5, 5, 5};
+  std::vector<double> knots = {0, 0, 0, 0, 1, 2, 2, 3, 4, 4, 5, 5, 5, 5};
   // B-Spline Curve
   std::vector<glm::dvec2> control_points = {{0, 0}, {0, 1}, {1, 1}, {1, 0},
-                                            {2, 0}, {2, 1}, {3, 1}, {3, 0}, {5, 0}, {5, 3}};
+                                            {2, 0}, {2, 1}, {3, 1}, {3, 0},
+                                            {5, 0}, {5, 3}};
   BSplineCurve2D b_spline(degree, control_points, knots);
   // NURBS Curves
   std::vector<glm::dvec3> nurbs_pts;
@@ -95,7 +96,7 @@ TEST(NURBS_Chapter4, NURBS_BSplineDerivCompare2D) {
 
 TEST(NURBS_Chapter4, NURBS_BSplineDerivCompare3D) {
   uint32_t degree = 3;
-  std::vector<uint32_t> knots = {0, 0, 0, 0, 1, 2, 2, 3, 4, 4, 5, 5, 5, 5};
+  std::vector<double> knots = {0, 0, 0, 0, 1, 2, 2, 3, 4, 4, 5, 5, 5, 5};
   // B-Spline Curve
   std::vector<glm::dvec3> control_points = {
       {0, 0, 0}, {0, 1, 2}, {1, 1, 3}, {1, 0, 2},  {2, 0, 3},
@@ -133,8 +134,8 @@ TEST(NURBS_Chapter4, NURBS_BSplineSurfaceCompare) {
   glm::dvec2 interval = {0, 4};
   uint32_t u_degree = 4;
   uint32_t v_degree = 3;
-  std::vector<uint32_t> u_knots = {0, 0, 0, 0, 0, 1, 2, 2, 3, 4, 4, 4, 4, 4};
-  std::vector<uint32_t> v_knots = {0, 0, 0, 0, 1, 1, 2, 3, 3, 4, 4, 4, 4};
+  std::vector<double> u_knots = {0, 0, 0, 0, 0, 1, 2, 2, 3, 4, 4, 4, 4, 4};
+  std::vector<double> v_knots = {0, 0, 0, 0, 1, 1, 2, 3, 3, 4, 4, 4, 4};
   std::vector<std::vector<glm::dvec3>> control_points = {
       {{0, 0, 1},
        {1, 0, 0},
@@ -232,8 +233,8 @@ TEST(NURBS_Chapter4, NURBS_BSplineSurfaceDerivCompare) {
   glm::dvec2 interval = {0, 4};
   uint32_t u_degree = 4;
   uint32_t v_degree = 3;
-  std::vector<uint32_t> u_knots = {0, 0, 0, 0, 0, 1, 2, 2, 3, 4, 4, 4, 4, 4};
-  std::vector<uint32_t> v_knots = {0, 0, 0, 0, 1, 1, 2, 3, 3, 4, 4, 4, 4};
+  std::vector<double> u_knots = {0, 0, 0, 0, 0, 1, 2, 2, 3, 4, 4, 4, 4, 4};
+  std::vector<double> v_knots = {0, 0, 0, 0, 1, 1, 2, 3, 3, 4, 4, 4, 4};
   std::vector<std::vector<glm::dvec3>> control_points = {
       {{0, 0, 1},
        {1, 0, 0},
