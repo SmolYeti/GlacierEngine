@@ -5,7 +5,7 @@
 
 namespace nurbs {
 class BezierCurveUtil {
- public:
+public:
   // Returns:
   // The value of the Bernstein polynomials of i, n - 1 at the value of u
   // B(i,n - 1) (u)
@@ -23,34 +23,35 @@ class BezierCurveUtil {
 };
 
 class BezierCurve2D : public Curve2D {
- public:
-  BezierCurve2D(std::vector<glm::dvec2> control_points,
-                glm::dvec2 interval = {0.0, 1.0});
+public:
+  BezierCurve2D(std::vector<Point2D> control_points,
+                Point2D interval = {0.0, 1.0});
 
-  glm::dvec2 EvaluateCurve(double u) const override;
+  Point2D EvaluateCurve(double u) const override;
 
-  glm::dvec2 Derivative(double u)const ;
+  Point2D Derivative(double u) const;
 
-  glm::dvec2 PointOnBezierCurve(double u) const;
-  glm::dvec2 DeCasteljau(double u) const;
+  Point2D PointOnBezierCurve(double u) const;
+  Point2D DeCasteljau(double u) const;
 
 private:
-  std::vector<glm::dvec2> control_points_;
+  // Variables
+  std::vector<Point2D> control_points_;
 };
 
 class BezierCurve3D : public Curve3D {
- public:
-  BezierCurve3D(std::vector<glm::dvec3> control_points,
-                glm::dvec2 interval = {0.0, 1.0});
+public:
+  BezierCurve3D(std::vector<Point3D> control_points,
+                Point2D interval = {0.0, 1.0});
 
-  glm::dvec3 EvaluateCurve(double u) const override;
+  Point3D EvaluateCurve(double u) const override;
 
-  glm::vec3 Derivative(double u) const;
+  Point3D Derivative(double u) const;
 
-  glm::dvec3 PointOnBezierCurve(double u) const;
-  glm::dvec3 DeCasteljau(double u) const;
+  Point3D PointOnBezierCurve(double u) const;
+  Point3D DeCasteljau(double u) const;
 
 private:
-  std::vector<glm::dvec3> control_points_;
+  std::vector<Point3D> control_points_;
 };
-}  // namespace nurbs
+} // namespace nurbs

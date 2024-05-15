@@ -11,24 +11,24 @@ public:
   BSplineSurface(uint32_t u_degree, uint32_t v_degree,
                  const std::vector<double> &u_knots,
                  const std::vector<double> &v_knots,
-                 const std::vector<std::vector<glm::dvec3>> &control_polygon,
-                 glm::dvec2 u_interval = {0.0, 1.0},
-                 glm::dvec2 v_interval = {0.0, 1.0});
+                 const std::vector<std::vector<Point3D>> &control_polygon,
+                 Point2D u_interval = {0.0, 1.0},
+                 Point2D v_interval = {0.0, 1.0});
 
-  glm::dvec3 EvaluatePoint(glm::dvec2 uv) const override;
+  Point3D EvaluatePoint(Point2D uv) const override;
 
-  std::vector<glm::dvec3> EvaluatePoints(
+  std::vector<Point3D> EvaluatePoints(
       uint32_t u_sample_count, uint32_t v_sample_count) const override;
 
-  std::vector<std::vector<glm::dvec3>> Derivative(
-      glm::dvec2 uv, uint32_t max_derivative) const;
+  std::vector<std::vector<Point3D>> Derivative(Point2D uv,
+                                                uint32_t max_derivative) const;
 
   // Used for Derivatives2
-  std::vector<std::vector<std::vector<std::vector<glm::dvec3>>>>
+  std::vector<std::vector<std::vector<std::vector<Point3D>>>>
   SurfaceDerivCpts(uint32_t d, uint32_t r_start, uint32_t r_end,
                    uint32_t s_start, uint32_t s_end) const;
-  std::vector<std::vector<glm::dvec3>> Derivatives2(
-      glm::dvec2 uv, uint32_t max_derivative) const;
+  std::vector<std::vector<Point3D>> Derivatives2(Point2D uv,
+                                                 uint32_t max_derivative) const;
 
  private:
   uint32_t u_degree_;
@@ -36,6 +36,6 @@ public:
   std::vector<double> u_knots_;
   std::vector<double> v_knots_;
   // [u][v]
-  std::vector<std::vector<glm::dvec3>> control_polygon_;
+  std::vector<std::vector<Point3D>> control_polygon_;
 };
 }  // namespace nurbs

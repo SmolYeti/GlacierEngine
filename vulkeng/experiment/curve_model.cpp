@@ -8,7 +8,7 @@ CurveModel::CurveModel(VulkanDevice* device,
 
 std::shared_ptr<CurveModel> CurveModel::ModelFromCurve2D(
     VulkanDevice* device, const nurbs::Curve2D& curve) {
-    const std::vector<glm::dvec2> points = curve.EvaluateCurvePoints(POINT_COUNT);
+    const std::vector<nurbs::Point2D> points = curve.EvaluateCurvePoints(POINT_COUNT);
 
     std::vector<LineModel::Vertex> vertices = {};
     vertices.reserve(points.size());
@@ -23,7 +23,7 @@ std::shared_ptr<CurveModel> CurveModel::ModelFromCurve2D(
 
 std::shared_ptr<CurveModel> CurveModel::ModelFromCurve3D(
     VulkanDevice* device, const nurbs::Curve3D& curve) {
-    const std::vector<glm::dvec3> points = curve.EvaluateCurvePoints(POINT_COUNT);
+    const std::vector<nurbs::Point3D> points = curve.EvaluateCurvePoints(POINT_COUNT);
 
     std::vector<LineModel::Vertex> vertices = {};
     vertices.reserve(points.size());

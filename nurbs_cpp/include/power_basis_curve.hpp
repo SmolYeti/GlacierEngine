@@ -6,27 +6,27 @@
 namespace nurbs {
 class PowerBasisCurve2D : public Curve2D {
    public:
-    PowerBasisCurve2D(std::vector<glm::dvec2> bases,
-                      glm::dvec2 interval = {0.0, 1.0});
+    PowerBasisCurve2D(std::vector<Point2D> bases,
+                      Point2D interval = {0.0, 1.0});
 
-    glm::dvec2 EvaluateCurve(double u) const override;
+    Point2D EvaluateCurve(double u) const override;
 
    private:
-    glm::dvec2 Horner(double u) const;
+    Point2D Horner(double u) const;
 
-    std::vector<glm::dvec2> bases_;
+    std::vector<Point2D> bases_;
 };
 
 class PowerBasisCurve3D : public Curve3D {
    public:
-    PowerBasisCurve3D(std::vector<glm::dvec3> bases,
-                      glm::dvec2 interval = {0.0, 1.0});
+    PowerBasisCurve3D(std::vector<Point3D> bases,
+                      Point2D interval = {0.0, 1.0});
 
-    glm::dvec3 EvaluateCurve(double u) const override;
+    Point3D EvaluateCurve(double u) const override;
 
    private:
-    glm::dvec3 Horner(double u) const;
+    Point3D Horner(double u) const;
 
-    std::vector<glm::dvec3> bases_;
+    std::vector<Point3D> bases_;
 };
 }  // namespace nurbs

@@ -10,12 +10,12 @@
 namespace nurbs {
     class BezierSurface : public Surface {
     public:
-        BezierSurface(std::vector<BezierCurve3D> curves, glm::dvec2 u_interval = { 0.0, 1.0 },
-            glm::dvec2 v_interval = { 0.0, 1.0 });
+        BezierSurface(std::vector<BezierCurve3D> curves, Point2D u_interval = { 0.0, 1.0 },
+            Point2D v_interval = { 0.0, 1.0 });
 
-        glm::dvec3 EvaluatePoint(glm::dvec2 uv) const override;
+        Point3D EvaluatePoint(Point2D uv) const override;
 
-        std::vector<glm::dvec3> EvaluatePoints(
+        std::vector<Point3D> EvaluatePoints(
             uint32_t u_sample_count, uint32_t v_sample_count) const override;
 
     private:

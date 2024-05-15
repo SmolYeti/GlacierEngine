@@ -9,7 +9,7 @@ SurfaceModel::SurfaceModel(VulkanDevice *device,
 std::shared_ptr<SurfaceModel>
 SurfaceModel::ModelFromSurface(VulkanDevice *device,
                                const nurbs::Surface &surface) {
-  const std::vector<glm::dvec3> points =
+  const std::vector<nurbs::Point3D> points =
       surface.EvaluatePoints(POINT_COUNT, POINT_COUNT);
 
   TriangleModel::Builder builder;

@@ -5,9 +5,9 @@
 
 namespace nurbs {
 namespace {
-glm::dvec2 CorrectParameter(glm::dvec2 param, glm::dvec2 u_internal,
-                            glm::dvec2 v_internal, glm::dvec2 u_interval,
-                            glm::dvec2 v_interval) {
+Point2D CorrectParameter(Point2D param, Point2D u_internal,
+                            Point2D v_internal, Point2D u_interval,
+                            Point2D v_interval) {
   double u_interval_scale = u_interval.y - u_interval.x;
   double u_internal_scale = u_internal.y - u_internal.x;
   double v_interval_scale = v_interval.y - v_interval.x;
@@ -24,8 +24,8 @@ glm::dvec2 CorrectParameter(glm::dvec2 param, glm::dvec2 u_internal,
 NURBSSurface::NURBSSurface(uint32_t u_degree, uint32_t v_degree,
                            std::vector<double> u_knots,
                            std::vector<double> v_knots,
-                           std::vector<std::vector<glm::dvec4>> control_polygon,
-                           glm::dvec2 u_interval, glm::dvec2 v_interval)
+                           std::vector<std::vector<Point4D>> control_polygon,
+                           Point2D u_interval, Point2D v_interval)
     : Surface(u_interval, v_interval), u_degree_(u_degree), v_degree_(v_degree),
       u_knots_(u_knots), v_knots_(v_knots), control_polygon_(control_polygon),
       u_internal_interval_(u_interval), v_internal_interval_(v_interval) {
@@ -41,7 +41,7 @@ NURBSSurface::NURBSSurface(uint32_t u_degree, uint32_t v_degree,
 
 // ALGORITHM A4.3 SurfacePoint(n,p,U,m,q,V,Pw,u,v,S) p134
 // Compute point on rational B-spline surface
-glm::dvec3 NURBSSurface::EvaluatePoint(glm::dvec2 uv) const {
+Point3D NURBSSurface::EvaluatePoint(Point2D uv) const {
   if (uv.x < u_interval_.x) {
     uv.x = u_interval_.x;
   }
@@ -54,8 +54,8 @@ glm::dvec3 NURBSSurface::EvaluatePoint(glm::dvec2 uv) const {
   if (uv.y > v_interval_.y) {
     uv.y = v_interval_.y;
   }
-  glm::dvec2 in_param = uv;
-  /*glm::dvec2 in_param = CorrectParameter(
+  Point2D in_param = uv;
+  /*Point2D in_param = CorrectParameter(
       uv, u_internal_interval_, v_internal_interval_, u_interval_,
      v_interval_);*/
   uint32_t u_span =
@@ -66,9 +66,9 @@ glm::dvec3 NURBSSurface::EvaluatePoint(glm::dvec2 uv) const {
       knots::FindSpanParam(v_degree_, v_knots_, in_param.y, kTolerance);
   std::vector<double> v_basis =
       knots::BasisFuns(v_span, in_param.y, v_degree_, v_knots_, kTolerance);
-  glm::dvec4 point{0.0, 0.0, 0.0, 0.0};
+  Point4D point{0.0, 0.0, 0.0, 0.0};
   for (uint32_t i = 0; i <= v_degree_; ++i) {
-    glm::dvec4 temp_point{0.0, 0.0, 0.0, 0.0};
+    Point4D temp_point{0.0, 0.0, 0.0, 0.0};
     for (uint32_t j = 0; j <= u_degree_; ++j) {
       temp_point +=
           u_basis[j] *
@@ -80,12 +80,12 @@ glm::dvec3 NURBSSurface::EvaluatePoint(glm::dvec2 uv) const {
   return {point.x, point.y, point.z};
 }
 
-/*std::vector<glm::dvec3> NURBSSurface::EvaluatePoints(
+/*std::vector<Point3D> NURBSSurface::EvaluatePoints(
     uint32_t u_sample_count, uint32_t v_sample_count) const {}*/
 
 // ALGORITHM A4.4 RatSurfaceDerivs(Aders,wders,d,SKL) p.137
 std::vector<std::vector<double>>
-PolygonWeightDerivatives(glm::dvec2 uv, uint32_t u_degree, uint32_t v_degree,
+PolygonWeightDerivatives(Point2D uv, uint32_t u_degree, uint32_t v_degree,
                          const std::vector<double> &u_knots,
                          const std::vector<double> &v_knots,
                          const std::vector<std::vector<double>> &weights,
@@ -124,10 +124,10 @@ PolygonWeightDerivatives(glm::dvec2 uv, uint32_t u_degree, uint32_t v_degree,
   return derivs;
 }
 
-std::vector<std::vector<glm::dvec3>>
-NURBSSurface::Derivatives(glm::dvec2 uv, uint32_t max_derivative) const {
+std::vector<std::vector<Point3D>>
+NURBSSurface::Derivatives(Point2D uv, uint32_t max_derivative) const {
   // Split the control polygon into the b_spline and weights control polygons
-  std::vector<std::vector<glm::dvec3>> bspl_cpts;
+  std::vector<std::vector<Point3D>> bspl_cpts;
   std::vector<std::vector<double>> weights;
   for (auto &vec : control_polygon_) {
     bspl_cpts.push_back({});
@@ -142,7 +142,7 @@ NURBSSurface::Derivatives(glm::dvec2 uv, uint32_t max_derivative) const {
   BSplineSurface bspl_surface(u_degree_, v_degree_, u_knots_, v_knots_,
                               bspl_cpts, u_interval_, v_interval_);
   // Calculate the point and weight derivatives
-  std::vector<std::vector<glm::dvec3>> a_derivs =
+  std::vector<std::vector<Point3D>> a_derivs =
       bspl_surface.Derivative(uv, max_derivative);
   std::vector<std::vector<double>> weight_derivs =
       PolygonWeightDerivatives(uv, u_degree_, v_degree_, u_knots_, v_knots_,
@@ -151,19 +151,19 @@ NURBSSurface::Derivatives(glm::dvec2 uv, uint32_t max_derivative) const {
       knots::BinomialCoefficients(max_derivative, max_derivative);
 
   // Calculate the derivatives
-  std::vector<std::vector<glm::dvec3>> derivs(
+  std::vector<std::vector<Point3D>> derivs(
       max_derivative + 1,
-      std::vector<glm::dvec3>(max_derivative + 1, {0.0, 0.0, 0.0}));
+      std::vector<Point3D>(max_derivative + 1, {0.0, 0.0, 0.0}));
   for (uint32_t k = 0; k <= max_derivative; ++k) {
     for (uint32_t l = 0; l <= max_derivative - k; ++l) {
-      glm::dvec3 v = a_derivs[k][l];
+      Point3D v = a_derivs[k][l];
       for (uint32_t j = 1; j <= l; ++j) {
         v -= bin[l][j] * weight_derivs[0][j] * derivs[k][l - j];
       }
       for (uint32_t i = 1; i <= k; ++i) {
         v -= bin[k][i] * weight_derivs[i][0] * derivs[k - i][l];
 
-        glm::dvec3 v2 = {0.0, 0.0, 0.0};
+        Point3D v2 = {0.0, 0.0, 0.0};
         for (uint32_t j = 1; j <= l; ++j) {
           v2 += bin[l][j] * weight_derivs[i][j] * derivs[k - i][l - j];
         }
@@ -177,7 +177,7 @@ NURBSSurface::Derivatives(glm::dvec2 uv, uint32_t max_derivative) const {
 
 // Algorithm 5.3 SurfaceKnotIns p.155
 NURBSSurface NURBSSurface::KnotInsert(SurfaceDirection dir, double knot,
-                                      uint32_t times) {
+                                      int times) {
   // Input: np,p,UP,Pw,u,k,s,r
   // np - Number of columns in the control polygon
   // p - U Degree of the surface
@@ -190,15 +190,18 @@ NURBSSurface NURBSSurface::KnotInsert(SurfaceDirection dir, double knot,
   // k - location of knot in insert
   // s - inital knot multiplicity
   // r - times to insert knot
-  auto np = control_polygon_.size();
-  auto p = u_degree_;
+  auto np = control_polygon_.size() - 1;
+  int p = u_degree_;
   auto UP = u_knots_;
-  auto mp = control_polygon_[0].size();
-  auto q = v_degree_;
+  auto mp = control_polygon_[0].size() - 1;
+  int q = v_degree_;
   auto VP = v_knots_;
   auto Pw = control_polygon_;
   auto uv = knot;
-  auto r = times;
+  int r = times;
+
+  // missing values from book
+  int u_knot_count = np + p + 1;
 
   // Output
   // nq - Number of columns in the control polygon
@@ -208,12 +211,12 @@ NURBSSurface NURBSSurface::KnotInsert(SurfaceDirection dir, double knot,
   // Qw - Control Polygon
   std::vector<double> UQ;
   std::vector<double> VQ;
-  std::vector<std::vector<glm::dvec4>> Qw;
+  std::vector<std::vector<Point4D>> Qw;
 
   if (dir == SurfaceDirection::kUDir) {
     // Get the remaining input values
-    auto k = knots::FindSpanParam(p, UP, knot, kTolerance);
-    auto s = knots::MultiplicityParam(p, UP, knot, kTolerance);
+    int k = knots::FindSpanParam(p, UP, knot, kTolerance);
+    int s = knots::MultiplicityParam(p, UP, knot, kTolerance);
 
     // Max value of r is (p + 1) - s
     r = std::min(r, (p + 1) - s);
@@ -222,18 +225,18 @@ NURBSSurface NURBSSurface::KnotInsert(SurfaceDirection dir, double knot,
     UQ.resize(UP.size() + r);
     Qw.resize(Pw.size() + r);
     for (auto &column : Qw) {
-      column.resize(mp);
+      column.resize(mp + 1);
     }
 
     // Load u vector as in A5.1
     // Load new knot vector
-    for (uint32_t i = 0; i <= k; i++) {
+    for (int i = 0; i <= k; i++) {
       UQ[i] = UP[i];
     }
-    for (uint32_t i = 1; i <= r; i++) {
+    for (int i = 1; i <= r; i++) {
       UQ[k + i] = uv;
     }
-    for (uint32_t i = k + 1; i < UP.size(); i++) {
+    for (int i = k + 1; i <= u_knot_count; i++) {
       UQ[i + r] = UP[i];
     }
 
@@ -249,33 +252,33 @@ NURBSSurface NURBSSurface::KnotInsert(SurfaceDirection dir, double knot,
       alpha.resize(r + 1);
     }
 
-    uint32_t L;
-    for (uint32_t j = 1; j <= r; ++j) {
+    int L = k - p;
+    for (int j = 1; j <= r; ++j) {
       L = k - p + j;
-      for (uint32_t i = 0; i <= p - j - s + 1; i++) {
+      for (int i = 0; i <= p - j - s; i++) {
         alphas[i][j] = (u - static_cast<double>(UP[L + i])) /
                        (static_cast<double>(UP[i + k + 1]) -
                         static_cast<double>(UP[L + i]));
       }
     }
-    std::vector<glm::dvec4> Rw(p + 1);
+    std::vector<Point4D> Rw(p + 1);
 
-    for (size_t row = 0; row < mp; row++) {
+    for (size_t row = 0; row <= mp; row++) {
       /* Save unaltered control points */
-      for (uint32_t i = 0; i <= k - p; ++i) {
+      for (int i = 0; i <= k - p; ++i) {
         Qw[i][row] = Pw[i][row];
       }
-      for (size_t i = k; i < np; i++) {
+      for (int i = k; i <= np; i++) {
         Qw[i + r][row] = Pw[i][row];
       }
       // Load auxiliary control points
-      for (uint32_t i = 0; i <= p - s; ++i) {
+      for (int i = 0; i <= p - s; ++i) {
         Rw[i] = Pw[k - p + i][row];
       }
 
-      for (uint32_t j = 1; j <= r; ++j) {
+      for (int j = 1; j <= r; ++j) {
         L = k - p + j;
-        for (uint32_t i = 0; i <= p - j - s + 1; ++i) {
+        for (int i = 0; i <= p - j - s; ++i) {
           Rw[i] = (alphas[i][j] * Rw[i + 1]) + ((1.0 - alphas[i][j]) * Rw[i]);
         }
         Qw[L][row] = Rw[0];
@@ -292,8 +295,8 @@ NURBSSurface NURBSSurface::KnotInsert(SurfaceDirection dir, double knot,
     /* Similar code as above with u and v directional parameters switched */
 
     // Get the remaining input values
-    auto k = knots::FindSpanParam(q, VP, knot, kTolerance);
-    auto s = knots::MultiplicityParam(q, VP, knot, kTolerance);
+    int k = knots::FindSpanParam(q, VP, knot, kTolerance);
+    int s = knots::MultiplicityParam(q, VP, knot, kTolerance);
 
     // Max value of r is (p + 1) - s
     r = std::min(r, (q + 1) - s);
@@ -338,7 +341,7 @@ NURBSSurface NURBSSurface::KnotInsert(SurfaceDirection dir, double knot,
                         static_cast<double>(VP[L + i]));
       }
     }
-    std::vector<glm::dvec4> Rw(q + 1);
+    std::vector<Point4D> Rw(q + 1);
 
     for (size_t col = 0; col < np; col++) {
       /* Save unaltered control points */

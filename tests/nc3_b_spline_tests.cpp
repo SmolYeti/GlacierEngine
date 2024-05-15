@@ -12,122 +12,105 @@
 
 constexpr double kTolerance = std::numeric_limits<double>::epsilon();
 namespace nurbs {
-TEST(NURBS_Chapter3, Curve2DIntervalEqual) {
-  std::vector<glm::dvec2> control_points = {{0, 0}, {0, 1}, {1, 1}, {1, 0}};
-  std::vector<double> knots = {0, 0, 0, 0, 1, 1, 1, 1};
-  BSplineCurve2D b_spline(3, control_points, knots);
-  for (double in_param = -0.01; in_param < 1.02; in_param += 0.01) {
-    double out_param = b_spline.InternalParameter(in_param);
-    EXPECT_DOUBLE_EQ(in_param, out_param);
-  }
-}
-
-TEST(NURBS_Chapter3, Curve2DIntervalShiftKnots) {
-  std::vector<glm::dvec2> control_points = {{0, 0}, {0, 1}, {1, 1}, {1, 0}};
-  std::vector<double> knots = {1, 1, 1, 1, 5, 5, 5, 5};
-  BSplineCurve2D b_spline(3, control_points, knots);
-  for (double in_param = -0.01; in_param < 1.02; in_param += 0.01) {
-    double out_param = b_spline.InternalParameter(in_param);
-    EXPECT_DOUBLE_EQ(out_param, (in_param * 4.0) + 1.0);
-  }
-}
-
-TEST(NURBS_Chapter3, Curve2DIntervalShiftInterval) {
-  std::vector<glm::dvec2> control_points = {{0, 0}, {0, 1}, {1, 1}, {1, 0}};
-  std::vector<double> knots = {1, 1, 1, 1, 5, 5, 5, 5};
-  BSplineCurve2D b_spline(3, control_points, knots, {-1.0, 1.0});
-  for (double in_param = -1.01; in_param < 1.02; in_param += 0.1) {
-    double out_param = b_spline.InternalParameter(in_param);
-    EXPECT_DOUBLE_EQ(out_param, ((in_param + 1.0) * 2.0) + 1.0);
-  }
-}
-
-TEST(NURBS_Chapter3, Curve3DIntervalEqual) {
-  std::vector<glm::dvec3> control_points = {
-      {0, 0, 0.0}, {0, 1, -1.0}, {1, 1, 2.0}, {1, 0, 0.0}};
-  std::vector<double> knots = {0, 0, 0, 0, 1, 1, 1, 1};
-  BSplineCurve3D b_spline(3, control_points, knots);
-  for (double in_param = -0.01; in_param < 1.02; in_param += 0.01) {
-    double out_param = b_spline.InternalParameter(in_param);
-    EXPECT_DOUBLE_EQ(in_param, out_param);
-  }
-}
-
-TEST(NURBS_Chapter3, Curve3DIntervalShiftKnots) {
-  std::vector<glm::dvec3> control_points = {
-      {0, 0, 0.0}, {0, 1, -1.0}, {1, 1, 2.0}, {1, 0, 0.0}};
-  std::vector<double> knots = {1, 1, 1, 1, 5, 5, 5, 5};
-  BSplineCurve3D b_spline(3, control_points, knots);
-  for (double in_param = -0.01; in_param < 1.02; in_param += 0.01) {
-    double out_param = b_spline.InternalParameter(in_param);
-    EXPECT_DOUBLE_EQ(out_param, (in_param * 4.0) + 1.0);
-  }
-}
-
-TEST(NURBS_Chapter3, Curve3DIntervalShiftInterval) {
-  std::vector<glm::dvec3> control_points = {
-      {0, 0, 0.0}, {0, 1, -1.0}, {1, 1, 2.0}, {1, 0, 0.0}};
-  std::vector<double> knots = {1, 1, 1, 1, 5, 5, 5, 5};
-  BSplineCurve3D b_spline(3, control_points, knots, {-1.0, 1.0});
-  for (double in_param = -1.01; in_param < 1.02; in_param += 0.1) {
-    double out_param = b_spline.InternalParameter(in_param);
-    EXPECT_DOUBLE_EQ(out_param, ((in_param + 1.0) * 2.0) + 1.0);
-  }
-}
-
 TEST(NURBS_Chapter3, BSplineCurveBezierEquivalence2D) {
-  std::vector<glm::dvec2> control_points = {{0, 0}, {0, 1}, {1, 1}, {1, 0}};
+  std::vector<Point2D> control_points = {{0, 0}, {0, 1}, {1, 1}, {1, 0}};
   BezierCurve2D bezier(control_points);
-  BSplineCurve2D b_spline(3, control_points, {0, 0, 0, 0, 1, 1, 1, 1});
+  BSplineCurve2D b_spline(3, control_points, {0, 0, 0, 0, 1, 1, 1, 1},
+                          {0.0, 1.0});
   double div = 1.0 / 99.0;
   for (int32_t i = -1; i < 101; ++i) {
     double location = static_cast<double>(i) * div;
-    glm::dvec2 point_0 = bezier.EvaluateCurve(location);
-    glm::dvec2 point_1 = b_spline.EvaluateCurve(location);
+    Point2D point_0 = bezier.EvaluateCurve(location);
+    Point2D point_1 = b_spline.EvaluateCurve(location);
     EXPECT_DOUBLE_EQ(point_0.x, point_1.x);
     EXPECT_DOUBLE_EQ(point_0.y, point_1.y);
   }
 }
 
+TEST(NURBS_Chapter3, BSplineCurveBezierEquivalence2DInterval) {
+  constexpr double tolerance = std::numeric_limits<double>::epsilon() * 10;
+  const Point2D interval = {-1.2, 3.7};
+  std::vector<Point2D> control_points = {{0, 0}, {0, 1}, {1, 1}, {1, 0}};
+  BezierCurve2D bezier(control_points, interval);
+  BSplineCurve2D b_spline(3, control_points,
+                          {interval.x, interval.x, interval.x, interval.x,
+                           interval.y, interval.y, interval.y, interval.y},
+                          interval);
+  double div = 1.0 / 99.0;
+  div *= (interval.y - interval.x);
+  for (int32_t i = -1; i < 101; ++i) {
+    double location = (static_cast<double>(i) * div) + interval.x;
+    Point2D point_0 = bezier.EvaluateCurve(location);
+    Point2D point_1 = b_spline.EvaluateCurve(location);
+    EXPECT_NEAR(point_0.x, point_1.x, tolerance);
+    EXPECT_NEAR(point_0.y, point_1.y, tolerance);
+  }
+}
+
 TEST(NURBS_Chapter3, BSplineCurveBezierEquivalence3D) {
-  std::vector<glm::dvec3> control_points = {
+  std::vector<Point3D> control_points = {
       {0, 0, 0}, {0, 1, 1}, {1, 1, 2}, {1, 0, 1}};
   BezierCurve3D bezier(control_points);
   BSplineCurve3D b_spline(3, control_points, {0, 0, 0, 0, 1, 1, 1, 1});
   double div = 1.0 / 99.0;
   for (int32_t i = -1; i < 101; ++i) {
     double location = static_cast<double>(i) * div;
-    glm::dvec2 point_0 = bezier.EvaluateCurve(location);
-    glm::dvec2 point_1 = b_spline.EvaluateCurve(location);
+    Point3D point_0 = bezier.EvaluateCurve(location);
+    Point3D point_1 = b_spline.EvaluateCurve(location);
     EXPECT_DOUBLE_EQ(point_0.x, point_1.x);
     EXPECT_DOUBLE_EQ(point_0.y, point_1.y);
+    EXPECT_DOUBLE_EQ(point_0.z, point_1.z);
+  }
+}
+
+TEST(NURBS_Chapter3, BSplineCurveBezierEquivalence3DInterval) {
+  constexpr double tolerance = std::numeric_limits<double>::epsilon() * 10;
+  const Point2D interval = {-1.2, 3.7};
+  std::vector<Point3D> control_points = {
+      {0, 0, 0}, {0, 1, 1}, {1, 1, 2}, {1, 0, 1}};
+  BezierCurve3D bezier(control_points, interval);
+  BSplineCurve3D b_spline(3, control_points,
+                          {interval.x, interval.x, interval.x, interval.x,
+                           interval.y, interval.y, interval.y, interval.y},
+                          interval);
+
+  double div = 1.0 / 99.0;
+  div *= (interval.y - interval.x);
+
+  for (int32_t i = -1; i < 101; ++i) {
+    double location = (static_cast<double>(i) * div) + interval.x;
+    Point3D point_0 = bezier.EvaluateCurve(location);
+    Point3D point_1 = b_spline.EvaluateCurve(location);
+    EXPECT_NEAR(point_0.x, point_1.x, tolerance);
+    EXPECT_NEAR(point_0.y, point_1.y, tolerance);
+    EXPECT_NEAR(point_0.z, point_1.z, tolerance);
   }
 }
 
 TEST(NURBS_Chapter3, BSplineCurveBasisCompare2D) {
-  std::vector<glm::dvec2> control_points = {{0, 0}, {0, 1}, {1, 1}, {1, 0}};
+  std::vector<Point2D> control_points = {{0, 0}, {0, 1}, {1, 1}, {1, 0}};
   BezierCurve2D bezier(control_points);
   BSplineCurve2D b_spline(3, control_points, {0, 0, 0, 0, 1, 1, 1, 1});
   double div = 1.0 / 99.0;
   for (int32_t i = -1; i < 101; ++i) {
     double location = static_cast<double>(i) * div;
-    glm::dvec2 point_0 = bezier.EvaluateCurve(location);
-    glm::dvec2 point_1 = b_spline.EvaluateCurve(location);
+    Point2D point_0 = bezier.EvaluateCurve(location);
+    Point2D point_1 = b_spline.EvaluateCurve(location);
     EXPECT_DOUBLE_EQ(point_0.x, point_1.x);
     EXPECT_DOUBLE_EQ(point_0.y, point_1.y);
   }
 }
 
 TEST(NURBS_Chapter3, BSplineCurveBasisCompare3D) {
-  std::vector<glm::dvec3> control_points = {
+  std::vector<Point3D> control_points = {
       {0, 0, 0}, {0, 1, 2}, {1, 1, 3}, {1, 0, 1}};
   BezierCurve3D bezier(control_points);
   BSplineCurve3D b_spline(3, control_points, {0, 0, 0, 0, 1, 1, 1, 1});
   double div = 1.0 / 99.0;
   for (int32_t i = -1; i < 101; ++i) {
     double location = static_cast<double>(i) * div;
-    glm::dvec3 point_0 = bezier.EvaluateCurve(location);
-    glm::dvec3 point_1 = b_spline.EvaluateCurve(location);
+    Point3D point_0 = bezier.EvaluateCurve(location);
+    Point3D point_1 = b_spline.EvaluateCurve(location);
     EXPECT_DOUBLE_EQ(point_0.x, point_1.x);
     EXPECT_DOUBLE_EQ(point_0.y, point_1.y);
     EXPECT_DOUBLE_EQ(point_0.z, point_1.z);
@@ -135,39 +118,39 @@ TEST(NURBS_Chapter3, BSplineCurveBasisCompare3D) {
 }
 
 TEST(NURBS_Chapter3, BSplineCurveMin2D) {
-  std::vector<glm::dvec2> control_points = {
+  std::vector<Point2D> control_points = {
       {0, 0}, {0, 1}, {0.5, 0}, {1, 1}, {1, 0}};
   BSplineCurve2D b_spline(3, control_points, {0, 0, 0, 0, 1, 2, 2, 2, 2},
                           {0, 2});
   {
     double location = -1;
-    glm::dvec2 point = b_spline.EvaluateCurve(location);
+    Point2D point = b_spline.EvaluateCurve(location);
     EXPECT_DOUBLE_EQ(point.x, 0);
     EXPECT_DOUBLE_EQ(point.y, 0);
   }
   {
     double location = 0;
-    glm::dvec2 point = b_spline.EvaluateCurve(location);
+    Point2D point = b_spline.EvaluateCurve(location);
     EXPECT_DOUBLE_EQ(point.x, 0);
     EXPECT_DOUBLE_EQ(point.y, 0);
   }
 }
 
 TEST(NURBS_Chapter3, BSplineCurveMin3D) {
-  std::vector<glm::dvec3> control_points = {
+  std::vector<Point3D> control_points = {
       {0, 0, 0}, {0, 1, 1}, {0.5, 0, 1}, {1, 1, 1}, {1, 0, 0}};
   BSplineCurve3D b_spline(3, control_points, {0, 0, 0, 0, 1, 2, 2, 2, 2},
                           {0, 2});
   {
     double location = -1;
-    glm::dvec3 point = b_spline.EvaluateCurve(location);
+    Point3D point = b_spline.EvaluateCurve(location);
     EXPECT_DOUBLE_EQ(point.x, 0);
     EXPECT_DOUBLE_EQ(point.y, 0);
     EXPECT_DOUBLE_EQ(point.z, 0);
   }
   {
     double location = 0;
-    glm::dvec3 point = b_spline.EvaluateCurve(location);
+    Point3D point = b_spline.EvaluateCurve(location);
     EXPECT_DOUBLE_EQ(point.x, 0);
     EXPECT_DOUBLE_EQ(point.y, 0);
     EXPECT_DOUBLE_EQ(point.z, 0);
@@ -175,52 +158,52 @@ TEST(NURBS_Chapter3, BSplineCurveMin3D) {
 }
 
 TEST(NURBS_Chapter3, BSplineCurveMid2D) {
-  std::vector<glm::dvec2> control_points = {
+  std::vector<Point2D> control_points = {
       {0, 0}, {0, 1}, {0.5, 0}, {1, 1}, {1, 0}};
   BSplineCurve2D b_spline(3, control_points, {0, 0, 0, 0, 1, 2, 2, 2, 2},
                           {0, 2});
   {
     double location = 0.5;
-    glm::dvec2 point = b_spline.EvaluateCurve(location);
+    Point2D point = b_spline.EvaluateCurve(location);
     EXPECT_DOUBLE_EQ(point.x, 0.15625);
     EXPECT_DOUBLE_EQ(point.y, 0.625);
   }
   {
     double location = 1.0;
-    glm::dvec2 point = b_spline.EvaluateCurve(location);
+    Point2D point = b_spline.EvaluateCurve(location);
     EXPECT_DOUBLE_EQ(point.x, 0.5);
     EXPECT_DOUBLE_EQ(point.y, 0.5);
   }
   {
     double location = 1.5;
-    glm::dvec2 point = b_spline.EvaluateCurve(location);
+    Point2D point = b_spline.EvaluateCurve(location);
     EXPECT_DOUBLE_EQ(point.x, 0.84375);
     EXPECT_DOUBLE_EQ(point.y, 0.625);
   }
 }
 
 TEST(NURBS_Chapter3, BSplineCurveMid3D) {
-  std::vector<glm::dvec3> control_points = {
+  std::vector<Point3D> control_points = {
       {0, 0, 0}, {0, 1, 1}, {0.5, 0, 1}, {1, 1, 1}, {1, 0, 0}};
   BSplineCurve3D b_spline(3, control_points, {0, 0, 0, 0, 1, 2, 2, 2, 2},
                           {0, 2});
   {
     double location = 0.5;
-    glm::dvec3 point = b_spline.EvaluateCurve(location);
+    Point3D point = b_spline.EvaluateCurve(location);
     EXPECT_DOUBLE_EQ(point.x, 0.15625);
     EXPECT_DOUBLE_EQ(point.y, 0.625);
     EXPECT_DOUBLE_EQ(point.z, 0.875);
   }
   {
     double location = 1.0;
-    glm::dvec3 point = b_spline.EvaluateCurve(location);
+    Point3D point = b_spline.EvaluateCurve(location);
     EXPECT_DOUBLE_EQ(point.x, 0.5);
     EXPECT_DOUBLE_EQ(point.y, 0.5);
     EXPECT_DOUBLE_EQ(point.z, 1.0);
   }
   {
     double location = 1.5;
-    glm::dvec3 point = b_spline.EvaluateCurve(location);
+    Point3D point = b_spline.EvaluateCurve(location);
     EXPECT_DOUBLE_EQ(point.x, 0.84375);
     EXPECT_DOUBLE_EQ(point.y, 0.625);
     EXPECT_DOUBLE_EQ(point.z, 0.875);
@@ -228,39 +211,39 @@ TEST(NURBS_Chapter3, BSplineCurveMid3D) {
 }
 
 TEST(NURBS_Chapter3, BSplineCurveMax2D) {
-  std::vector<glm::dvec2> control_points = {
+  std::vector<Point2D> control_points = {
       {0, 0}, {0, 1}, {0.5, 0}, {1, 1}, {1, 0}};
   BSplineCurve2D b_spline(3, control_points, {0, 0, 0, 0, 1, 2, 2, 2, 2},
                           {0, 2});
   {
     double location = 2;
-    glm::dvec2 point = b_spline.EvaluateCurve(location);
+    Point2D point = b_spline.EvaluateCurve(location);
     EXPECT_DOUBLE_EQ(point.x, 1);
     EXPECT_DOUBLE_EQ(point.y, 0);
   }
   {
     double location = 3;
-    glm::dvec2 point = b_spline.EvaluateCurve(location);
+    Point2D point = b_spline.EvaluateCurve(location);
     EXPECT_DOUBLE_EQ(point.x, 1);
     EXPECT_DOUBLE_EQ(point.y, 0);
   }
 }
 
 TEST(NURBS_Chapter3, BSplineCurveMax3D) {
-  std::vector<glm::dvec3> control_points = {
+  std::vector<Point3D> control_points = {
       {0, 0, 0}, {0, 1, 1}, {0.5, 0, 1}, {1, 1, 1}, {1, 0, 0}};
   BSplineCurve3D b_spline(3, control_points, {0, 0, 0, 0, 1, 2, 2, 2, 2},
                           {0, 2});
   {
     double location = 2;
-    glm::dvec3 point = b_spline.EvaluateCurve(location);
+    Point3D point = b_spline.EvaluateCurve(location);
     EXPECT_DOUBLE_EQ(point.x, 1);
     EXPECT_DOUBLE_EQ(point.y, 0);
     EXPECT_DOUBLE_EQ(point.z, 0);
   }
   {
     double location = 3;
-    glm::dvec3 point = b_spline.EvaluateCurve(location);
+    Point3D point = b_spline.EvaluateCurve(location);
     EXPECT_DOUBLE_EQ(point.x, 1);
     EXPECT_DOUBLE_EQ(point.y, 0);
     EXPECT_DOUBLE_EQ(point.z, 0);
@@ -269,7 +252,7 @@ TEST(NURBS_Chapter3, BSplineCurveMax3D) {
 
 // p91 - TODO: Calculate and finish
 TEST(NURBS_Chapter3, DISABLED_BSplineCurveDeriv) {
-  std::vector<glm::dvec2> control_points = {{0, 0}, {0, 1}, {0.5, 0.5},
+  std::vector<Point2D> control_points = {{0, 0}, {0, 1}, {0.5, 0.5},
                                             {1, 1}, {1, 0}, {2, 0}};
   std::vector<double> knots = {0, 0, 0, 1, 2, 4, 4, 5, 5, 5};
   uint32_t degree = 2;
@@ -288,14 +271,14 @@ TEST(NURBS_Chapter3, DISABLED_BSplineCurveDeriv) {
 }
 
 TEST(NURBS_Chapter3, BSplineCurveDeriv2DEx3_1) {
-  std::vector<glm::dvec2> control_points = {{0, 0}, {0, 1}, {1, 1}, {1, 0}};
+  std::vector<Point2D> control_points = {{0, 0}, {0, 1}, {1, 1}, {1, 0}};
   BezierCurve2D bezier(control_points);
   BSplineCurve2D b_spline(3, control_points, {0, 0, 0, 0, 1, 1, 1, 1});
   double div = 1.0 / 99.0;
   for (int32_t i = 0; i < 100; ++i) {
     double location = static_cast<double>(i) * div;
-    glm::dvec2 point_b = bezier.Derivative(location);
-    std::vector<glm::dvec2> point_s = b_spline.Derivatives(location, 1);
+    Point2D point_b = bezier.Derivative(location);
+    std::vector<Point2D> point_s = b_spline.Derivatives(location, 1);
     // Numbers are not between 0 and 1, so the epsilon needs to be scaled
     // This is not the proper scaling though.
     EXPECT_NEAR(point_b.x, point_s[1].x,
@@ -306,15 +289,15 @@ TEST(NURBS_Chapter3, BSplineCurveDeriv2DEx3_1) {
 }
 
 TEST(NURBS_Chapter3, BSplineCurveDeriv3DEx3_1) {
-  std::vector<glm::dvec3> control_points = {
+  std::vector<Point3D> control_points = {
       {0, 0, 0}, {0, 1, 2}, {1, 1, 2}, {1, 0, 0}};
   BezierCurve3D bezier(control_points);
   BSplineCurve3D b_spline(3, control_points, {0, 0, 0, 0, 1, 1, 1, 1});
   double div = 1.0 / 99.0;
   for (int32_t i = 0; i < 100; ++i) {
     double location = static_cast<double>(i) * div;
-    glm::dvec3 point_b = bezier.Derivative(location);
-    std::vector<glm::dvec3> point_s = b_spline.Derivatives(location, 1);
+    Point3D point_b = bezier.Derivative(location);
+    std::vector<Point3D> point_s = b_spline.Derivatives(location, 1);
     // Numbers are not between 0 and 1, so the epsilon needs to be scaled
     // This is not the proper scaling though.
     EXPECT_NEAR(point_b.x, point_s[1].x,
@@ -351,15 +334,15 @@ TEST(NURBS_Chapter3, AllBasisFunCompare) {
 }
 
 TEST(NURBS_Chapter3, BSplineCurveDerivCompare2D) {
-  std::vector<glm::dvec2> control_points = {
+  std::vector<Point2D> control_points = {
       {0, 0}, {0, 1}, {0.5, 0.5}, {1, 1}, {1, 0}};
   BSplineCurve2D b_spline(3, control_points, {0, 0, 0, 0, 1, 2, 2, 2, 2},
                           {0, 2});
   double div = 1.0 / 99.0;
   for (int32_t i = 0; i < 100; ++i) {
     double location = static_cast<double>(i) * div;
-    std::vector<glm::dvec2> points_0 = b_spline.Derivatives(location, 1);
-    std::vector<glm::dvec2> points_1 = b_spline.Derivatives2(location, 1);
+    std::vector<Point2D> points_0 = b_spline.Derivatives(location, 1);
+    std::vector<Point2D> points_1 = b_spline.Derivatives2(location, 1);
     ASSERT_EQ(points_0.size(), points_1.size());
     // Numbers are not between 0 and 1, so the epsilon needs to be scaled
     // This is not the proper scaling though.
@@ -373,15 +356,15 @@ TEST(NURBS_Chapter3, BSplineCurveDerivCompare2D) {
 }
 
 TEST(NURBS_Chapter3, BSplineCurveDerivCompare3D) {
-  std::vector<glm::dvec3> control_points = {
+  std::vector<Point3D> control_points = {
       {0, 0, 0}, {0, 1, 1}, {0.5, 0.5, 2}, {1, 1, 1}, {1, 0, 0}};
   BSplineCurve3D b_spline(3, control_points, {0, 0, 0, 0, 1, 2, 2, 2, 2},
                           {0, 2});
   double div = 1.0 / 99.0;
   for (int32_t i = 0; i < 100; ++i) {
     double location = static_cast<double>(i) * div;
-    std::vector<glm::dvec3> points_0 = b_spline.Derivatives(location, 1);
-    std::vector<glm::dvec3> points_1 = b_spline.Derivatives2(location, 1);
+    std::vector<Point3D> points_0 = b_spline.Derivatives(location, 1);
+    std::vector<Point3D> points_1 = b_spline.Derivatives2(location, 1);
     ASSERT_EQ(points_0.size(), points_1.size());
     // Numbers are not between 0 and 1, so the epsilon needs to be scaled
     // This is not the proper scaling though.
@@ -402,7 +385,7 @@ TEST(NURBS_Chapter3, BSplineSurfaceConstruct) {
   uint32_t degree = 3;
   std::vector<double> u_knots = {0, 0, 0, 0, 1, 2, 2, 2, 2};
   std::vector<double> v_knots = {0, 0, 0, 0, 1, 2, 2, 2, 2};
-  std::vector<std::vector<glm::dvec3>> control_points = {
+  std::vector<std::vector<Point3D>> control_points = {
       {{-1, 0, -1},
        {-0.33, 0.1, -1.33},
        {0.33, 0.1, -1.33},
@@ -437,7 +420,7 @@ TEST(NURBS_Chapter3, BSplineSurfaceBezierCompare) {
   uint32_t degree = 3;
   std::vector<double> u_knots = {0, 0, 0, 0, 1, 1, 1, 1};
   std::vector<double> v_knots = {0, 0, 0, 0, 1, 1, 1, 1};
-  std::vector<std::vector<glm::dvec3>> control_points = {
+  std::vector<std::vector<Point3D>> control_points = {
       {{-0.87, 0, -0.87},
        {-0.33, 0.1, -1.33},
        {0.33, 0.1, -1.33},
@@ -464,11 +447,11 @@ TEST(NURBS_Chapter3, BSplineSurfaceBezierCompare) {
   // Compare the surfaces
   double div = 1.0 / 99.0;
   for (int32_t i = 0; i < 100; ++i) {
-    glm::dvec2 location = {static_cast<double>(i) * div, 0};
+    Point2D location = {static_cast<double>(i) * div, 0};
     for (int32_t j = 0; j < 100; ++j) {
       location.y = static_cast<double>(j) * div;
-      glm::dvec3 point_bspl = bspl_surface.EvaluatePoint(location);
-      glm::dvec3 point_bez = bspl_surface.EvaluatePoint(location);
+      Point3D point_bspl = bspl_surface.EvaluatePoint(location);
+      Point3D point_bez = bspl_surface.EvaluatePoint(location);
       // Numbers are not between 0 and 1, so the epsilon needs to be scaled
       // This is not the proper scaling though.
       EXPECT_DOUBLE_EQ(point_bspl.x, point_bez.x);
@@ -479,14 +462,14 @@ TEST(NURBS_Chapter3, BSplineSurfaceBezierCompare) {
 }
 
 TEST(NURBS_Chapter3, BSplineSurfacePoints) {
-  glm::dvec2 interval = {0, 4};
+  Point2D interval = {0, 4};
   uint32_t u_degree = 4;
   uint32_t v_degree = 3;
   std::vector<double> u_knots = {0, 0, 0, 0, 0, 1, 2, 2, 3, 4, 4, 4, 4, 4};
   std::vector<double> v_knots = {0, 0, 0, 0, 1, 1, 2, 3, 3, 4, 4, 4, 4};
   uint32_t u_points = static_cast<uint32_t>(u_knots.size()) - u_degree - 1;
   uint32_t v_points = static_cast<uint32_t>(v_knots.size()) - v_degree - 1;
-  std::vector<std::vector<glm::dvec3>> control_points;
+  std::vector<std::vector<Point3D>> control_points;
   std::vector<BSplineCurve3D> curves;
   control_points.resize(u_points);
   curves.reserve(u_points);
@@ -498,7 +481,7 @@ TEST(NURBS_Chapter3, BSplineSurfacePoints) {
       double v_val =
           static_cast<double>(v_index) - (static_cast<double>(v_points) * 0.5);
       double dist_0_sq = (u_val * u_val) + (v_val * v_val);
-      control_points[u_index][v_index] = {u_index, v_index, dist_0_sq};
+      control_points[u_index][v_index] = {u_val, v_val, dist_0_sq};
     }
     curves.emplace_back(v_degree, control_points[u_index], v_knots, interval);
   }
@@ -509,17 +492,17 @@ TEST(NURBS_Chapter3, BSplineSurfacePoints) {
   // Compare the surface to the curves
   double div = 1.0 / 99.0;
   for (int32_t i = 0; i < 100; ++i) {
-    glm::dvec2 location = {static_cast<double>(i) * div, 0};
+    Point2D location = {static_cast<double>(i) * div, 0};
     for (int32_t j = 0; j < 100; ++j) {
       location.y = static_cast<double>(j) * div;
-      glm::dvec3 point_bspl = b_spline_surface.EvaluatePoint(location);
+      Point3D point_bspl = b_spline_surface.EvaluatePoint(location);
 
-      std::vector<glm::dvec3> temp_pts(curves.size());
+      std::vector<Point3D> temp_pts(curves.size());
       for (size_t index = 0; index < curves.size(); ++index) {
         temp_pts[index] = curves[index].EvaluateCurve(location.y);
       }
       BSplineCurve3D u_curve(u_degree, temp_pts, u_knots, interval);
-      glm::dvec3 point_curv = u_curve.EvaluateCurve(location.x);
+      Point3D point_curv = u_curve.EvaluateCurve(location.x);
       // Numbers are not between 0 and 1, so the epsilon needs to be scaled
       // This is not the proper scaling though.
       EXPECT_NEAR(point_bspl.x, point_curv.x,
@@ -534,7 +517,7 @@ TEST(NURBS_Chapter3, BSplineSurfacePoints) {
 
 // TODO - Add more tests for B-Spline Curve Derivatives
 TEST(NURBS_Chapter3, DISABLED_BSplineSurfaceDerivCompare) {
-  std::vector<std::vector<glm::dvec3>> control_polygon = {
+  std::vector<std::vector<Point3D>> control_polygon = {
       {{0, 0, 0}, {1, 1, 0}, {0.5, 0.5, 0}, {1, 1, 0}, {1, 0, 0}, {2, -1, 0}},
       {{0, 1, 1}, {0, 3, 1}, {0.5, 1.5, 1}, {1, 2, 1}, {1, -1, 1}, {2, -2, 1}},
       {{0, 0, 2}, {1, 4, 1}, {0.5, 1.5, 2}, {1, 3, 2}, {1, -2, 2}, {2, -3, 2}},
@@ -555,10 +538,10 @@ TEST(NURBS_Chapter3, DISABLED_BSplineSurfaceDerivCompare) {
     double u_location = static_cast<double>(i) * div;
     for (int32_t j = 0; j < 100; ++j) {
       double v_location = static_cast<double>(j) * div;
-      glm::dvec2 location = {u_location, v_location};
-      std::vector<std::vector<glm::dvec3>> points_0 =
+      Point2D location = {u_location, v_location};
+      std::vector<std::vector<Point3D>> points_0 =
           b_spline.Derivative(location, 2);
-      std::vector<std::vector<glm::dvec3>> points_1 =
+      std::vector<std::vector<Point3D>> points_1 =
           b_spline.Derivatives2(location, 2);
       ASSERT_EQ(points_0.size(), points_1.size());
       // Numbers are not between 0 and 1, so the epsilon needs to be scaled

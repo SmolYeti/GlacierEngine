@@ -13,19 +13,19 @@ public:
 
   NURBSSurface(uint32_t u_degree, uint32_t v_degree,
                std::vector<double> u_knots, std::vector<double> v_knots,
-               std::vector<std::vector<glm::dvec4>> control_polygon,
-               glm::dvec2 u_interval = {0.0, 1.0},
-               glm::dvec2 v_interval = {0.0, 1.0});
+               std::vector<std::vector<Point4D>> control_polygon,
+               Point2D u_interval = {0.0, 1.0},
+               Point2D v_interval = {0.0, 1.0});
 
-  glm::dvec3 EvaluatePoint(glm::dvec2 uv) const override;
+  Point3D EvaluatePoint(Point2D uv) const override;
 
-  /* std::vector<glm::dvec3> EvaluatePoints(
+  /* std::vector<Point3D> EvaluatePoints(
        uint32_t u_sample_count, uint32_t v_sample_count) const override;*/
-  std::vector<std::vector<glm::dvec3>>
-  Derivatives(glm::dvec2 uv, uint32_t max_derivative) const;
+  std::vector<std::vector<Point3D>>
+  Derivatives(Point2D uv, uint32_t max_derivative) const;
 
   enum SurfaceDirection { kUDir, kVDir };
-  NURBSSurface KnotInsert(SurfaceDirection dir, double knot, uint32_t times);
+  NURBSSurface KnotInsert(SurfaceDirection dir, double knot, int times);
 
   const std::vector<double> &u_knots() { return u_knots_; }
   const std::vector<double> &v_knots() { return v_knots_; }
@@ -35,10 +35,10 @@ public:
     uint32_t v_degree_;
     std::vector<double> u_knots_;
     std::vector<double> v_knots_;
-    std::vector<std::vector<glm::dvec4>> control_polygon_;
+    std::vector<std::vector<Point4D>> control_polygon_;
 
-    glm::dvec2 u_internal_interval_;
-    glm::dvec2 v_internal_interval_;
+    Point2D u_internal_interval_;
+    Point2D v_internal_interval_;
   };
 
 } // namespace nurbs

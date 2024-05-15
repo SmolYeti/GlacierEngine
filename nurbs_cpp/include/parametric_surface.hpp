@@ -7,14 +7,15 @@
 #include <functional>
 
 namespace nurbs {
-    class ParametricSurface : public Surface {
-    public:
-        ParametricSurface(std::array<std::function<double(glm::dvec2)>, 3> functions, glm::dvec2 u_interval = { 0.0, 1.0 },
-            glm::dvec2 v_interval = { 0.0, 1.0 });
+class ParametricSurface : public Surface {
+public:
+  ParametricSurface(std::array<std::function<double(Point2D)>, 3> functions,
+                    Point2D u_interval = {0.0, 1.0},
+                    Point2D v_interval = {0.0, 1.0});
 
-        glm::dvec3 EvaluatePoint(glm::dvec2 uv) const override;
+  Point3D EvaluatePoint(Point2D uv) const override;
 
-    private:
-        const std::array<std::function<double(glm::dvec2)>, 3> functions_;
-    };
-}
+private:
+  const std::array<std::function<double(Point2D)>, 3> functions_;
+};
+} // namespace nurbs

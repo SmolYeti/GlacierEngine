@@ -184,7 +184,7 @@ VulkanApplication::~VulkanApplication() {
 void VulkanApplication::LoadGameObjects() {
   // Curve Model
   {
-    std::vector<glm::dvec2> control_points = {
+    std::vector<nurbs::Point2D> control_points = {
         {0, 0}, {0, 1}, {0.5, -1}, {1, 1}, {1, 0}};
     nurbs::BSplineCurve2D b_spline(3, control_points,
                                    {0, 0, 0, 0, 1, 2, 2, 2, 2}, {0, 2});
@@ -201,7 +201,7 @@ void VulkanApplication::LoadGameObjects() {
     uint32_t degree = 3;
     std::vector<double> u_knots = {0, 0, 0, 0, 1, 2, 2, 2, 2};
     std::vector<double> v_knots = {0, 0, 0, 0, 1, 2, 2, 2, 2};
-    std::vector<std::vector<glm::dvec3>> control_points = {
+    std::vector<std::vector<nurbs::Point3D>> control_points = {
         {{-1, 0, -1},
          {-0.33, 0.1, -1.33},
          {0.33, 0.1, -1.33},
