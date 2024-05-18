@@ -38,11 +38,11 @@ std::vector<std::vector<double>> AllBasisFuns(uint32_t span, double u,
 
 std::vector<std::vector<double>> BinomialCoefficients(uint32_t n, uint32_t k);
 
-uint32_t MultiplicityKnotI(int32_t degree, const std::vector<uint32_t> &knots,
+int MultiplicityKnotI(int32_t degree, const std::vector<uint32_t> &knots,
                            int knot);
-uint32_t MultiplicityKnotU(int32_t degree, const std::vector<uint32_t> &knots,
+int MultiplicityKnotU(int32_t degree, const std::vector<uint32_t> &knots,
                            uint32_t knot);
-uint32_t MultiplicityParam(int32_t degree, const std::vector<double> &knots,
+int MultiplicityParam(int32_t degree, const std::vector<double> &knots,
                            double param, double tolerance);
 } // namespace knots
 } // namespace nurbs

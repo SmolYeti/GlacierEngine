@@ -105,38 +105,38 @@ TEST(NURBS_Chapter2, MultiplicityKnotI) {
   constexpr uint32_t degree = 3;
   const std::vector<uint32_t> knots = {0, 0, 0, 0, 1, 2, 2,
                                        2, 3, 3, 4, 4, 4, 4};
-  uint32_t ret = MultiplicityKnotI(degree, knots, -1);
-  EXPECT_EQ(ret, 0);
+  int ret = MultiplicityKnotI(degree, knots, -1);
+  EXPECT_EQ(ret, -1);
   ret = MultiplicityKnotI(degree, knots, 0);
-  EXPECT_EQ(ret, 4);
-  ret = MultiplicityKnotI(degree, knots, 1);
-  EXPECT_EQ(ret, 1);
-  ret = MultiplicityKnotI(degree, knots, 2);
   EXPECT_EQ(ret, 3);
-  ret = MultiplicityKnotI(degree, knots, 3);
-  EXPECT_EQ(ret, 2);
-  ret = MultiplicityKnotI(degree, knots, 4);
-  EXPECT_EQ(ret, 4);
-  ret = MultiplicityKnotI(degree, knots, 5);
+  ret = MultiplicityKnotI(degree, knots, 1);
   EXPECT_EQ(ret, 0);
+  ret = MultiplicityKnotI(degree, knots, 2);
+  EXPECT_EQ(ret, 2);
+  ret = MultiplicityKnotI(degree, knots, 3);
+  EXPECT_EQ(ret, 1);
+  ret = MultiplicityKnotI(degree, knots, 4);
+  EXPECT_EQ(ret, 3);
+  ret = MultiplicityKnotI(degree, knots, 5);
+  EXPECT_EQ(ret, -1);
 }
 
 TEST(NURBS_Chapter2, MultiplicityKnotU) {
   constexpr uint32_t degree = 3;
   const std::vector<uint32_t> knots = {0, 0, 0, 0, 1, 2, 2,
                                        2, 3, 3, 4, 4, 4, 4};
-  uint32_t ret = MultiplicityKnotU(degree, knots, 0);
-  EXPECT_EQ(ret, 4);
-  ret = MultiplicityKnotU(degree, knots, 1);
-  EXPECT_EQ(ret, 1);
-  ret = MultiplicityKnotU(degree, knots, 2);
+  int ret = MultiplicityKnotU(degree, knots, 0);
   EXPECT_EQ(ret, 3);
-  ret = MultiplicityKnotU(degree, knots, 3);
-  EXPECT_EQ(ret, 2);
-  ret = MultiplicityKnotU(degree, knots, 4);
-  EXPECT_EQ(ret, 4);
-  ret = MultiplicityKnotU(degree, knots, 5);
+  ret = MultiplicityKnotU(degree, knots, 1);
   EXPECT_EQ(ret, 0);
+  ret = MultiplicityKnotU(degree, knots, 2);
+  EXPECT_EQ(ret, 2);
+  ret = MultiplicityKnotU(degree, knots, 3);
+  EXPECT_EQ(ret, 1);
+  ret = MultiplicityKnotU(degree, knots, 4);
+  EXPECT_EQ(ret, 3);
+  ret = MultiplicityKnotU(degree, knots, 5);
+  EXPECT_EQ(ret, -1);
 }
 
 TEST(NURBS_Chapter2, MultiplicityParam) {
@@ -144,28 +144,28 @@ TEST(NURBS_Chapter2, MultiplicityParam) {
   const std::vector<double> knots = {0, 0, 0, 0, 1, 2, 2,
                                        2, 3, 3, 4, 4, 4, 4};
   
-  uint32_t ret = MultiplicityParam(degree, knots, -1.0, kTolerance);
-  EXPECT_EQ(ret, 0);
+  int ret = MultiplicityParam(degree, knots, -1.0, kTolerance);
+  EXPECT_EQ(ret, -1);
   ret = MultiplicityParam(degree, knots, 0.0, kTolerance);
-  EXPECT_EQ(ret, 4);
-  ret = MultiplicityParam(degree, knots, 0.5, kTolerance);
-  EXPECT_EQ(ret, 0);
-  ret = MultiplicityParam(degree, knots, 1.0, kTolerance);
-  EXPECT_EQ(ret, 1);
-  ret = MultiplicityParam(degree, knots, 1.5, kTolerance);
-  EXPECT_EQ(ret, 0);
-  ret = MultiplicityParam(degree, knots, 2.0, kTolerance);
   EXPECT_EQ(ret, 3);
-  ret = MultiplicityParam(degree, knots, 2.99, kTolerance);
+  ret = MultiplicityParam(degree, knots, 0.5, kTolerance);
+  EXPECT_EQ(ret, -1);
+  ret = MultiplicityParam(degree, knots, 1.0, kTolerance);
   EXPECT_EQ(ret, 0);
-  ret = MultiplicityParam(degree, knots, 3.0, kTolerance);
+  ret = MultiplicityParam(degree, knots, 1.5, kTolerance);
+  EXPECT_EQ(ret, -1);
+  ret = MultiplicityParam(degree, knots, 2.0, kTolerance);
   EXPECT_EQ(ret, 2);
+  ret = MultiplicityParam(degree, knots, 2.99, kTolerance);
+  EXPECT_EQ(ret, -1);
+  ret = MultiplicityParam(degree, knots, 3.0, kTolerance);
+  EXPECT_EQ(ret, 1);
   ret = MultiplicityParam(degree, knots, 3.0001, kTolerance);
-  EXPECT_EQ(ret, 0);
+  EXPECT_EQ(ret, -1);
   ret = MultiplicityParam(degree, knots, 4.0, kTolerance);
-  EXPECT_EQ(ret, 4);
+  EXPECT_EQ(ret, 3);
   ret = MultiplicityParam(degree, knots, 5.0, kTolerance);
-  EXPECT_EQ(ret, 0);
+  EXPECT_EQ(ret, -1);
 }
 
 TEST(NURBS_Chapter2, BasisEx2_3) {  

@@ -448,32 +448,32 @@ std::vector<std::vector<double>> BinomialCoefficients(uint32_t n, uint32_t k) {
   return bin;
 }
 
-uint32_t MultiplicityKnotI(int32_t degree, const std::vector<uint32_t> &knots,
-                           int knot) {
+int MultiplicityKnotI(int32_t degree, const std::vector<uint32_t> &knots,
+                      int knot) {
   if (knot < 0) {
-    return 0;
+    return -1;
   } else {
     return MultiplicityKnotU(degree, knots, static_cast<uint32_t>(knot));
   }
 }
 
-uint32_t MultiplicityKnotU(int32_t degree, const std::vector<uint32_t> &knots,
-                           uint32_t knot) {
-  uint32_t mult = 0;
+int MultiplicityKnotU(int32_t degree, const std::vector<uint32_t> &knots,
+                      uint32_t knot) {
+  int mult = -1;
   auto index = knots::FindStartKnot(degree, knots, knot);
-  while (index + mult < knots.size() &&
-         static_cast<int>(knots[index + mult]) == knot) {
+  while (index + mult + 1 < knots.size() &&
+         static_cast<int>(knots[index + mult + 1]) == knot) {
     ++mult;
   }
   return mult;
 }
 
-uint32_t MultiplicityParam(int32_t degree, const std::vector<double> &knots,
-                           double param, double tolerance) {
-  uint32_t mult = 0;
+int MultiplicityParam(int32_t degree, const std::vector<double> &knots,
+                      double param, double tolerance) {
+  int mult = -1;
   auto index = knots::FindStartParam(degree, knots, param, tolerance);
-  while (index + mult < knots.size() &&
-         std::abs(param - static_cast<double>(knots[index + mult])) <=
+  while (index + mult + 1 < knots.size() &&
+         std::abs(param - static_cast<double>(knots[index + mult + 1])) <=
              tolerance) {
     ++mult;
   }

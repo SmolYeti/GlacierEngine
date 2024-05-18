@@ -73,7 +73,7 @@ struct Point4D {
 
 // Point 2D Operators
 static Point2D operator+(double lhs, const Point2D &rhs) {
-  return {rhs.x + lhs, rhs.y + lhs};
+  return {lhs + rhs.x, lhs + rhs.y};
 }
 
 static Point2D operator-(double lhs, const Point2D &rhs) {
@@ -81,7 +81,7 @@ static Point2D operator-(double lhs, const Point2D &rhs) {
 }
 
 static Point2D operator*(double lhs, const Point2D &rhs) {
-  return {rhs.x * lhs, rhs.y * lhs};
+  return {lhs * rhs.x, lhs * rhs.y};
 }
 
 static Point2D operator/(double lhs, const Point2D &rhs) {
@@ -112,7 +112,7 @@ static Point4D operator+(double lhs, const Point4D &rhs) {
 }
 
 static Point4D operator-(double lhs, const Point4D &rhs) {
-  return {lhs - rhs.x, lhs - rhs.y, lhs - rhs.z, lhs - rhs.z};
+  return {lhs - rhs.x, lhs - rhs.y, lhs - rhs.z, lhs - rhs.w};
 }
 
 static Point4D operator*(double lhs, const Point4D &rhs) {

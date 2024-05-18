@@ -6,7 +6,7 @@ namespace nurbs {
 Point2D Point2D::operator+(double rhs) const { return {x + rhs, y + rhs}; }
 
 Point2D Point2D::operator+(const Point2D &rhs) const {
-  return {x + rhs.x, y + rhs.x};
+  return {x + rhs.x, y + rhs.y};
 }
 
 void Point2D::operator+=(double rhs) {
@@ -56,7 +56,7 @@ Point3D Point3D::operator+(double rhs) const {
 }
 
 Point3D Point3D::operator+(const Point3D &rhs) const {
-  return {x + rhs.x, y + rhs.x, z + rhs.z};
+  return {x + rhs.x, y + rhs.y, z + rhs.z};
 }
 
 void Point3D::operator+=(double rhs) {
@@ -118,7 +118,7 @@ Point4D Point4D::operator+(double rhs) const {
 }
 
 Point4D Point4D::operator+(const Point4D &rhs) const {
-  return {x + rhs.x, y + rhs.x, z + rhs.z, w + rhs.w};
+  return {x + rhs.x, y + rhs.y, z + rhs.z, w + rhs.w};
 }
 
 void Point4D::operator+=(double rhs) {

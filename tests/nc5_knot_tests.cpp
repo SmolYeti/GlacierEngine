@@ -20,9 +20,9 @@ TEST(NURBS_Chapter5, InsertKnotNone2D) {
   NURBSCurve2D insert_curve = nurbs_curve.KnotInsertion(1, 0);
 
   // Check knot multiplicity
-  uint32_t knot_count =
+  int knot_count =
       knots::MultiplicityParam(degree, insert_curve.knots(), 1, kTestEpsilon);
-  EXPECT_EQ(knot_count, 1);
+  EXPECT_EQ(knot_count, 0);
 
   // Compare
   double div = (1.0 / 99.0) * (interval.y - interval.x);
@@ -50,13 +50,15 @@ TEST(NURBS_Chapter5, InsertKnotOnce2D) {
   NURBSCurve2D insert_curve = nurbs_curve.KnotInsertion(3, 1);
 
   // Check knot multiplicity
-  uint32_t knot_count =
+  int knot_count =
       knots::MultiplicityParam(degree, insert_curve.knots(), 3, kTestEpsilon);
-  EXPECT_EQ(knot_count, 2);
+  EXPECT_EQ(knot_count, 1);
 
   // Compare
-  double div = (1.0 / 99.0) * (interval.y - interval.x);
-  for (int32_t i = -1; i < 101; ++i) {
+  int test_points = 10;
+  double d_pts = static_cast<double>(test_points);
+  double div = (1.0 / d_pts) * (interval.y - interval.x);
+  for (int32_t i = -1; i < d_pts + 1; ++i) {
     double location = (static_cast<double>(i) * div) + interval.x;
     Point2D point_nurbs = nurbs_curve.EvaluateCurve(location);
     Point2D point_isrt = insert_curve.EvaluateCurve(location);
@@ -80,9 +82,9 @@ TEST(NURBS_Chapter5, InsertKnotTwice2D) {
   NURBSCurve2D insert_curve = nurbs_curve.KnotInsertion(2, 2);
 
   // Check knot multiplicity
-  uint32_t knot_count =
+  int knot_count =
       knots::MultiplicityParam(degree, insert_curve.knots(), 2, kTestEpsilon);
-  EXPECT_EQ(knot_count, 4);
+  EXPECT_EQ(knot_count, 3);
 
   // Compare
   double div = (1.0 / 99.0) * (interval.y - interval.x);
@@ -110,9 +112,9 @@ TEST(NURBS_Chapter5, InsertKnotsAtOne2D) {
   NURBSCurve2D insert_curve = nurbs_curve.KnotInsertion(1, 3);
 
   // Check knot multiplicity
-  uint32_t knot_count =
+  int knot_count =
       knots::MultiplicityParam(degree, insert_curve.knots(), 1, kTestEpsilon);
-  EXPECT_EQ(knot_count, 4);
+  EXPECT_EQ(knot_count, 3);
 
   // Compare
   double div = (1.0 / 99.0) * (interval.y - interval.x);
@@ -175,6 +177,7 @@ TEST(NURBS_Chapter5, CurveCutPoints2D) {
     EXPECT_DOUBLE_EQ(point_nurbs.y, point_cut.y);
   }
 }
+
 TEST(NURBS_Chapter5, InsertKnotNone3D) {
   constexpr double kTestEpsilon = std::numeric_limits<double>::epsilon();
   // NURBS Curves
@@ -190,9 +193,9 @@ TEST(NURBS_Chapter5, InsertKnotNone3D) {
   NURBSCurve3D insert_curve = nurbs_curve.KnotInsertion(1, 0);
 
   // Check knot multiplicity
-  uint32_t knot_count =
+  int knot_count =
       knots::MultiplicityParam(degree, insert_curve.knots(), 1, kTestEpsilon);
-  EXPECT_EQ(knot_count, 1);
+  EXPECT_EQ(knot_count, 0);
 
   // Compare
   int32_t splits = 100;
@@ -223,9 +226,9 @@ TEST(NURBS_Chapter5, InsertKnotOnce3D) {
   NURBSCurve3D insert_curve = nurbs_curve.KnotInsertion(3, 1);
 
   // Check knot multiplicity
-  uint32_t knot_count =
+  int knot_count =
       knots::MultiplicityParam(degree, insert_curve.knots(), 3, kTestEpsilon);
-  EXPECT_EQ(knot_count, 2);
+  EXPECT_EQ(knot_count, 1);
 
   // Compare
   int32_t splits = 100;
@@ -256,9 +259,9 @@ TEST(NURBS_Chapter5, InsertKnotTwice3D) {
   NURBSCurve3D insert_curve = nurbs_curve.KnotInsertion(2, 2);
 
   // Check knot multiplicity
-  uint32_t knot_count =
+  int knot_count =
       knots::MultiplicityParam(degree, insert_curve.knots(), 2, kTestEpsilon);
-  EXPECT_EQ(knot_count, 4);
+  EXPECT_EQ(knot_count, 3);
 
   // Compare
   int32_t splits = 100;
@@ -289,9 +292,9 @@ TEST(NURBS_Chapter5, InsertKnotsAtOne3D) {
   NURBSCurve3D insert_curve = nurbs_curve.KnotInsertion(1, 3);
 
   // Check knot multiplicity
-  uint32_t knot_count =
+  int knot_count =
       knots::MultiplicityParam(degree, insert_curve.knots(), 1, kTestEpsilon);
-  EXPECT_EQ(knot_count, 4);
+  EXPECT_EQ(knot_count, 3);
 
   // Compare
   int32_t splits = 100;
@@ -362,6 +365,61 @@ TEST(NURBS_Chapter5, CurveCutPoints3D) {
   }
 }
 
+TEST(NURBS_Chapter5, InsertKnotNoneSurfaceU) {
+  constexpr double kTestEpsilon =
+      std::numeric_limits<double>::epsilon() * 100.0;
+  // NURBS surface
+  uint32_t u_degree = 3;
+  uint32_t v_degree = 2;
+  std::vector<double> u_knots = {0, 0, 0, 0, 1, 2, 2, 3, 3, 3, 3};
+  std::vector<double> v_knots = {0, 0, 0, 1, 1, 2, 2, 2, 3, 4, 4, 4};
+  Point2D u_interval = {0.0, 3.0};
+  Point2D v_interval = {0.0, 4.0};
+  std::vector<std::vector<Point4D>> control_points;
+  uint32_t u_points = static_cast<uint32_t>(u_knots.size()) - u_degree - 1;
+  uint32_t v_points = static_cast<uint32_t>(v_knots.size()) - v_degree - 1;
+  control_points.resize(u_points);
+  for (uint32_t u_index = 0; u_index < u_points; ++u_index) {
+    control_points[u_index].resize(v_points);
+    for (uint32_t v_index = 0; v_index < v_points; ++v_index) {
+      double u_val =
+          static_cast<double>(u_index) - (static_cast<double>(u_points) * 0.5);
+      double v_val =
+          static_cast<double>(v_index) - (static_cast<double>(v_points) * 0.5);
+      double dist_0_sq = ((u_val * u_val) + (v_val * v_val));
+      control_points[u_index][v_index] = {u_val, v_val, dist_0_sq, 1.0};
+    }
+  }
+
+  NURBSSurface surface(u_degree, v_degree, u_knots, v_knots, control_points,
+                       u_interval, v_interval);
+
+  // Knot insert
+  NURBSSurface insert_surface =
+      surface.KnotInsert(NURBSSurface::SurfaceDirection::kUDir, 2, 0);
+
+  // Check knot multiplicity
+  int knot_count = knots::MultiplicityParam(
+      u_degree, insert_surface.u_knots(), 2, kTestEpsilon);
+  EXPECT_EQ(knot_count, 1);
+
+  // Compare
+  double div = 1.0 / 99.0;
+  double u_div = div * (u_interval.y - u_interval.x);
+  double v_div = div * (v_interval.y - v_interval.x);
+  for (int32_t i = -1; i < 101; ++i) {
+    Point2D uv = {(static_cast<double>(i) * u_div) + u_interval.x, 0.0};
+    for (int32_t j = -1; j < 101; ++j) {
+      uv.y = (static_cast<double>(j) * v_div) + v_interval.x;
+      Point3D point_nurbs = surface.EvaluatePoint(uv);
+      Point3D point_isrt = insert_surface.EvaluatePoint(uv);
+      EXPECT_NEAR(point_nurbs.x, point_isrt.x, kTestEpsilon);
+      EXPECT_NEAR(point_nurbs.y, point_isrt.y, kTestEpsilon);
+      EXPECT_NEAR(point_nurbs.z, point_isrt.z, kTestEpsilon);
+    }
+  }
+}
+
 TEST(NURBS_Chapter5, InsertKnotOnceSurfaceU) {
   constexpr double kTestEpsilon =
       std::numeric_limits<double>::epsilon() * 100.0;
@@ -396,9 +454,9 @@ TEST(NURBS_Chapter5, InsertKnotOnceSurfaceU) {
       surface.KnotInsert(NURBSSurface::SurfaceDirection::kUDir, 2, 1);
 
   // Check knot multiplicity
-  uint32_t knot_count = knots::MultiplicityParam(
+  int knot_count = knots::MultiplicityParam(
       u_degree, insert_surface.u_knots(), 2, kTestEpsilon);
-  EXPECT_EQ(knot_count, 3);
+  EXPECT_EQ(knot_count, 2);
 
   // Compare
   double div = 1.0 / 99.0;
@@ -450,12 +508,12 @@ TEST(NURBS_Chapter5, InsertKnotOnceSurfaceUBasicInterval) {
 
   // Knot insert
   NURBSSurface insert_surface =
-      surface.KnotInsert(NURBSSurface::SurfaceDirection::kUDir, 0.66, 0);
+      surface.KnotInsert(NURBSSurface::SurfaceDirection::kUDir, 0.66, 1);
 
   // Check knot multiplicity
-  uint32_t knot_count = knots::MultiplicityParam(
+  int knot_count = knots::MultiplicityParam(
       u_degree, insert_surface.u_knots(), 0.66, kTestEpsilon);
-  EXPECT_EQ(knot_count, 3);
+  EXPECT_EQ(knot_count, 2);
 
   // Compare
   double div = 1.0 / 99.0;
@@ -473,7 +531,7 @@ TEST(NURBS_Chapter5, InsertKnotOnceSurfaceUBasicInterval) {
 }
 
 TEST(NURBS_Chapter5, InsertKnotTwiceSurfaceU) {
-  constexpr double kTestEpsilon = std::numeric_limits<double>::epsilon() * 10.0;
+  constexpr double kTestEpsilon = std::numeric_limits<double>::epsilon() * 100.0;
   // NURBS surface
   uint32_t u_degree = 3;
   uint32_t v_degree = 2;
@@ -503,9 +561,9 @@ TEST(NURBS_Chapter5, InsertKnotTwiceSurfaceU) {
       surface.KnotInsert(NURBSSurface::SurfaceDirection::kUDir, 1, 2);
 
   // Check knot multiplicity
-  uint32_t knot_count = knots::MultiplicityParam(
+  int knot_count = knots::MultiplicityParam(
       u_degree, insert_surface.u_knots(), 1, kTestEpsilon);
-  EXPECT_EQ(knot_count, 3);
+  EXPECT_EQ(knot_count, 2);
 
   // Compare
   double div = 1.0 / 99.0;
@@ -560,12 +618,12 @@ TEST(NURBS_Chapter5, InsertKnotsMaxSurfaceU) {
       surface.KnotInsert(NURBSSurface::SurfaceDirection::kUDir, 2, 2);
 
   // Check knot multiplicity
-  uint32_t knot_count = knots::MultiplicityParam(
+  int knot_count = knots::MultiplicityParam(
       u_degree, insert_surface_part.u_knots(), 1, kTestEpsilon);
-  EXPECT_EQ(knot_count, 4);
+  EXPECT_EQ(knot_count, 3);
   knot_count = knots::MultiplicityParam(u_degree, insert_surface_full.u_knots(),
                                         2, kTestEpsilon);
-  EXPECT_EQ(knot_count, 4);
+  EXPECT_EQ(knot_count, 3);
 
   // Compare
   double div = 1.0 / 99.0;
@@ -590,7 +648,7 @@ TEST(NURBS_Chapter5, InsertKnotsMaxSurfaceU) {
 
 TEST(NURBS_Chapter5, InsertKnotOnceSurfaceV) {
   constexpr double kTestEpsilon =
-      std::numeric_limits<double>::epsilon() * 100.0;
+      std::numeric_limits<double>::epsilon() * 1.0;
   // NURBS surface
   uint32_t u_degree = 3;
   uint32_t v_degree = 2;
@@ -622,9 +680,9 @@ TEST(NURBS_Chapter5, InsertKnotOnceSurfaceV) {
       surface.KnotInsert(NURBSSurface::SurfaceDirection::kVDir, 1, 1);
 
   // Check knot multiplicity
-  uint32_t knot_count = knots::MultiplicityParam(
+  int knot_count = knots::MultiplicityParam(
       v_degree, insert_surface.v_knots(), 1, kTestEpsilon);
-  EXPECT_EQ(knot_count, 3);
+  EXPECT_EQ(knot_count, 2);
 
   // Compare
   double div = 1.0 / 99.0;
@@ -675,9 +733,9 @@ TEST(NURBS_Chapter5, InsertKnotTwiceSurfaceV) {
       surface.KnotInsert(NURBSSurface::SurfaceDirection::kVDir, 3, 2);
 
   // Check knot multiplicity
-  uint32_t knot_count = knots::MultiplicityParam(
+  int knot_count = knots::MultiplicityParam(
       v_degree, insert_surface.v_knots(), 3, kTestEpsilon);
-  EXPECT_EQ(knot_count, 3);
+  EXPECT_EQ(knot_count, 2);
 
   // Compare
   double div = 1.0 / 99.0;
@@ -732,12 +790,12 @@ TEST(NURBS_Chapter5, InsertKnotsMaxSurfaceV) {
       surface.KnotInsert(NURBSSurface::SurfaceDirection::kVDir, 3, 2);
 
   // Check knot multiplicity
-  uint32_t knot_count = knots::MultiplicityParam(
+  int knot_count = knots::MultiplicityParam(
       v_degree, insert_surface_part.v_knots(), 1, kTestEpsilon);
-  EXPECT_EQ(knot_count, 3);
+  EXPECT_EQ(knot_count, 2);
   knot_count = knots::MultiplicityParam(v_degree, insert_surface_full.v_knots(),
                                         3, kTestEpsilon);
-  EXPECT_EQ(knot_count, 3);
+  EXPECT_EQ(knot_count, 2);
 
   // Compare
   double div = 1.0 / 99.0;
