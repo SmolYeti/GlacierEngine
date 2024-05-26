@@ -33,7 +33,13 @@ public:
   // A point on the curve
   Point2D PointByCornerCut(double parameter) const;
 
+  // Merge a knot vector into the curve's knot vector and return the resulting curve
+  // Returns:
+  // A copy of the curve with the merged in knot vector
+  NURBSCurve2D MergeKnotVect(std::vector<double> knots) const;
+
   const std::vector<double> &knots() const { return knots_; }
+  const std::vector<Point3D> &control_points() const { return control_points_; }
 
 private:
   uint32_t degree_;
@@ -69,7 +75,12 @@ public:
   // A point on the curve
   Point3D PointByCornerCut(double parameter) const;
 
+  // Merge a knot vector into the curve's knot vector and return the resulting
+  // curve Returns: A copy of the curve with the merged in knot vector
+  NURBSCurve3D MergeKnotVect(std::vector<double> knots) const;
+
   const std::vector<double> &knots() const { return knots_; }
+  const std::vector<Point4D> &control_points() const { return control_points_; }
 
 private:
   uint32_t degree_;

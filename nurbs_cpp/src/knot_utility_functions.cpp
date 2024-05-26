@@ -5,7 +5,7 @@
 #include <iostream>
 namespace nurbs {
 namespace knots {
-// ALGORITHM A.2.1 int FindSpan(n,p,u,U)
+// ALGORITHM A.2.1 int FindSpan(n,p,u,U) p.
 // n - set as Max index of U
 // p - degree
 // u - input value along the curve/knot vector

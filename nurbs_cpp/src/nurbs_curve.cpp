@@ -244,6 +244,77 @@ Point2D NURBSCurve2D::PointByCornerCut(double param) const {
   return C;
 }
 
+// ALGORITHM 5.4 RefineKnotVectCurve(n, p, Um Pwm Xm rm Ubar, Qw) p.164
+NURBSCurve2D NURBSCurve2D::MergeKnotVect(std::vector<double> knots) const {
+  if (knots.empty()) {
+    return NURBSCurve2D(degree_, control_points_, knots_, interval_);
+  }
+
+  // Input Parameters
+  // n - Size of control points
+  // p - degree of the curve
+  // U - knot vector
+  // Pw - control points
+  // X - Knot vector to merge
+  // r - size of X
+  int n = static_cast<int>(control_points_.size()) - 1;
+  int p = degree_;
+  std::vector<double> U = knots_;
+  std::vector<Point3D> Pw = control_points_;
+  std::vector<double> X = knots;
+  int r = static_cast<int>(X.size()) - 1;
+
+  // Output Parameters
+  // Ubar - resulting knot vector
+  // Qw - resulting control polygon
+  std::vector<Point3D> Qw;
+  Qw.resize(Pw.size() + r + 1);
+  std::vector<double> Ubar;
+  Ubar.resize(U.size() + r + 1);
+
+  int m = n + p + 1;
+  int a = knots::FindSpanParam(p, U, X[0], kTolerance);
+  int b = knots::FindSpanParam(p, U, X[r], kTolerance);
+  b += 1;
+
+  for (int i = 0; i <= a - p; ++i) {
+    Qw[i] = Pw[i];
+  }
+  for (int i = b - 1; i <= n; ++i) {
+    Qw[i + r + 1] = Pw[i];
+  }
+  for (int i = 0; i <= a; ++i) {
+    Ubar[i] = U[i];
+  }
+  for (int i = b + p; i <= m; ++i) {
+    Ubar[i + r + 1] = U[i];
+  }
+  int i = b + p - 1;
+  int k = b + p + r;
+  for (int j = r; j >= 0; --j) {
+    while (X[j] <= U[i] && i > a) {
+      Qw[k - p - 1] = Pw[i - p - 1];
+      Ubar[k] = U[i];
+      k = k - 1;
+      i = i - 1;
+    }
+    Qw[k - p - 1] = Qw[k - p];
+    for (int l = 1; l <= p; ++l) {
+      int ind = k - p + l;
+      double alfa = Ubar[k + l] - X[j];
+      if (abs(alfa) < kTolerance) {
+        Qw[ind - 1] = Qw[ind];
+      } else {
+        alfa = alfa / (Ubar[k + l] - U[i - p + l]);
+        Qw[ind - 1] = (alfa * Qw[ind - 1]) + ((1.0 - alfa) * Qw[ind]);
+      }
+    }
+    Ubar[k] = X[j];
+    k = k - 1;
+  }
+  return NURBSCurve2D(p, Qw, Ubar, interval_);
+}
+
 NURBSCurve3D::NURBSCurve3D(uint32_t degree, std::vector<Point4D> control_points,
                            std::vector<double> knots, Point2D interval)
     : Curve3D(interval), degree_(degree), control_points_(control_points),
@@ -450,4 +521,76 @@ Point3D NURBSCurve3D::PointByCornerCut(double param) const {
   }
   return C;
 }
+
+// ALGORITHM 5.4 RefineKnotVectCurve(n, p, Um Pwm Xm rm Ubar, Qw) p.164
+NURBSCurve3D NURBSCurve3D::MergeKnotVect(std::vector<double> knots) const {
+  if (knots.empty()) {
+    return NURBSCurve3D(degree_, control_points_, knots_, interval_);
+  }
+
+  // Input Parameters
+  // n - Size of control points
+  // p - degree of the curve
+  // U - knot vector
+  // Pw - control points
+  // X - Knot vector to merge
+  // r - size of X
+  int n = static_cast<int>(control_points_.size()) - 1;
+  int p = degree_;
+  std::vector<double> U = knots_;
+  std::vector<Point4D> Pw = control_points_;
+  std::vector<double> X = knots;
+  int r = static_cast<int>(X.size()) - 1;
+
+  // Output Parameters
+  // Ubar - resulting knot vector
+  // Qw - resulting control polygon
+  std::vector<Point4D> Qw;
+  Qw.resize(Pw.size() + r + 1);
+  std::vector<double> Ubar;
+  Ubar.resize(U.size() + r + 1);
+
+  int m = n + p + 1;
+  int a = knots::FindSpanParam(p, U, X[0], kTolerance);
+  int b = knots::FindSpanParam(p, U, X[r], kTolerance);
+  b += 1;
+
+  for (int i = 0; i <= a - p; ++i) {
+    Qw[i] = Pw[i];
+  }
+  for (int i = b - 1; i <= n; ++i) {
+    Qw[i + r + 1] = Pw[i];
+  }
+  for (int i = 0; i <= a; ++i) {
+    Ubar[i] = U[i];
+  }
+  for (int i = b + p; i <= m; ++i) {
+    Ubar[i + r + 1] = U[i];
+  }
+  int i = b + p - 1;
+  int k = b + p + r;
+  for (int j = r; j >= 0; --j) {
+    while (X[j] <= U[i] && i > a) {
+      Qw[k - p - 1] = Pw[i - p - 1];
+      Ubar[k] = U[i];
+      k = k - 1;
+      i = i - 1;
+    }
+    Qw[k - p - 1] = Qw[k - p];
+    for (int l = 1; l <= p; ++l) {
+      int ind = k - p + l;
+      double alfa = Ubar[k + l] - X[j];
+      if (abs(alfa) < kTolerance) {
+        Qw[ind - 1] = Qw[ind];
+      } else {
+        alfa = alfa / (Ubar[k + l] - U[i - p + l]);
+        Qw[ind - 1] = (alfa * Qw[ind - 1]) + ((1.0 - alfa) * Qw[ind]);
+      }
+    }
+    Ubar[k] = X[j];
+    k = k - 1;
+  }
+  return NURBSCurve3D(p, Qw, Ubar, interval_);
+}
+
 } // namespace nurbs
