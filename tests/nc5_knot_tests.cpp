@@ -996,7 +996,7 @@ TEST(NURBS_Chapter5, MergeKnotNone3D) {
       {0, 0, 1, 1}, {0, 1, 2, 1}, {1, 1, 3, 1}, {1, 0, 1, 1}, {2, 0, 3, 1},
       {2, 1, 3, 1}, {3, 1, 5, 1}, {3, 0, 2, 1}, {4, 0, 3, 1}, {4, 1, 1, 1}};
   NURBSCurve3D nurbs_curve(degree, control_points, knots, interval);
-    
+
   // Merge Knot
   std::vector<double> merge = {};
   NURBSCurve3D merge_curve = nurbs_curve.MergeKnotVect(merge);
@@ -1161,4 +1161,580 @@ TEST(NURBS_Chapter5, MergeKnotFull3D) {
   }
 }
 
-} // namespace nurbs
+TEST(NURBS_Chapter5, MergeKnotNoneSurfaceU) {
+  constexpr double kTestEpsilon =
+      std::numeric_limits<double>::epsilon() * 100.0;
+  // NURBS surface
+  uint32_t u_degree = 3;
+  uint32_t v_degree = 2;
+  std::vector<double> u_knots = {0, 0, 0, 0, 1, 2, 2, 3, 3, 3, 3};
+  std::vector<double> v_knots = {0, 0, 0, 1, 1, 2, 2, 2, 3, 4, 4, 4};
+  Point2D u_interval = {0.0, 3.0};
+  Point2D v_interval = {0.0, 4.0};
+  std::vector<std::vector<Point4D>> control_points;
+  uint32_t u_points = static_cast<uint32_t>(u_knots.size()) - u_degree - 1;
+  uint32_t v_points = static_cast<uint32_t>(v_knots.size()) - v_degree - 1;
+  control_points.resize(u_points);
+  for (uint32_t u_index = 0; u_index < u_points; ++u_index) {
+    control_points[u_index].resize(v_points);
+    for (uint32_t v_index = 0; v_index < v_points; ++v_index) {
+      double u_val =
+          static_cast<double>(u_index) - (static_cast<double>(u_points) * 0.5);
+      double v_val =
+          static_cast<double>(v_index) - (static_cast<double>(v_points) * 0.5);
+      double dist_0_sq = ((u_val * u_val) + (v_val * v_val));
+      control_points[u_index][v_index] = {u_val, v_val, dist_0_sq, 1.0};
+    }
+  }
+
+  NURBSSurface surface(u_degree, v_degree, u_knots, v_knots, control_points,
+                       u_interval, v_interval);
+
+  // Knot Merge
+  std::vector<double> merge_knots = {};
+  NURBSSurface merge_surface = surface.RefineKnotVect(
+      merge_knots, NURBSSurface::SurfaceDirection::kUDir);
+
+  // Check knot multiplicity
+  int knot_count = knots::MultiplicityParam(u_degree, merge_surface.u_knots(),
+                                            1, kTestEpsilon);
+  EXPECT_EQ(knot_count, 0);
+  knot_count = knots::MultiplicityParam(u_degree, merge_surface.u_knots(), 2,
+                                        kTestEpsilon);
+  EXPECT_EQ(knot_count, 1);
+
+  // Compare
+  double div = 1.0 / 99.0;
+  double u_div = div * (u_interval.y - u_interval.x);
+  double v_div = div * (v_interval.y - v_interval.x);
+  for (int32_t i = -1; i < 101; ++i) {
+    Point2D uv = {(static_cast<double>(i) * u_div) + u_interval.x, 0.0};
+    for (int32_t j = -1; j < 101; ++j) {
+      uv.y = (static_cast<double>(j) * v_div) + v_interval.x;
+      Point3D point_nurbs = surface.EvaluatePoint(uv);
+      Point3D point_isrt = merge_surface.EvaluatePoint(uv);
+      EXPECT_NEAR(point_nurbs.x, point_isrt.x, kTestEpsilon);
+      EXPECT_NEAR(point_nurbs.y, point_isrt.y, kTestEpsilon);
+      EXPECT_NEAR(point_nurbs.z, point_isrt.z, kTestEpsilon);
+    }
+  }
+}
+
+TEST(NURBS_Chapter5, MergeKnotSinglesSurfaceU) {
+  constexpr double kTestEpsilon =
+      std::numeric_limits<double>::epsilon() * 100.0;
+  // NURBS surface
+  uint32_t u_degree = 3;
+  uint32_t v_degree = 2;
+  std::vector<double> u_knots = {0, 0, 0, 0, 1, 2, 2, 3, 3, 3, 3};
+  std::vector<double> v_knots = {0, 0, 0, 1, 1, 2, 2, 2, 3, 4, 4, 4};
+  Point2D u_interval = {0.0, 3.0};
+  Point2D v_interval = {0.0, 4.0};
+  std::vector<std::vector<Point4D>> control_points;
+  uint32_t u_points = static_cast<uint32_t>(u_knots.size()) - u_degree - 1;
+  uint32_t v_points = static_cast<uint32_t>(v_knots.size()) - v_degree - 1;
+  control_points.resize(u_points);
+  for (uint32_t u_index = 0; u_index < u_points; ++u_index) {
+    control_points[u_index].resize(v_points);
+    for (uint32_t v_index = 0; v_index < v_points; ++v_index) {
+      double u_val =
+          static_cast<double>(u_index) - (static_cast<double>(u_points) * 0.5);
+      double v_val =
+          static_cast<double>(v_index) - (static_cast<double>(v_points) * 0.5);
+      double dist_0_sq = ((u_val * u_val) + (v_val * v_val));
+      control_points[u_index][v_index] = {u_val, v_val, dist_0_sq, 1.0};
+    }
+  }
+
+  NURBSSurface surface(u_degree, v_degree, u_knots, v_knots, control_points,
+                       u_interval, v_interval);
+
+  // Merge insert
+  std::vector<double> merge_knots = {1, 2};
+  NURBSSurface merge_surface = surface.RefineKnotVect(
+      merge_knots, NURBSSurface::SurfaceDirection::kUDir);
+
+  // Check knot multiplicity
+  int knot_count = knots::MultiplicityParam(u_degree, merge_surface.u_knots(),
+                                            1, kTestEpsilon);
+  EXPECT_EQ(knot_count, 1);
+  knot_count = knots::MultiplicityParam(u_degree, merge_surface.u_knots(), 2,
+                                        kTestEpsilon);
+  EXPECT_EQ(knot_count, 2);
+
+  // Knot insert
+  NURBSSurface insert_surface =
+      surface.KnotInsert(NURBSSurface::SurfaceDirection::kUDir, 1, 1);
+  insert_surface =
+      insert_surface.KnotInsert(NURBSSurface::SurfaceDirection::kUDir, 2, 1);
+
+  // Compare knots
+  ASSERT_EQ(merge_surface.u_knots(), insert_surface.u_knots());
+  for (size_t idx = 0; idx < merge_surface.u_knots().size(); ++idx) {
+    EXPECT_EQ(merge_surface.u_knots()[idx], insert_surface.u_knots()[idx]);
+  }
+  ASSERT_EQ(merge_surface.v_knots(), insert_surface.v_knots());
+  for (size_t idx = 0; idx < merge_surface.v_knots().size(); ++idx) {
+    EXPECT_EQ(merge_surface.v_knots()[idx], insert_surface.v_knots()[idx]);
+  }
+
+  // Compare control points
+  ASSERT_EQ(merge_surface.control_polygon().size(),
+            insert_surface.control_polygon().size());
+  for (size_t i = 0; i < merge_surface.control_polygon().size(); ++i) {
+    ASSERT_EQ(merge_surface.control_polygon()[i].size(),
+              insert_surface.control_polygon()[i].size());
+    for (size_t j = 0; j < merge_surface.control_polygon()[i].size(); ++j) {
+      EXPECT_EQ(merge_surface.control_polygon()[i][j].x,
+                insert_surface.control_polygon()[i][j].x);
+      EXPECT_EQ(merge_surface.control_polygon()[i][j].y,
+                insert_surface.control_polygon()[i][j].y);
+      EXPECT_EQ(merge_surface.control_polygon()[i][j].z,
+                insert_surface.control_polygon()[i][j].z);
+      EXPECT_EQ(merge_surface.control_polygon()[i][j].w,
+                insert_surface.control_polygon()[i][j].w);
+    }
+  }
+
+  // Compare
+  double div = 1.0 / 99.0;
+  double u_div = div * (u_interval.y - u_interval.x);
+  double v_div = div * (v_interval.y - v_interval.x);
+  for (int32_t i = -1; i < 101; ++i) {
+    Point2D uv = {(static_cast<double>(i) * u_div) + u_interval.x, 0.0};
+    for (int32_t j = -1; j < 101; ++j) {
+      uv.y = (static_cast<double>(j) * v_div) + v_interval.x;
+      Point3D point_nurbs = surface.EvaluatePoint(uv);
+      Point3D point_isrt = merge_surface.EvaluatePoint(uv);
+      EXPECT_NEAR(point_nurbs.x, point_isrt.x, kTestEpsilon);
+      EXPECT_NEAR(point_nurbs.y, point_isrt.y, kTestEpsilon);
+      EXPECT_NEAR(point_nurbs.z, point_isrt.z, kTestEpsilon);
+    }
+  }
+}
+
+TEST(NURBS_Chapter5, MergeKnotFullSurfaceU) {
+  constexpr double kTestEpsilon =
+      std::numeric_limits<double>::epsilon() * 100.0;
+  // NURBS surface
+  uint32_t u_degree = 3;
+  uint32_t v_degree = 2;
+  std::vector<double> u_knots = {0, 0, 0, 0, 1, 2, 2, 3, 3, 3, 3};
+  std::vector<double> v_knots = {0, 0, 0, 1, 1, 2, 2, 2, 3, 4, 4, 4};
+  Point2D u_interval = {0.0, 3.0};
+  Point2D v_interval = {0.0, 4.0};
+  std::vector<std::vector<Point4D>> control_points;
+  uint32_t u_points = static_cast<uint32_t>(u_knots.size()) - u_degree - 1;
+  uint32_t v_points = static_cast<uint32_t>(v_knots.size()) - v_degree - 1;
+  control_points.resize(u_points);
+  for (uint32_t u_index = 0; u_index < u_points; ++u_index) {
+    control_points[u_index].resize(v_points);
+    for (uint32_t v_index = 0; v_index < v_points; ++v_index) {
+      double u_val =
+          static_cast<double>(u_index) - (static_cast<double>(u_points) * 0.5);
+      double v_val =
+          static_cast<double>(v_index) - (static_cast<double>(v_points) * 0.5);
+      double dist_0_sq = ((u_val * u_val) + (v_val * v_val));
+      control_points[u_index][v_index] = {u_val, v_val, dist_0_sq, 1.0};
+    }
+  }
+
+  NURBSSurface surface(u_degree, v_degree, u_knots, v_knots, control_points,
+                       u_interval, v_interval);
+
+  // Merge insert
+  std::vector<double> merge_knots = {1, 1, 1, 2, 2};
+  NURBSSurface merge_surface = surface.RefineKnotVect(
+      merge_knots, NURBSSurface::SurfaceDirection::kUDir);
+
+  // Check knot multiplicity
+  int knot_count = knots::MultiplicityParam(u_degree, merge_surface.u_knots(),
+                                            1, kTestEpsilon);
+  EXPECT_EQ(knot_count, 3);
+  knot_count = knots::MultiplicityParam(u_degree, merge_surface.u_knots(), 2,
+                                        kTestEpsilon);
+  EXPECT_EQ(knot_count, 3);
+
+  // Knot insert
+  NURBSSurface insert_surface =
+      surface.KnotInsert(NURBSSurface::SurfaceDirection::kUDir, 1, 3);
+  insert_surface =
+      insert_surface.KnotInsert(NURBSSurface::SurfaceDirection::kUDir, 2, 2);
+
+  // Compare knots
+  ASSERT_EQ(merge_surface.u_knots(), insert_surface.u_knots());
+  for (size_t idx = 0; idx < merge_surface.u_knots().size(); ++idx) {
+    EXPECT_EQ(merge_surface.u_knots()[idx], insert_surface.u_knots()[idx]);
+  }
+  ASSERT_EQ(merge_surface.v_knots(), insert_surface.v_knots());
+  for (size_t idx = 0; idx < merge_surface.v_knots().size(); ++idx) {
+    EXPECT_EQ(merge_surface.v_knots()[idx], insert_surface.v_knots()[idx]);
+  }
+
+  // Compare control points
+  ASSERT_EQ(merge_surface.control_polygon().size(),
+            insert_surface.control_polygon().size());
+  for (size_t i = 0; i < merge_surface.control_polygon().size(); ++i) {
+    ASSERT_EQ(merge_surface.control_polygon()[i].size(),
+              insert_surface.control_polygon()[i].size());
+    for (size_t j = 0; j < merge_surface.control_polygon()[i].size(); ++j) {
+      EXPECT_EQ(merge_surface.control_polygon()[i][j].x,
+                insert_surface.control_polygon()[i][j].x);
+      EXPECT_EQ(merge_surface.control_polygon()[i][j].y,
+                insert_surface.control_polygon()[i][j].y);
+      EXPECT_EQ(merge_surface.control_polygon()[i][j].z,
+                insert_surface.control_polygon()[i][j].z);
+      EXPECT_EQ(merge_surface.control_polygon()[i][j].w,
+                insert_surface.control_polygon()[i][j].w);
+    }
+  }
+
+  // Compare
+  double div = 1.0 / 99.0;
+  double u_div = div * (u_interval.y - u_interval.x);
+  double v_div = div * (v_interval.y - v_interval.x);
+  for (int32_t i = -1; i < 101; ++i) {
+    Point2D uv = {(static_cast<double>(i) * u_div) + u_interval.x, 0.0};
+    for (int32_t j = -1; j < 101; ++j) {
+      uv.y = (static_cast<double>(j) * v_div) + v_interval.x;
+      Point3D point_nurbs = surface.EvaluatePoint(uv);
+      Point3D point_isrt = merge_surface.EvaluatePoint(uv);
+      EXPECT_NEAR(point_nurbs.x, point_isrt.x, kTestEpsilon);
+      EXPECT_NEAR(point_nurbs.y, point_isrt.y, kTestEpsilon);
+      EXPECT_NEAR(point_nurbs.z, point_isrt.z, kTestEpsilon);
+    }
+  }
+}
+
+TEST(NURBS_Chapter5, MergeKnotNoneSurfaceV) {
+  constexpr double kTestEpsilon =
+      std::numeric_limits<double>::epsilon() * 100.0;
+  // NURBS surface
+  uint32_t u_degree = 3;
+  uint32_t v_degree = 2;
+  std::vector<double> u_knots = {0, 0, 0, 0, 1, 2, 2, 3, 3, 3, 3};
+  std::vector<double> v_knots = {0, 0, 0, 1, 1, 2, 2, 2, 3, 4, 4, 4};
+  Point2D u_interval = {0.0, 3.0};
+  Point2D v_interval = {0.0, 4.0};
+  std::vector<std::vector<Point4D>> control_points;
+  uint32_t u_points = static_cast<uint32_t>(u_knots.size()) - u_degree - 1;
+  uint32_t v_points = static_cast<uint32_t>(v_knots.size()) - v_degree - 1;
+  control_points.resize(u_points);
+  for (uint32_t u_index = 0; u_index < u_points; ++u_index) {
+    control_points[u_index].resize(v_points);
+    for (uint32_t v_index = 0; v_index < v_points; ++v_index) {
+      double u_val =
+          static_cast<double>(u_index) - (static_cast<double>(u_points) * 0.5);
+      double v_val =
+          static_cast<double>(v_index) - (static_cast<double>(v_points) * 0.5);
+      double dist_0_sq = ((u_val * u_val) + (v_val * v_val));
+      control_points[u_index][v_index] = {u_val, v_val, dist_0_sq, 1.0};
+    }
+  }
+
+  NURBSSurface surface(u_degree, v_degree, u_knots, v_knots, control_points,
+                       u_interval, v_interval);
+
+  // Knot Merge
+  std::vector<double> merge_knots = {};
+  NURBSSurface merge_surface = surface.RefineKnotVect(
+      merge_knots, NURBSSurface::SurfaceDirection::kVDir);
+
+  // Check knot multiplicity
+  int knot_count = knots::MultiplicityParam(v_degree, merge_surface.v_knots(),
+                                            1, kTestEpsilon);
+  EXPECT_EQ(knot_count, 1);
+  knot_count = knots::MultiplicityParam(v_degree, merge_surface.v_knots(), 2,
+                                        kTestEpsilon);
+  EXPECT_EQ(knot_count, 2);
+  knot_count = knots::MultiplicityParam(v_degree, merge_surface.v_knots(), 3,
+                                        kTestEpsilon);
+  EXPECT_EQ(knot_count, 0);
+
+  // Compare
+  double div = 1.0 / 99.0;
+  double u_div = div * (u_interval.y - u_interval.x);
+  double v_div = div * (v_interval.y - v_interval.x);
+  for (int32_t i = -1; i < 101; ++i) {
+    Point2D uv = {(static_cast<double>(i) * u_div) + u_interval.x, 0.0};
+    for (int32_t j = -1; j < 101; ++j) {
+      uv.y = (static_cast<double>(j) * v_div) + v_interval.x;
+      Point3D point_nurbs = surface.EvaluatePoint(uv);
+      Point3D point_isrt = merge_surface.EvaluatePoint(uv);
+      EXPECT_NEAR(point_nurbs.x, point_isrt.x, kTestEpsilon);
+      EXPECT_NEAR(point_nurbs.y, point_isrt.y, kTestEpsilon);
+      EXPECT_NEAR(point_nurbs.z, point_isrt.z, kTestEpsilon);
+    }
+  }
+}
+
+TEST(NURBS_Chapter5, MergeKnotSinglesSurfaceV) {
+  constexpr double kTestEpsilon =
+      std::numeric_limits<double>::epsilon() * 100.0;
+  // NURBS surface
+  uint32_t u_degree = 3;
+  uint32_t v_degree = 2;
+  std::vector<double> u_knots = {0, 0, 0, 0, 1, 2, 2, 3, 3, 3, 3};
+  std::vector<double> v_knots = {0, 0, 0, 1, 1, 2, 2, 2, 3, 4, 4, 4};
+  Point2D u_interval = {0.0, 3.0};
+  Point2D v_interval = {0.0, 4.0};
+  std::vector<std::vector<Point4D>> control_points;
+  uint32_t u_points = static_cast<uint32_t>(u_knots.size()) - u_degree - 1;
+  uint32_t v_points = static_cast<uint32_t>(v_knots.size()) - v_degree - 1;
+  control_points.resize(u_points);
+  for (uint32_t u_index = 0; u_index < u_points; ++u_index) {
+    control_points[u_index].resize(v_points);
+    for (uint32_t v_index = 0; v_index < v_points; ++v_index) {
+      double u_val =
+          static_cast<double>(u_index) - (static_cast<double>(u_points) * 0.5);
+      double v_val =
+          static_cast<double>(v_index) - (static_cast<double>(v_points) * 0.5);
+      double dist_0_sq = ((u_val * u_val) + (v_val * v_val));
+      control_points[u_index][v_index] = {u_val, v_val, dist_0_sq, 1.0};
+    }
+  }
+
+  NURBSSurface surface(u_degree, v_degree, u_knots, v_knots, control_points,
+                       u_interval, v_interval);
+
+  // Merge insert
+  std::vector<double> merge_knots = {1, 3};
+  NURBSSurface merge_surface = surface.RefineKnotVect(
+      merge_knots, NURBSSurface::SurfaceDirection::kVDir);
+
+  // Check knot multiplicity
+  int knot_count = knots::MultiplicityParam(v_degree, merge_surface.v_knots(),
+                                            1, kTestEpsilon);
+  EXPECT_EQ(knot_count, 2);
+  knot_count = knots::MultiplicityParam(v_degree, merge_surface.v_knots(), 2,
+                                        kTestEpsilon);
+  EXPECT_EQ(knot_count, 2);
+  knot_count = knots::MultiplicityParam(v_degree, merge_surface.v_knots(), 3,
+                                        kTestEpsilon);
+  EXPECT_EQ(knot_count, 1);
+
+  // Knot insert
+  NURBSSurface insert_surface =
+      surface.KnotInsert(NURBSSurface::SurfaceDirection::kVDir, 1, 1);
+  insert_surface =
+      insert_surface.KnotInsert(NURBSSurface::SurfaceDirection::kVDir, 3, 1);
+
+  // Compare knots
+  ASSERT_EQ(merge_surface.u_knots(), insert_surface.u_knots());
+  for (size_t idx = 0; idx < merge_surface.u_knots().size(); ++idx) {
+    EXPECT_EQ(merge_surface.u_knots()[idx], insert_surface.u_knots()[idx]);
+  }
+  ASSERT_EQ(merge_surface.v_knots(), insert_surface.v_knots());
+  for (size_t idx = 0; idx < merge_surface.v_knots().size(); ++idx) {
+    EXPECT_EQ(merge_surface.v_knots()[idx], insert_surface.v_knots()[idx]);
+  }
+
+  // Compare control points
+  ASSERT_EQ(merge_surface.control_polygon().size(),
+            insert_surface.control_polygon().size());
+  for (size_t i = 0; i < merge_surface.control_polygon().size(); ++i) {
+    ASSERT_EQ(merge_surface.control_polygon()[i].size(),
+              insert_surface.control_polygon()[i].size());
+    for (size_t j = 0; j < merge_surface.control_polygon()[i].size(); ++j) {
+      EXPECT_EQ(merge_surface.control_polygon()[i][j].x,
+                insert_surface.control_polygon()[i][j].x);
+      EXPECT_EQ(merge_surface.control_polygon()[i][j].y,
+                insert_surface.control_polygon()[i][j].y);
+      EXPECT_EQ(merge_surface.control_polygon()[i][j].z,
+                insert_surface.control_polygon()[i][j].z);
+      EXPECT_EQ(merge_surface.control_polygon()[i][j].w,
+                insert_surface.control_polygon()[i][j].w);
+    }
+  }
+
+  // Compare
+  double div = 1.0 / 99.0;
+  double u_div = div * (u_interval.y - u_interval.x);
+  double v_div = div * (v_interval.y - v_interval.x);
+  for (int32_t i = -1; i < 101; ++i) {
+    Point2D uv = {(static_cast<double>(i) * u_div) + u_interval.x, 0.0};
+    for (int32_t j = -1; j < 101; ++j) {
+      uv.y = (static_cast<double>(j) * v_div) + v_interval.x;
+      Point3D point_nurbs = surface.EvaluatePoint(uv);
+      Point3D point_isrt = merge_surface.EvaluatePoint(uv);
+      EXPECT_NEAR(point_nurbs.x, point_isrt.x, kTestEpsilon);
+      EXPECT_NEAR(point_nurbs.y, point_isrt.y, kTestEpsilon);
+      EXPECT_NEAR(point_nurbs.z, point_isrt.z, kTestEpsilon);
+    }
+  }
+}
+
+TEST(NURBS_Chapter5, MergeKnotFullSurfaceV) {
+  constexpr double kTestEpsilon =
+      std::numeric_limits<double>::epsilon() * 100.0;
+  // NURBS surface
+  uint32_t u_degree = 3;
+  uint32_t v_degree = 2;
+  std::vector<double> u_knots = {0, 0, 0, 0, 1, 2, 2, 3, 3, 3, 3};
+  std::vector<double> v_knots = {0, 0, 0, 1, 1, 2, 2, 2, 3, 4, 4, 4};
+  Point2D u_interval = {0.0, 3.0};
+  Point2D v_interval = {0.0, 4.0};
+  std::vector<std::vector<Point4D>> control_points;
+  uint32_t u_points = static_cast<uint32_t>(u_knots.size()) - u_degree - 1;
+  uint32_t v_points = static_cast<uint32_t>(v_knots.size()) - v_degree - 1;
+  control_points.resize(u_points);
+  for (uint32_t u_index = 0; u_index < u_points; ++u_index) {
+    control_points[u_index].resize(v_points);
+    for (uint32_t v_index = 0; v_index < v_points; ++v_index) {
+      double u_val =
+          static_cast<double>(u_index) - (static_cast<double>(u_points) * 0.5);
+      double v_val =
+          static_cast<double>(v_index) - (static_cast<double>(v_points) * 0.5);
+      double dist_0_sq = ((u_val * u_val) + (v_val * v_val));
+      control_points[u_index][v_index] = {u_val, v_val, dist_0_sq, 1.0};
+    }
+  }
+
+  NURBSSurface surface(u_degree, v_degree, u_knots, v_knots, control_points,
+                       u_interval, v_interval);
+
+  // Merge insert
+  std::vector<double> merge_knots = {1, 3, 3};
+  NURBSSurface merge_surface = surface.RefineKnotVect(
+      merge_knots, NURBSSurface::SurfaceDirection::kVDir);
+
+  // Check knot multiplicity
+  int knot_count = knots::MultiplicityParam(v_degree, merge_surface.v_knots(),
+                                            1, kTestEpsilon);
+  EXPECT_EQ(knot_count, 2);
+  knot_count = knots::MultiplicityParam(v_degree, merge_surface.v_knots(), 2,
+                                        kTestEpsilon);
+  EXPECT_EQ(knot_count, 2);
+  knot_count = knots::MultiplicityParam(v_degree, merge_surface.v_knots(), 2,
+                                        kTestEpsilon);
+  EXPECT_EQ(knot_count, 2);
+
+  // Knot insert
+  NURBSSurface insert_surface =
+      surface.KnotInsert(NURBSSurface::SurfaceDirection::kVDir, 1, 1);
+  insert_surface =
+      insert_surface.KnotInsert(NURBSSurface::SurfaceDirection::kVDir, 3, 2);
+
+  // Compare knots
+  ASSERT_EQ(merge_surface.u_knots(), insert_surface.u_knots());
+  for (size_t idx = 0; idx < merge_surface.u_knots().size(); ++idx) {
+    EXPECT_EQ(merge_surface.u_knots()[idx], insert_surface.u_knots()[idx]);
+  }
+  ASSERT_EQ(merge_surface.v_knots(), insert_surface.v_knots());
+  for (size_t idx = 0; idx < merge_surface.v_knots().size(); ++idx) {
+    EXPECT_EQ(merge_surface.v_knots()[idx], insert_surface.v_knots()[idx]);
+  }
+
+  // Compare control points
+  ASSERT_EQ(merge_surface.control_polygon().size(),
+            insert_surface.control_polygon().size());
+  for (size_t i = 0; i < merge_surface.control_polygon().size(); ++i) {
+    ASSERT_EQ(merge_surface.control_polygon()[i].size(),
+              insert_surface.control_polygon()[i].size());
+    for (size_t j = 0; j < merge_surface.control_polygon()[i].size(); ++j) {
+      EXPECT_EQ(merge_surface.control_polygon()[i][j].x,
+                insert_surface.control_polygon()[i][j].x);
+      EXPECT_EQ(merge_surface.control_polygon()[i][j].y,
+                insert_surface.control_polygon()[i][j].y);
+      EXPECT_EQ(merge_surface.control_polygon()[i][j].z,
+                insert_surface.control_polygon()[i][j].z);
+      EXPECT_EQ(merge_surface.control_polygon()[i][j].w,
+                insert_surface.control_polygon()[i][j].w);
+    }
+  }
+
+  // Compare
+  double div = 1.0 / 99.0;
+  double u_div = div * (u_interval.y - u_interval.x);
+  double v_div = div * (v_interval.y - v_interval.x);
+  for (int32_t i = -1; i < 101; ++i) {
+    Point2D uv = {(static_cast<double>(i) * u_div) + u_interval.x, 0.0};
+    for (int32_t j = -1; j < 101; ++j) {
+      uv.y = (static_cast<double>(j) * v_div) + v_interval.x;
+      Point3D point_nurbs = surface.EvaluatePoint(uv);
+      Point3D point_isrt = merge_surface.EvaluatePoint(uv);
+      EXPECT_NEAR(point_nurbs.x, point_isrt.x, kTestEpsilon);
+      EXPECT_NEAR(point_nurbs.y, point_isrt.y, kTestEpsilon);
+      EXPECT_NEAR(point_nurbs.z, point_isrt.z, kTestEpsilon);
+    }
+  }
+}
+
+TEST(NURBS_Chapter5, Decompose2D) {
+  constexpr double kTestEpsilon = std::numeric_limits<double>::epsilon();
+  // NURBS Curves
+  uint32_t degree = 3;
+  std::vector<double> knots = {0, 0, 0, 0, 1, 2, 2, 3, 4, 4, 5, 5, 5, 5};
+  Point2D interval = {0.0, 5.0};
+  std::vector<Point3D> control_points = {
+      {0, 0, 1}, {0, 1, 1}, {1, 1, 1}, {1, 0, 1}, {2, 0, 1},
+      {2, 1, 1}, {3, 1, 1}, {3, 0, 1}, {4, 0, 1}, {4, 1, 1}};
+  NURBSCurve2D nurbs_curve(degree, control_points, knots, interval);
+
+  // Decompose the curve
+  std::vector<BezierCurve2D> beziers = nurbs_curve.Decompose();
+  ASSERT_EQ(beziers.size(), 5);
+
+  // Compare
+  double div = (1.0 / 99.0) * (interval.y - interval.x);
+  for (int32_t i = -1; i < 101; ++i) {
+    double location = (static_cast<double>(i) * div) + interval.x;
+    Point2D point_nurbs = nurbs_curve.EvaluateCurve(location);
+    Point2D point_decomp;
+    if (location < 1.0) {
+      point_decomp = beziers[0].EvaluateCurve(location);
+    } else if (location < 2.0) {
+      point_decomp = beziers[1].EvaluateCurve(location - 1.0);
+    } else if (location < 3.0) {
+      point_decomp = beziers[2].EvaluateCurve(location - 2.0);
+    } else if (location < 4.0) {
+      point_decomp = beziers[3].EvaluateCurve(location - 3.0);
+    } else {
+      point_decomp = beziers[4].EvaluateCurve(location - 4.0);
+    }
+
+    EXPECT_DOUBLE_EQ(point_nurbs.x, point_decomp.x);
+    EXPECT_DOUBLE_EQ(point_nurbs.y, point_decomp.y);
+  }
+}
+
+TEST(NURBS_Chapter5, Decompose3D) {
+  constexpr double kTestEpsilon = std::numeric_limits<double>::epsilon();
+  // NURBS Curves
+  uint32_t degree = 3;
+  std::vector<double> knots = {0, 0, 0, 0, 1, 2, 2, 3, 4, 4, 5, 5, 5, 5};
+  Point2D interval = {0.0, 5.0};
+  std::vector<Point4D> control_points = {
+      {0, 0, 1, 1}, {0, 1, 2, 1}, {1, 1, 4, 1}, {1, 0, 3,1}, {2, 0, 2, 1},
+      {2, 1, 0, 1}, {3, 1, 3, 1}, {3, 0, 5, 1}, {4, 0, 5, 1}, {4, 1, 3, 1}};
+  NURBSCurve3D nurbs_curve(degree, control_points, knots, interval);
+
+  // Decompose the curve
+  std::vector<BezierCurve3D> beziers = nurbs_curve.Decompose();
+  ASSERT_EQ(beziers.size(), 5);
+
+  // Compare
+  double div = (1.0 / 99.0) * (interval.y - interval.x);
+  for (int32_t i = -1; i < 101; ++i) {
+    double location = (static_cast<double>(i) * div) + interval.x;
+    Point3D point_nurbs = nurbs_curve.EvaluateCurve(location);
+    Point3D point_decomp;
+    if (location < 1.0) {
+      point_decomp = beziers[0].EvaluateCurve(location);
+    } else if (location < 2.0) {
+      point_decomp = beziers[1].EvaluateCurve(location - 1.0);
+    } else if (location < 3.0) {
+      point_decomp = beziers[2].EvaluateCurve(location - 2.0);
+    } else if (location < 4.0) {
+      point_decomp = beziers[3].EvaluateCurve(location - 3.0);
+    } else {
+      point_decomp = beziers[4].EvaluateCurve(location - 4.0);
+    }
+
+    EXPECT_DOUBLE_EQ(point_nurbs.x, point_decomp.x);
+    EXPECT_DOUBLE_EQ(point_nurbs.y, point_decomp.y);
+    EXPECT_DOUBLE_EQ(point_nurbs.z, point_decomp.z);
+  }
+}
+
+}  // namespace nurbs

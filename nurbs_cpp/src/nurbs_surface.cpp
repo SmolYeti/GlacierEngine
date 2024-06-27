@@ -4,15 +4,20 @@
 #include "include/knot_utility_functions.hpp"
 
 namespace nurbs {
-namespace {} // namespace
+namespace {}  // namespace
 NURBSSurface::NURBSSurface(uint32_t u_degree, uint32_t v_degree,
                            std::vector<double> u_knots,
                            std::vector<double> v_knots,
                            std::vector<std::vector<Point4D>> control_polygon,
                            Point2D u_interval, Point2D v_interval)
-    : Surface(u_interval, v_interval), u_degree_(u_degree), v_degree_(v_degree),
-      u_knots_(u_knots), v_knots_(v_knots), control_polygon_(control_polygon),
-      u_internal_interval_(u_interval), v_internal_interval_(v_interval) {
+    : Surface(u_interval, v_interval),
+      u_degree_(u_degree),
+      v_degree_(v_degree),
+      u_knots_(u_knots),
+      v_knots_(v_knots),
+      control_polygon_(control_polygon),
+      u_internal_interval_(u_interval),
+      v_internal_interval_(v_interval) {
   if (u_knots_.size() != control_polygon_.size() + u_degree_ + 1) {
     throw std::exception("Invalid U Parameters for a NURBS Surface");
   }
@@ -67,12 +72,11 @@ Point3D NURBSSurface::EvaluatePoint(Point2D uv) const {
     uint32_t u_sample_count, uint32_t v_sample_count) const {}*/
 
 // ALGORITHM A4.4 RatSurfaceDerivs(Aders,wders,d,SKL) p.137
-std::vector<std::vector<double>>
-PolygonWeightDerivatives(Point2D uv, uint32_t u_degree, uint32_t v_degree,
-                         const std::vector<double> &u_knots,
-                         const std::vector<double> &v_knots,
-                         const std::vector<std::vector<double>> &weights,
-                         uint32_t max_derivative, double tolerance) {
+std::vector<std::vector<double>> PolygonWeightDerivatives(
+    Point2D uv, uint32_t u_degree, uint32_t v_degree,
+    const std::vector<double>& u_knots, const std::vector<double>& v_knots,
+    const std::vector<std::vector<double>>& weights, uint32_t max_derivative,
+    double tolerance) {
   // Cap the derivative
   uint32_t max_deriv_u = std::min(u_degree, max_derivative);
   uint32_t max_deriv_v = std::min(v_degree, max_derivative);
@@ -107,16 +111,16 @@ PolygonWeightDerivatives(Point2D uv, uint32_t u_degree, uint32_t v_degree,
   return derivs;
 }
 
-std::vector<std::vector<Point3D>>
-NURBSSurface::Derivatives(Point2D uv, uint32_t max_derivative) const {
+std::vector<std::vector<Point3D>> NURBSSurface::Derivatives(
+    Point2D uv, uint32_t max_derivative) const {
   // Split the control polygon into the b_spline and weights control polygons
   std::vector<std::vector<Point3D>> bspl_cpts;
   std::vector<std::vector<double>> weights;
-  for (auto &vec : control_polygon_) {
+  for (auto& vec : control_polygon_) {
     bspl_cpts.push_back({});
     weights.push_back({});
 
-    for (auto &cpt : vec) {
+    for (auto& cpt : vec) {
       bspl_cpts.back().push_back({cpt.x, cpt.y, cpt.z});
       weights.back().push_back(cpt.w);
     }
@@ -160,7 +164,7 @@ NURBSSurface::Derivatives(Point2D uv, uint32_t max_derivative) const {
 
 // Algorithm 5.3 SurfaceKnotIns p.155
 NURBSSurface NURBSSurface::KnotInsert(SurfaceDirection dir, double knot,
-                                      int times) {
+                                      int times) const {
   // Input: np,p,UP,Pw,u,k,s,r
   // np - Number of columns in the control polygon
   // p - U Degree of the surface
@@ -202,7 +206,7 @@ NURBSSurface NURBSSurface::KnotInsert(SurfaceDirection dir, double knot,
     // Resize the output arrays
     UQ.resize(UP.size() + r);
     Qw.resize(Pw.size() + r);
-    for (auto &column : Qw) {
+    for (auto& column : Qw) {
       column.resize(Pw[0].size());
     }
 
@@ -223,7 +227,7 @@ NURBSSurface NURBSSurface::KnotInsert(SurfaceDirection dir, double knot,
 
     // Save the Alphas
     std::vector<std::vector<double>> alphas(p + 1);
-    for (auto &alpha : alphas) {
+    for (auto& alpha : alphas) {
       alpha.resize(r + 1);
     }
 
@@ -277,7 +281,7 @@ NURBSSurface NURBSSurface::KnotInsert(SurfaceDirection dir, double knot,
     // Resize the output arrays
     VQ.resize(VP.size() + r);
     Qw.resize(Pw.size());
-    for (auto &column : Qw) {
+    for (auto& column : Qw) {
       column.resize(Pw[0].size() + r);
     }
 
@@ -298,7 +302,7 @@ NURBSSurface NURBSSurface::KnotInsert(SurfaceDirection dir, double knot,
 
     // Save the Alphas
     std::vector<std::vector<double>> alphas(q + 1);
-    for (auto &alpha : alphas) {
+    for (auto& alpha : alphas) {
       alpha.resize(r + 1);
     }
 
@@ -342,4 +346,180 @@ NURBSSurface NURBSSurface::KnotInsert(SurfaceDirection dir, double knot,
   return NURBSSurface(u_degree_, v_degree_, UQ, VQ, Qw, u_interval_,
                       v_interval_);
 }
-} // namespace nurbs
+
+// ALGORITHM A5.5 RefineKnotVectSurface(n,p,U,m,q,V,Pw,X,r,dir,Ubar,Vbar,Qw)
+NURBSSurface NURBSSurface::RefineKnotVect(std::vector<double> knots,
+                                          SurfaceDirection dir) const {
+  if (control_polygon_.empty() || knots.empty()) {
+    return NURBSSurface(u_degree_, v_degree_, u_knots_, v_knots_,
+                        control_polygon_, u_interval_, v_interval_);
+  }
+
+  // Refine surface knot vector
+  // Input: n,p,U,m,q,V,Pw,X,r,dir
+  // n - number of points in the U direction
+  // p - U degree
+  // U - U knot vector
+  // m - number of points int the V direction
+  // q - V degree
+  // V - V knot vector
+  // Pw - control polygon
+  // X - knot vector to merge in
+  // r - size of X
+  // dir - direction to merge
+  int n = static_cast<int>(control_polygon_.size()) - 1;
+  int p = u_degree_;
+  auto U = u_knots_;
+  int m = static_cast<int>(control_polygon_[0].size()) - 1;
+  int q = v_degree_;
+  auto V = v_knots_;
+  auto Pw = control_polygon_;
+  auto X = knots;
+  int r = static_cast<int>(knots.size()) - 1;
+
+  // Output: Ubar, Vbar, Qw
+  // Ubar - U knot vector
+  // Vbar - V out vector
+  // Qw - control polygon
+  std::vector<double> Ubar;
+  std::vector<double> Vbar;
+  std::vector<std::vector<Point4D>> Qw;
+
+  if (dir == SurfaceDirection::kUDir) {
+    // find indexes a and b;
+    int a = knots::FindSpanParam(p, U, X[0], kTolerance);
+    int b = knots::FindSpanParam(p, U, X[r], kTolerance);
+    b += 1;
+
+    // initialize Ubar;
+    Ubar.resize(U.size() + r + 1);
+    for (int i = 0; i <= a; ++i) {
+      Ubar[i] = U[i];
+    }
+    for (int i = b + p; i < U.size(); ++i) {
+      Ubar[i + r + 1] = U[i];
+    }
+
+    // copy V into Vbar;
+    Vbar = V;
+
+    // Save unaltered ctrl pts
+    Qw.resize(Pw.size() + r + 1);
+    for (int i = 0; i <= a - p; ++i) {
+      Qw[i] = Pw[i];
+    }
+    for (int i = b - 1; i <= n; ++i) {
+      Qw[i + r + 1] = Pw[i];
+    }
+    // Init middle points of Qw
+    for (int i = a - p + 1; i < b + r; ++i) {
+      Qw[i].resize(Pw[0].size());
+    }
+
+    int i = b + p - 1;
+    int k = b + p + r;
+
+    for (int j = r; j >= 0; j--) {
+      while (X[j] <= U[i] && i > a) {
+        Ubar[k] = U[i];
+        for (int row = 0; row <= m; row++) {
+          Qw[k - p - 1][row] = Pw[i - p - 1][row];
+        }
+        k = k - 1;
+        i = i - 1;
+      }
+
+      for (int row = 0; row <= m; row++) {
+        Qw[k - p - 1][row] = Qw[k - p][row];
+      }
+
+      for (int l = 1; l <= p; l++) {
+        int ind = k - p + l;
+        double alfa = Ubar[k + l] - X[j];
+        if (abs(alfa) == 0.0) {
+          for (int row = 0; row <= m; row++) {
+            Qw[ind - 1][row] = Qw[ind][row];
+          }
+        } else {
+          alfa = alfa / (Ubar[k + l] - U[i - p + l]);
+          for (int row = 0; row <= m; row++) {
+            Qw[ind - 1][row] =
+                (alfa * Qw[ind - 1][row]) + ((1.0 - alfa) * Qw[ind][row]);
+          }
+        }
+      }
+      Ubar[k] = X[j];
+      k = k - 1;
+    }
+  } else if (dir == SurfaceDirection::kVDir) {
+    // Similar code as above with u and v directional parameters switched
+
+    // find indexes a and b;
+    int a = knots::FindSpanParam(q, V, X[0], kTolerance);
+    int b = knots::FindSpanParam(q, V, X[r], kTolerance);
+    b += 1;
+
+    // initialize Vbar;
+    Vbar.resize(V.size() + r + 1);
+    for (int i = 0; i <= a; ++i) {
+      Vbar[i] = V[i];
+    }
+    for (int i = b + q; i < V.size(); ++i) {
+      Vbar[i + r + 1] = V[i];
+    }
+
+    // copy U into Ubar;
+    Ubar = U;
+
+    // Save unaltered ctrl pts
+    Qw.resize(Pw.size());
+    for (int i = 0; i <= n; ++i) {
+      Qw[i].resize(Pw[0].size() + r + 1);
+      for (int j = 0; j <= a - q; ++j) {
+        Qw[i][j] = Pw[i][j];
+      }
+      for (int j = b - 1; j <= m; ++j) {
+        Qw[i][j + r + 1] = Pw[i][j];
+      }
+    }
+
+    int i = b + q - 1;
+    int k = b + q + r;
+
+    for (int j = r; j >= 0; j--) {
+      while (X[j] <= V[i] && i > a) {
+        Vbar[k] = V[i];
+        for (int col = 0; col <= n; col++) {
+          Qw[col][k - q - 1] = Pw[col][i - q - 1];
+        }
+        k = k - 1;
+        i = i - 1;
+      }
+
+      for (int col = 0; col <= n; col++) {
+        Qw[col][k - q - 1] = Qw[col][k - q];
+      }
+
+      for (int l = 1; l <= q; l++) {
+        int ind = k - q + l;
+        double alfa = Vbar[k + l] - X[j];
+        if (abs(alfa) == 0.0) {
+          for (int col = 0; col <= n; col++) {
+            Qw[col][ind - 1] = Qw[col][ind];
+          }
+        } else {
+          alfa = alfa / (Vbar[k + l] - V[i - q + l]);
+          for (int col = 0; col <= n; col++) {
+            Qw[col][ind - 1] =
+                (alfa * Qw[col][ind - 1]) + ((1.0 - alfa) * Qw[col][ind]);
+          }
+        }
+      }
+      Vbar[k] = X[j];
+      k = k - 1;
+    }
+  }
+  return NURBSSurface(u_degree_, v_degree_, Ubar, Vbar, Qw, u_interval_,
+                      v_interval_);
+}
+}  // namespace nurbs

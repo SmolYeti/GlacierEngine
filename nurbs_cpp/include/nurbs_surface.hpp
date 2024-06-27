@@ -25,10 +25,16 @@ public:
   Derivatives(Point2D uv, uint32_t max_derivative) const;
 
   enum SurfaceDirection { kUDir, kVDir };
-  NURBSSurface KnotInsert(SurfaceDirection dir, double knot, int times);
+  NURBSSurface KnotInsert(SurfaceDirection dir, double knot, int times) const;
 
-  const std::vector<double> &u_knots() { return u_knots_; }
-  const std::vector<double> &v_knots() { return v_knots_; }
+  NURBSSurface RefineKnotVect(std::vector<double> knots, SurfaceDirection dir) const;
+
+  const std::vector<double> &u_knots() const { return u_knots_; }
+  const std::vector<double> &v_knots() const { return v_knots_; }
+
+  const std::vector<std::vector<Point4D>>& control_polygon() const {
+    return control_polygon_;
+  }
 
   private:
     uint32_t u_degree_;

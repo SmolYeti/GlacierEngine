@@ -6,7 +6,9 @@
 namespace nurbs {
 NURBSCurve2D::NURBSCurve2D(uint32_t degree, std::vector<Point3D> control_points,
                            std::vector<double> knots, Point2D interval)
-    : Curve2D(interval), degree_(degree), control_points_(control_points),
+    : Curve2D(interval),
+      degree_(degree),
+      control_points_(control_points),
       knots_(knots) {
   if (knots.size() != control_points.size() + degree + 1) {
     throw std::exception("Invalid BSplineCruve2D");
@@ -216,7 +218,6 @@ Point2D NURBSCurve2D::PointByCornerCut(double param) const {
   } else if (in_param >= static_cast<double>(U[n + p + 1]) - kTolerance) {
     C = Point2D(Pw[n].x, Pw[n].y) / Pw[n].z;
   } else {
-
     // Local Variables
     int k = knots::FindSpanParam(p, U, in_param, kTolerance);
     int s = knots::MultiplicityParam(p, U, in_param, kTolerance);
@@ -315,9 +316,100 @@ NURBSCurve2D NURBSCurve2D::MergeKnotVect(std::vector<double> knots) const {
   return NURBSCurve2D(p, Qw, Ubar, interval_);
 }
 
+// ALGORITHM A5.6 DecomposeCurve(n, p, U, Pw, nb, Qw) p.173
+std::vector<BezierCurve2D> NURBSCurve2D::Decompose() const {
+  // Input:
+  // n - Number of points
+  // p - degree
+  // U - knot vector
+  // Pw - Control points
+  // Output:
+  // nb - number of bezier segments
+  // Qw - a vector of points representing nb bezier curves
+  auto Pw = control_points_;
+  int n = static_cast<int>(Pw.size()) - 1;
+  int p = degree_;
+  auto U = knots_;
+
+  std::vector<BezierCurve2D> bezier_segments;
+
+  std::vector<std::vector<Point3D>> Qw(2);
+  for (auto &vec : Qw) {
+    vec.resize(p + 1);
+  }
+
+  std::vector<double> alphas(p + 1, 0.0);
+
+  int m = n + p + 1;
+  int a = p;
+  int b = p + 1;
+
+  for (int i = 0; i <= p; ++i) {
+    Qw[0][i] = Pw[i];
+  }
+
+  while (b < m) {
+    int i = b;
+    while (b < m && U[b + 1] == U[b]) {
+      ++b;
+    }
+    int mult = b - i + 1;
+    if (mult < p) {
+      double numer = U[b] - U[a];  // Numerator of alpha
+      // Compute and store alphas
+      for (int j = p; j > mult; --j) {
+        alphas[j - mult - 1] = numer / (U[a + j] - U[a]);
+      }
+      int r = p - mult;  // Knot insert r times
+      for (int j = 1; j <= r; ++j) {
+        int save = r - j;
+        int s = mult + j;  // This many new points
+        for (int k = p; k >= s; --k) {
+          double alpha = alphas[k - s];
+          Qw[0][k] = (alpha * Qw[0][k]) + ((1.0 - alpha) * Qw[0][k - 1]);
+        }
+        if (b < m) {
+          // Control point of next segment
+          Qw[1][save] = Qw[0][p];
+        }
+      }
+
+      // Bezier segment complete
+      std::vector<Point2D> bezier_points;
+      bezier_points.reserve(p + 1);
+      for (auto point : Qw[0]) {
+        bezier_points.emplace_back(Point2D(point.x, point.y) / point.z);
+      }
+      bezier_segments.emplace_back(bezier_points);
+      if (b < m) {
+        Qw[0] = Qw[1];
+        Qw[1].clear();
+        Qw[1].resize(p + 1);
+        // Initialize for next segment
+        for (i = p - mult; i <= p; ++i) {
+          Qw[0][i] = Pw[b - p + i];
+        }
+        a = b;
+        b = b + 1;
+      }
+    } else {
+      // Final Bezier segment
+      std::vector<Point2D> bezier_points;
+      bezier_points.reserve(p + 1);
+      for (auto point : Qw[0]) {
+        bezier_points.emplace_back(Point2D(point.x, point.y) / point.z);
+      }
+      bezier_segments.emplace_back(bezier_points);
+    }
+  }
+  return bezier_segments;
+}
+
 NURBSCurve3D::NURBSCurve3D(uint32_t degree, std::vector<Point4D> control_points,
                            std::vector<double> knots, Point2D interval)
-    : Curve3D(interval), degree_(degree), control_points_(control_points),
+    : Curve3D(interval),
+      degree_(degree),
+      control_points_(control_points),
       knots_(knots) {
   if (knots.size() != control_points.size() + degree + 1) {
     throw std::exception("Invalid BSplineCruve2D");
@@ -494,7 +586,6 @@ Point3D NURBSCurve3D::PointByCornerCut(double param) const {
   } else if (in_param >= static_cast<double>(U[n + p + 1]) - kTolerance) {
     C = Point3D(Pw[n].x, Pw[n].y, Pw[n].z) / Pw[n].w;
   } else {
-
     // Local Variables
     auto k = knots::FindSpanParam(p, U, in_param, kTolerance);
     auto s = knots::MultiplicityParam(p, U, in_param, kTolerance);
@@ -593,4 +684,93 @@ NURBSCurve3D NURBSCurve3D::MergeKnotVect(std::vector<double> knots) const {
   return NURBSCurve3D(p, Qw, Ubar, interval_);
 }
 
-} // namespace nurbs
+// ALGORITHM A5.6 DecomposeCurve(n, p, U, Pw, nb, Qw) p.173
+std::vector<BezierCurve3D> NURBSCurve3D::Decompose() const {
+  // Input:
+  // n - Number of points
+  // p - degree
+  // U - knot vector
+  // Pw - Control points
+  // Output:
+  // nb - number of bezier segments
+  // Qw - a vector of points representing nb bezier curves
+  auto Pw = control_points_;
+  int n = static_cast<int>(Pw.size()) - 1;
+  int p = degree_;
+  auto U = knots_;
+
+  std::vector<BezierCurve3D> bezier_segments;
+
+  std::vector<std::vector<Point4D>> Qw(2);
+  for (auto &vec : Qw) {
+    vec.resize(p + 1);
+  }
+
+  std::vector<double> alphas(p + 1, 0.0);
+
+  int m = n + p + 1;
+  int a = p;
+  int b = p + 1;
+
+  for (int i = 0; i <= p; ++i) {
+    Qw[0][i] = Pw[i];
+  }
+
+  while (b < m) {
+    int i = b;
+    while (b < m && U[b + 1] == U[b]) {
+      ++b;
+    }
+    int mult = b - i + 1;
+    if (mult < p) {
+      double numer = U[b] - U[a];  // Numerator of alpha
+      // Compute and store alphas
+      for (int j = p; j > mult; --j) {
+        alphas[j - mult - 1] = numer / (U[a + j] - U[a]);
+      }
+      int r = p - mult;  // Knot insert r times
+      for (int j = 1; j <= r; ++j) {
+        int save = r - j;
+        int s = mult + j;  // This many new points
+        for (int k = p; k >= s; --k) {
+          double alpha = alphas[k - s];
+          Qw[0][k] = (alpha * Qw[0][k]) + ((1.0 - alpha) * Qw[0][k - 1]);
+        }
+        if (b < m) {
+          // Control point of next segment
+          Qw[1][save] = Qw[0][p];
+        }
+      }
+
+      // Bezier segment complete
+      std::vector<Point3D> bezier_points;
+      bezier_points.reserve(p + 1);
+      for (auto point : Qw[0]) {
+        bezier_points.emplace_back(Point3D(point.x, point.y, point.z) / point.w);
+      }
+      bezier_segments.emplace_back(bezier_points);
+      if (b < m) {
+        Qw[0] = Qw[1];
+        Qw[1].clear();
+        Qw[1].resize(p + 1);
+        // Initialize for next segment
+        for (i = p - mult; i <= p; ++i) {
+          Qw[0][i] = Pw[b - p + i];
+        }
+        a = b;
+        b = b + 1;
+      }
+    } else {
+      // Final Bezier segment
+      std::vector<Point3D> bezier_points;
+      bezier_points.reserve(p + 1);
+      for (auto point : Qw[0]) {
+        bezier_points.emplace_back(Point3D(point.x, point.y, point.z) / point.w);
+      }
+      bezier_segments.emplace_back(bezier_points);
+    }
+  }
+  return bezier_segments;
+}
+
+}  // namespace nurbs
