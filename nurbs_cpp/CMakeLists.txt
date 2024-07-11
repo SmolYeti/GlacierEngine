@@ -7,5 +7,4 @@ add_library(nurbs_cpp ${NURBS_DIR})
 
 target_include_directories(nurbs_cpp PUBLIC
     ${PROJECT_SOURCE_DIR}/nurbs_cpp
-    ${GLM_PATH}
 )

@@ -373,33 +373,26 @@ std::vector<BezierCurve2D> NURBSCurve2D::Decompose() const {
           Qw[1][save] = Qw[0][p];
         }
       }
+    }
 
-      // Bezier segment complete
-      std::vector<Point2D> bezier_points;
-      bezier_points.reserve(p + 1);
-      for (auto point : Qw[0]) {
-        bezier_points.emplace_back(Point2D(point.x, point.y) / point.z);
+    // Bezier segment complete
+    std::vector<Point2D> bezier_points;
+    bezier_points.reserve(p + 1);
+    for (auto point : Qw[0]) {
+      bezier_points.emplace_back(Point2D(point.x, point.y) / point.z);
+    }
+    bezier_segments.emplace_back(bezier_points);
+
+    if (b < m) {
+      Qw[0] = Qw[1];
+      Qw[1].clear();
+      Qw[1].resize(p + 1);
+      // Initialize for next segment
+      for (i = std::max(p - mult, 0); i <= p; ++i) {
+        Qw[0][i] = Pw[b - p + i];
       }
-      bezier_segments.emplace_back(bezier_points);
-      if (b < m) {
-        Qw[0] = Qw[1];
-        Qw[1].clear();
-        Qw[1].resize(p + 1);
-        // Initialize for next segment
-        for (i = p - mult; i <= p; ++i) {
-          Qw[0][i] = Pw[b - p + i];
-        }
-        a = b;
-        b = b + 1;
-      }
-    } else {
-      // Final Bezier segment
-      std::vector<Point2D> bezier_points;
-      bezier_points.reserve(p + 1);
-      for (auto point : Qw[0]) {
-        bezier_points.emplace_back(Point2D(point.x, point.y) / point.z);
-      }
-      bezier_segments.emplace_back(bezier_points);
+      a = b;
+      b = b + 1;
     }
   }
   return bezier_segments;
@@ -741,33 +734,26 @@ std::vector<BezierCurve3D> NURBSCurve3D::Decompose() const {
           Qw[1][save] = Qw[0][p];
         }
       }
+    }
 
-      // Bezier segment complete
-      std::vector<Point3D> bezier_points;
-      bezier_points.reserve(p + 1);
-      for (auto point : Qw[0]) {
-        bezier_points.emplace_back(Point3D(point.x, point.y, point.z) / point.w);
+    // Bezier segment complete
+    std::vector<Point3D> bezier_points;
+    bezier_points.reserve(p + 1);
+    for (auto point : Qw[0]) {
+      bezier_points.emplace_back(Point3D(point.x, point.y, point.z) / point.w);
+    }
+    bezier_segments.emplace_back(bezier_points);
+
+    if (b < m) {
+      Qw[0] = Qw[1];
+      Qw[1].clear();
+      Qw[1].resize(p + 1);
+      // Initialize for next segment
+      for (i = std::max(p - mult, 0); i <= p; ++i) {
+        Qw[0][i] = Pw[b - p + i];
       }
-      bezier_segments.emplace_back(bezier_points);
-      if (b < m) {
-        Qw[0] = Qw[1];
-        Qw[1].clear();
-        Qw[1].resize(p + 1);
-        // Initialize for next segment
-        for (i = p - mult; i <= p; ++i) {
-          Qw[0][i] = Pw[b - p + i];
-        }
-        a = b;
-        b = b + 1;
-      }
-    } else {
-      // Final Bezier segment
-      std::vector<Point3D> bezier_points;
-      bezier_points.reserve(p + 1);
-      for (auto point : Qw[0]) {
-        bezier_points.emplace_back(Point3D(point.x, point.y, point.z) / point.w);
-      }
-      bezier_segments.emplace_back(bezier_points);
+      a = b;
+      b = b + 1;
     }
   }
   return bezier_segments;

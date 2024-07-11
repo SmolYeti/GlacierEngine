@@ -1660,6 +1660,47 @@ TEST(NURBS_Chapter5, MergeKnotFullSurfaceV) {
   }
 }
 
+TEST(NURBS_Chapter5, Decompose2DNone) {
+  constexpr double kTestEpsilon = std::numeric_limits<double>::epsilon();
+  // NURBS Curves
+  uint32_t degree = 3;
+  std::vector<double> knots = {0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2,
+                               3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5};
+  Point2D interval = {0.0, 5.0};
+  std::vector<Point3D> control_points = {
+      {0, 0, 1}, {0, 1, 1}, {1, 1, 1},  {1, 0, 1},   {2, 0, 1},
+      {2, 1, 1}, {3, 1, 1}, {3, 0, 1},  {4, 0, 1},   {4, 1, 1},
+      {5, 1, 1}, {5, 2, 1}, {6, 1, 1},  {7, 3, 1},   {7, 1, 1},
+      {8, 2, 1}, {9, 4, 1}, {10, 2, 1}, {10, -1, 1}, {11, 0, 1}};
+  NURBSCurve2D nurbs_curve(degree, control_points, knots, interval);
+
+  // Decompose the curve
+  std::vector<BezierCurve2D> beziers = nurbs_curve.Decompose();
+  ASSERT_EQ(beziers.size(), 5);
+
+  // Compare
+  double div = (1.0 / 99.0) * (interval.y - interval.x);
+  for (int32_t i = -1; i < 101; ++i) {
+    double location = (static_cast<double>(i) * div) + interval.x;
+    Point2D point_nurbs = nurbs_curve.EvaluateCurve(location);
+    Point2D point_decomp;
+    if (location < 1.0) {
+      point_decomp = beziers[0].EvaluateCurve(location);
+    } else if (location < 2.0) {
+      point_decomp = beziers[1].EvaluateCurve(location - 1.0);
+    } else if (location < 3.0) {
+      point_decomp = beziers[2].EvaluateCurve(location - 2.0);
+    } else if (location < 4.0) {
+      point_decomp = beziers[3].EvaluateCurve(location - 3.0);
+    } else {
+      point_decomp = beziers[4].EvaluateCurve(location - 4.0);
+    }
+
+    EXPECT_DOUBLE_EQ(point_nurbs.x, point_decomp.x);
+    EXPECT_DOUBLE_EQ(point_nurbs.y, point_decomp.y);
+  }
+}
+
 TEST(NURBS_Chapter5, Decompose2D) {
   constexpr double kTestEpsilon = std::numeric_limits<double>::epsilon();
   // NURBS Curves
@@ -1698,6 +1739,48 @@ TEST(NURBS_Chapter5, Decompose2D) {
   }
 }
 
+TEST(NURBS_Chapter5, Decompose3DNone) {
+  constexpr double kTestEpsilon = std::numeric_limits<double>::epsilon();
+  // NURBS Curves
+  uint32_t degree = 3;
+  std::vector<double> knots = {0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2,
+                               3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5};
+  Point2D interval = {0.0, 5.0};
+  std::vector<Point4D> control_points = {
+      {0, 0, 1, 1}, {0, 1, 1, 1}, {1, 1, 1, 1},  {1, 0, 1, 1},   {2, 0, 1, 1},
+      {2, 1, 1, 1}, {3, 1, 1, 1}, {3, 0, 1, 1},  {4, 0, 1, 1},   {4, 1, 1, 1},
+      {5, 1, 1, 1}, {5, 2, 1, 1}, {6, 1, 1, 1},  {7, 3, 1, 1},   {7, 1, 1, 1},
+      {8, 2, 1, 1}, {9, 4, 1, 1}, {10, 2, 1, 1}, {10, -1, 1, 1}, {11, 0, 1, 1}};
+  NURBSCurve3D nurbs_curve(degree, control_points, knots, interval);
+
+  // Decompose the curve
+  std::vector<BezierCurve3D> beziers = nurbs_curve.Decompose();
+  ASSERT_EQ(beziers.size(), 5);
+
+  // Compare
+  double div = (1.0 / 99.0) * (interval.y - interval.x);
+  for (int32_t i = -1; i < 101; ++i) {
+    double location = (static_cast<double>(i) * div) + interval.x;
+    Point3D point_nurbs = nurbs_curve.EvaluateCurve(location);
+    Point3D point_decomp;
+    if (location < 1.0) {
+      point_decomp = beziers[0].EvaluateCurve(location);
+    } else if (location < 2.0) {
+      point_decomp = beziers[1].EvaluateCurve(location - 1.0);
+    } else if (location < 3.0) {
+      point_decomp = beziers[2].EvaluateCurve(location - 2.0);
+    } else if (location < 4.0) {
+      point_decomp = beziers[3].EvaluateCurve(location - 3.0);
+    } else {
+      point_decomp = beziers[4].EvaluateCurve(location - 4.0);
+    }
+
+    EXPECT_DOUBLE_EQ(point_nurbs.x, point_decomp.x);
+    EXPECT_DOUBLE_EQ(point_nurbs.y, point_decomp.y);
+    EXPECT_DOUBLE_EQ(point_nurbs.z, point_decomp.z);
+  }
+}
+
 TEST(NURBS_Chapter5, Decompose3D) {
   constexpr double kTestEpsilon = std::numeric_limits<double>::epsilon();
   // NURBS Curves
@@ -1705,7 +1788,7 @@ TEST(NURBS_Chapter5, Decompose3D) {
   std::vector<double> knots = {0, 0, 0, 0, 1, 2, 2, 3, 4, 4, 5, 5, 5, 5};
   Point2D interval = {0.0, 5.0};
   std::vector<Point4D> control_points = {
-      {0, 0, 1, 1}, {0, 1, 2, 1}, {1, 1, 4, 1}, {1, 0, 3,1}, {2, 0, 2, 1},
+      {0, 0, 1, 1}, {0, 1, 2, 1}, {1, 1, 4, 1}, {1, 0, 3, 1}, {2, 0, 2, 1},
       {2, 1, 0, 1}, {3, 1, 3, 1}, {3, 0, 5, 1}, {4, 0, 5, 1}, {4, 1, 3, 1}};
   NURBSCurve3D nurbs_curve(degree, control_points, knots, interval);
 
@@ -1737,4 +1820,354 @@ TEST(NURBS_Chapter5, Decompose3D) {
   }
 }
 
+TEST(NURBS_Chapter5, DecomposeSurfaceUNone) {
+  constexpr double kTestEpsilon =
+      std::numeric_limits<double>::epsilon() * 100.0;
+  // NURBS surface
+  uint32_t u_degree = 3;
+  uint32_t v_degree = 2;
+  std::vector<double> u_knots = {0, 0, 0, 0, 1, 1, 1, 1,
+                                 2, 2, 2, 2, 3, 3, 3, 3};
+  std::vector<double> v_knots = {0, 0, 0, 1, 1, 2, 2, 2, 3, 4, 4, 4};
+  Point2D u_interval = {0.0, 3.0};
+  Point2D v_interval = {0.0, 4.0};
+  std::vector<std::vector<Point4D>> control_points;
+  uint32_t u_points = static_cast<uint32_t>(u_knots.size()) - u_degree - 1;
+  uint32_t v_points = static_cast<uint32_t>(v_knots.size()) - v_degree - 1;
+  control_points.resize(u_points);
+  for (uint32_t u_index = 0; u_index < u_points; ++u_index) {
+    control_points[u_index].resize(v_points);
+    for (uint32_t v_index = 0; v_index < v_points; ++v_index) {
+      double u_val =
+          static_cast<double>(u_index) - (static_cast<double>(u_points) * 0.5);
+      double v_val =
+          static_cast<double>(v_index) - (static_cast<double>(v_points) * 0.5);
+      double dist_0_sq = ((u_val * u_val) + (v_val * v_val));
+      control_points[u_index][v_index] = {u_val, v_val, dist_0_sq, 1.0};
+    }
+  }
+
+  NURBSSurface surface(u_degree, v_degree, u_knots, v_knots, control_points,
+                       u_interval, v_interval);
+
+  // Merge insert
+  std::vector<NURBSSurface> surfaces = surface.DecomposeU();
+
+  // Check surface count
+  ASSERT_EQ(surfaces.size(), 3);
+
+  // Compare
+  double points = 10.0;
+  double div = 1.0 / points;
+  double u_div = div * (u_interval.y - u_interval.x);
+  double v_div = div * (v_interval.y - v_interval.x);
+  for (int32_t i = -1; i < static_cast<int32_t>(points + 1.1); ++i) {
+    Point2D uv = {(static_cast<double>(i) * u_div) + u_interval.x, 0.0};
+    Point2D d_uv = {0.0, 0.0};
+    size_t u_index = 0;
+    if (uv.x < 1.0) {
+      u_index = 0;
+      d_uv.x = uv.x;
+    } else if (uv.x < 2.0) {
+      u_index = 1;
+      d_uv.x = uv.x - 1.0;
+    } else {
+      u_index = 2;
+      d_uv.x = uv.x - 2.0;
+    }
+    for (int32_t j = -1; j < 101; ++j) {
+      uv.y = (static_cast<double>(j) * v_div) + v_interval.x;
+      d_uv.y = uv.y;
+
+      Point3D point_nurbs = surface.EvaluatePoint(uv);
+      Point3D point_decomp = surfaces[u_index].EvaluatePoint(d_uv);
+      EXPECT_NEAR(point_nurbs.x, point_decomp.x, kTestEpsilon);
+      EXPECT_NEAR(point_nurbs.y, point_decomp.y, kTestEpsilon);
+      EXPECT_NEAR(point_nurbs.z, point_decomp.z, kTestEpsilon);
+    }
+  }
+}
+
+TEST(NURBS_Chapter5, DecomposeSurfaceU) {
+  constexpr double kTestEpsilon =
+      std::numeric_limits<double>::epsilon() * 100.0;
+  // NURBS surface
+  uint32_t u_degree = 3;
+  uint32_t v_degree = 2;
+  std::vector<double> u_knots = {0, 0, 0, 0, 1, 2, 2, 3, 3, 3, 3};
+  std::vector<double> v_knots = {0, 0, 0, 1, 1, 2, 2, 2, 3, 4, 4, 4};
+  Point2D u_interval = {0.0, 3.0};
+  Point2D v_interval = {0.0, 4.0};
+  std::vector<std::vector<Point4D>> control_points;
+  uint32_t u_points = static_cast<uint32_t>(u_knots.size()) - u_degree - 1;
+  uint32_t v_points = static_cast<uint32_t>(v_knots.size()) - v_degree - 1;
+  control_points.resize(u_points);
+  for (uint32_t u_index = 0; u_index < u_points; ++u_index) {
+    control_points[u_index].resize(v_points);
+    for (uint32_t v_index = 0; v_index < v_points; ++v_index) {
+      double u_val =
+          static_cast<double>(u_index) - (static_cast<double>(u_points) * 0.5);
+      double v_val =
+          static_cast<double>(v_index) - (static_cast<double>(v_points) * 0.5);
+      double dist_0_sq = ((u_val * u_val) + (v_val * v_val));
+      control_points[u_index][v_index] = {u_val, v_val, dist_0_sq, 1.0};
+    }
+  }
+
+  NURBSSurface surface(u_degree, v_degree, u_knots, v_knots, control_points,
+                       u_interval, v_interval);
+
+  // Merge insert
+  std::vector<NURBSSurface> surfaces = surface.DecomposeU();
+
+  // Check surface count
+  ASSERT_EQ(surfaces.size(), 3);
+
+  // Compare
+  double div = 1.0 / 99.0;
+  double u_div = div * (u_interval.y - u_interval.x);
+  double v_div = div * (v_interval.y - v_interval.x);
+  for (int32_t i = -1; i < 101; ++i) {
+    Point2D uv = {(static_cast<double>(i) * u_div) + u_interval.x, 0.0};
+    Point2D d_uv = {0.0, 0.0};
+    size_t u_index = 0;
+    if (uv.x < 1.0) {
+      u_index = 0;
+      d_uv.x = uv.x;
+    } else if (uv.x < 2.0) {
+      u_index = 1;
+      d_uv.x = uv.x - 1.0;
+    } else {
+      u_index = 2;
+      d_uv.x = uv.x - 2.0;
+    }
+    for (int32_t j = -1; j < 101; ++j) {
+      uv.y = (static_cast<double>(j) * v_div) + v_interval.x;
+      d_uv.y = uv.y;
+
+      Point3D point_nurbs = surface.EvaluatePoint(uv);
+      Point3D point_isrt = surfaces[u_index].EvaluatePoint(d_uv);
+      EXPECT_NEAR(point_nurbs.x, point_isrt.x, kTestEpsilon);
+      EXPECT_NEAR(point_nurbs.y, point_isrt.y, kTestEpsilon);
+      EXPECT_NEAR(point_nurbs.z, point_isrt.z, kTestEpsilon);
+    }
+  }
+}
+
+TEST(NURBS_Chapter5, DecomposeSurfaceVNone) {
+  constexpr double kTestEpsilon =
+      std::numeric_limits<double>::epsilon() * 100.0;
+  // NURBS surface
+  uint32_t u_degree = 3;
+  uint32_t v_degree = 2;
+  std::vector<double> u_knots = {0, 0, 0, 0, 1, 1, 1, 1};
+  std::vector<double> v_knots = {0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4};
+  Point2D u_interval = {0.0, 1.0};
+  Point2D v_interval = {0.0, 4.0};
+  std::vector<std::vector<Point4D>> control_points;
+  uint32_t u_points = static_cast<uint32_t>(u_knots.size()) - u_degree - 1;
+  uint32_t v_points = static_cast<uint32_t>(v_knots.size()) - v_degree - 1;
+  control_points.resize(u_points);
+  for (uint32_t u_index = 0; u_index < u_points; ++u_index) {
+    control_points[u_index].resize(v_points);
+    for (uint32_t v_index = 0; v_index < v_points; ++v_index) {
+      double u_val =
+          static_cast<double>(u_index) - (static_cast<double>(u_points) * 0.5);
+      double v_val =
+          static_cast<double>(v_index) - (static_cast<double>(v_points) * 0.5);
+      double dist_0_sq = ((u_val * u_val) + (v_val * v_val));
+      control_points[u_index][v_index] = {u_val, v_val, dist_0_sq, 1.0};
+    }
+  }
+
+  NURBSSurface surface(u_degree, v_degree, u_knots, v_knots, control_points,
+                       u_interval, v_interval);
+
+  // Decompose
+  std::vector<BezierSurface> surfaces = surface.DecomposeV();
+
+  // Check surface count
+  ASSERT_EQ(surfaces.size(), 4);
+
+  // Compare
+  double points = 10.0;
+  double div = 1.0 / points;
+  double u_div = div * (u_interval.y - u_interval.x);
+  double v_div = div * (v_interval.y - v_interval.x);
+  for (int32_t i = -1; i < static_cast<int32_t>(points + 1.1); ++i) {
+    Point2D uv = {(static_cast<double>(i) * u_div) + u_interval.x, 0.0};
+    Point2D d_uv = uv;
+    for (int32_t j = -1; j < 101; ++j) {
+      uv.y = (static_cast<double>(j) * v_div) + v_interval.x;
+      size_t v_index = 0;
+      if (uv.y < 1.0) {
+        v_index = 0;
+        d_uv.y = uv.y;
+      } else if (uv.y < 2.0) {
+        v_index = 1;
+        d_uv.y = uv.y - 1.0;
+      } else if (uv.y < 3.0) {
+        v_index = 2;
+        d_uv.y = uv.y - 2.0;
+      } else {
+        v_index = 3;
+        d_uv.y = uv.y - 3.0;
+      }
+
+      Point3D point_nurbs = surface.EvaluatePoint(uv);
+      Point3D point_decomp = surfaces[v_index].EvaluatePoint(d_uv);
+      EXPECT_NEAR(point_nurbs.x, point_decomp.x, kTestEpsilon);
+      EXPECT_NEAR(point_nurbs.y, point_decomp.y, kTestEpsilon);
+      EXPECT_NEAR(point_nurbs.z, point_decomp.z, kTestEpsilon);
+    }
+  }
+}
+
+TEST(NURBS_Chapter5, DecomposeSurfaceV) {
+  constexpr double kTestEpsilon =
+      std::numeric_limits<double>::epsilon() * 100.0;
+  // NURBS surface
+  uint32_t u_degree = 3;
+  uint32_t v_degree = 2;
+  std::vector<double> u_knots = {0, 0, 0, 0, 1, 1, 1, 1};
+  std::vector<double> v_knots = {0, 0, 0, 1, 1, 2, 2, 2, 3, 4, 4, 4};
+  Point2D u_interval = {0.0, 3.0};
+  Point2D v_interval = {0.0, 4.0};
+  std::vector<std::vector<Point4D>> control_points;
+  uint32_t u_points = static_cast<uint32_t>(u_knots.size()) - u_degree - 1;
+  uint32_t v_points = static_cast<uint32_t>(v_knots.size()) - v_degree - 1;
+  control_points.resize(u_points);
+  for (uint32_t u_index = 0; u_index < u_points; ++u_index) {
+    control_points[u_index].resize(v_points);
+    for (uint32_t v_index = 0; v_index < v_points; ++v_index) {
+      double u_val =
+          static_cast<double>(u_index) - (static_cast<double>(u_points) * 0.5);
+      double v_val =
+          static_cast<double>(v_index) - (static_cast<double>(v_points) * 0.5);
+      double dist_0_sq = ((u_val * u_val) + (v_val * v_val));
+      control_points[u_index][v_index] = {u_val, v_val, dist_0_sq, 1.0};
+    }
+  }
+
+  NURBSSurface surface(u_degree, v_degree, u_knots, v_knots, control_points,
+                       u_interval, v_interval);
+
+  // Decompose
+  std::vector<BezierSurface> surfaces = surface.DecomposeV();
+
+  // Check surface count
+  ASSERT_EQ(surfaces.size(), 4);
+
+  // Compare
+  double div = 1.0 / 99.0;
+  double u_div = div * (u_interval.y - u_interval.x);
+  double v_div = div * (v_interval.y - v_interval.x);
+  for (int32_t i = -1; i < 101; ++i) {
+    Point2D uv = {(static_cast<double>(i) * u_div) + u_interval.x, 0.0};
+    Point2D d_uv = uv;
+
+    for (int32_t j = -1; j < 101; ++j) {
+      uv.y = (static_cast<double>(j) * v_div) + v_interval.x;
+      size_t v_index = 0;
+      if (uv.y < 1.0) {
+        v_index = 0;
+        d_uv.y = uv.y;
+      } else if (uv.y < 2.0) {
+        v_index = 1;
+        d_uv.y = uv.y - 1.0;
+      } else if (uv.y < 3.0) {
+        v_index = 2;
+        d_uv.y = uv.y - 2.0;
+      } else {
+        v_index = 3;
+        d_uv.y = uv.y - 3.0;
+      }
+
+      Point3D point_nurbs = surface.EvaluatePoint(uv);
+      Point3D point_isrt = surfaces[v_index].EvaluatePoint(d_uv);
+      EXPECT_NEAR(point_nurbs.x, point_isrt.x, kTestEpsilon);
+      EXPECT_NEAR(point_nurbs.y, point_isrt.y, kTestEpsilon);
+      EXPECT_NEAR(point_nurbs.z, point_isrt.z, kTestEpsilon);
+    }
+  }
+}
+
+TEST(NURBS_Chapter5, DecomposeSurface) {
+  constexpr double kTestEpsilon =
+      std::numeric_limits<double>::epsilon() * 100.0;
+  // NURBS surface
+  uint32_t u_degree = 3;
+  uint32_t v_degree = 2;
+  std::vector<double> u_knots = {0, 0, 0, 0, 1, 2, 2, 3, 3, 3, 3};
+  std::vector<double> v_knots = {0, 0, 0, 1, 1, 2, 2, 2, 3, 4, 4, 4};
+  Point2D u_interval = {0.0, 3.0};
+  Point2D v_interval = {0.0, 4.0};
+  std::vector<std::vector<Point4D>> control_points;
+  uint32_t u_points = static_cast<uint32_t>(u_knots.size()) - u_degree - 1;
+  uint32_t v_points = static_cast<uint32_t>(v_knots.size()) - v_degree - 1;
+  control_points.resize(u_points);
+  for (uint32_t u_index = 0; u_index < u_points; ++u_index) {
+    control_points[u_index].resize(v_points);
+    for (uint32_t v_index = 0; v_index < v_points; ++v_index) {
+      double u_val =
+          static_cast<double>(u_index) - (static_cast<double>(u_points) * 0.5);
+      double v_val =
+          static_cast<double>(v_index) - (static_cast<double>(v_points) * 0.5);
+      double dist_0_sq = ((u_val * u_val) + (v_val * v_val));
+      control_points[u_index][v_index] = {u_val, v_val, dist_0_sq, 1.0};
+    }
+  }
+
+  NURBSSurface surface(u_degree, v_degree, u_knots, v_knots, control_points,
+                       u_interval, v_interval);
+
+  // Merge insert
+  std::vector<std::vector<BezierSurface>> surfaces = surface.Decompose();
+
+  // Check surface count
+  ASSERT_EQ(surfaces.size(), 3);
+  ASSERT_EQ(surfaces[0].size(), 4);
+
+  // Compare
+  double div = 1.0 / 99.0;
+  double u_div = div * (u_interval.y - u_interval.x);
+  double v_div = div * (v_interval.y - v_interval.x);
+  for (int32_t i = -1; i < 101; ++i) {
+    Point2D uv = {(static_cast<double>(i) * u_div) + u_interval.x, 0.0};
+    Point2D d_uv = {0.0, 0.0};
+    size_t u_index = 0;
+    if (uv.x < 1.0) {
+      u_index = 0;
+      d_uv.x = uv.x;
+    } else if (uv.x < 2.0) {
+      u_index = 1;
+      d_uv.x = uv.x - 1.0;
+    } else {
+      u_index = 2;
+      d_uv.x = uv.x - 2.0;
+    }
+    for (int32_t j = -1; j < 101; ++j) {
+      uv.y = (static_cast<double>(j) * v_div) + v_interval.x;
+      size_t v_index = 0;
+      if (uv.y < 1.0) {
+        v_index = 0;
+        d_uv.y = uv.y;
+      } else if (uv.y < 2.0) {
+        v_index = 1;
+        d_uv.y = uv.y - 1.0;
+      } else if (uv.y < 3.0) {
+        v_index = 2;
+        d_uv.y = uv.y - 2.0;
+      } else {
+        v_index = 3;
+        d_uv.y = uv.y - 3.0;
+      }
+      Point3D point_nurbs = surface.EvaluatePoint(uv);
+      Point3D point_isrt = surfaces[u_index][v_index].EvaluatePoint(d_uv);
+      EXPECT_NEAR(point_nurbs.x, point_isrt.x, kTestEpsilon);
+      EXPECT_NEAR(point_nurbs.y, point_isrt.y, kTestEpsilon);
+      EXPECT_NEAR(point_nurbs.z, point_isrt.z, kTestEpsilon);
+    }
+  }
+}
 }  // namespace nurbs

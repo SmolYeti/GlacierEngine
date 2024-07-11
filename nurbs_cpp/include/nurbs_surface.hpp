@@ -1,5 +1,6 @@
 #pragma once
 
+#include "include/bezier_surface.hpp"
 #include "include/surface.hpp"
 
 // STD
@@ -28,6 +29,11 @@ public:
   NURBSSurface KnotInsert(SurfaceDirection dir, double knot, int times) const;
 
   NURBSSurface RefineKnotVect(std::vector<double> knots, SurfaceDirection dir) const;
+
+  std::vector<NURBSSurface> DecomposeU() const;
+  std::vector<BezierSurface> DecomposeV() const;
+
+  std::vector<std::vector<BezierSurface>> Decompose() const;
 
   const std::vector<double> &u_knots() const { return u_knots_; }
   const std::vector<double> &v_knots() const { return v_knots_; }

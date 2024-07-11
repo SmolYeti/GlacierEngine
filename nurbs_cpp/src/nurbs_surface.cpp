@@ -522,4 +522,231 @@ NURBSSurface NURBSSurface::RefineKnotVect(std::vector<double> knots,
   return NURBSSurface(u_degree_, v_degree_, Ubar, Vbar, Qw, u_interval_,
                       v_interval_);
 }
+
+std::vector<NURBSSurface> NURBSSurface::DecomposeU() const {
+  // Decompose surface into Bezier patches
+  // Input: n, p, U, m, q, V, Pw, dir
+  // n - Max index of U knot vector
+  // p - U degree
+  // U - U knot vector
+  // m - # of points in the V direction
+  // q - V degree
+  // V - V knot vector
+  // Pw - control polygon
+  // dir - Direction to split
+  std::vector<std::vector<Point4D>> Pw = control_polygon_;
+  int p = u_degree_;
+  int n = static_cast<int>(Pw.size()) + p;
+  std::vector<double> U = u_knots_;
+  int m = Pw.empty() ? 0 : static_cast<int>(Pw[0].size());
+  // auto dir = SurfaceDirection::kUDir;
+
+  // Output: nb, Qw
+  // nb - # of bezier strips returned
+  // Qw - Bezier strips
+  std::vector<std::vector<std::vector<Point4D>>> Qw = {};
+  std::vector<NURBSSurface> strips = {};
+
+  // (dir == SurfaceDirection::kUDir)
+
+  std::vector<double> new_knots(p + p + 2, 1.0);
+  for (int index = 0; index <= p; ++index) {
+    new_knots[index] = 0.0;
+  }
+  Point2D new_interval = {0.0, 1.0};
+  std::vector<double> alphas(p + 1, 0.0);
+
+  int a = p;
+  int b = p + 1;
+
+  Qw.resize(2);
+  for (std::vector<std::vector<Point4D>>& strip : Qw) {
+    strip.resize(p + 1);
+    for (std::vector<Point4D>& points : strip) {
+      points.resize(m);
+    }
+  }
+
+  for (int i = 0; i <= p; ++i) {
+    for (int row = 0; row < m; ++row) {
+      Qw[0][i][row] = Pw[i][row];
+    }
+  }
+
+  while (b < n) {
+    // Get Mult
+    int i = b;
+    while (b < n && U[b + 1] == U[b]) {
+      ++b;
+    }
+    int mult = b - i + 1;
+
+    if (mult < p) {
+      // Get the numerator and the alfas;
+      double numer = U[b] - U[a];  // Numerator of alpha
+      // Compute and store alphas
+      for (int j = p; j > mult; --j) {
+        alphas[j - mult - 1] = numer / (U[a + j] - U[a]);
+      }
+      int r = p - mult;  // Knot insert r times
+
+      for (int j = 1; j <= r; ++j) {
+        int save = r - j;
+        int s = mult + j;  // This many new points
+        for (int k = p; k >= s; --k) {
+          double alpha = alphas[k - s];
+          for (int row = 0; row < m; ++row) {
+            Qw[0][k][row] =
+                (alpha * Qw[0][k][row]) + ((1.0 - alpha) * Qw[0][k - 1][row]);
+          }
+        }
+        if (b < n) {
+          for (int row = 0; row < m; ++row) {
+            Qw[1][save][row] = Qw[0][p][row];
+          }
+        }
+      }
+    }
+
+    strips.emplace_back(p, v_degree_, new_knots, v_knots_, Qw[0], new_interval,
+                        v_interval_);
+
+    if (b < n) {
+      Qw[0] = Qw[1];
+      for (i = std::max(p - mult, 0); i <= p; ++i) {
+        for (int row = 0; row < m; ++row) {
+          Qw[0][i][row] = Pw[b - p + i][row];
+        }
+      }
+      a = b;
+      b = b + 1;
+    }
+  }
+  return strips;
+}
+
+std::vector<BezierSurface> NURBSSurface::DecomposeV() const {
+  // Fail quick if the U direction is not already decomposed
+  if (control_polygon_.size() != u_degree_ + 1) {
+    return {};
+  }
+  // Decompose surface into Bezier patches
+  // Input: n, p, U, m, q, V, Pw, dir
+  // n - # of points in the U dir
+  // p - U degree
+  // U - U knot vector
+  // m - Max index of V knot vector
+  // q - V degree
+  // V - V knot vector
+  // Pw - control polygon
+  // dir - Direction to split
+  std::vector<std::vector<Point4D>> Pw = control_polygon_;
+  int p = u_degree_;
+  int q = v_degree_;
+  int m = Pw.empty() ? -1 : static_cast<int>(Pw[0].size()) + q;
+  std::vector<double> V = v_knots_;
+  // auto dir = SurfaceDirection::kUDir;
+
+  // Output: nb, Qw
+  // nb - # of bezier strips returned
+  // Qw - Bezier strips
+  std::vector<std::vector<std::vector<Point4D>>> Qw = {};
+  std::vector<BezierSurface> patches = {};
+  std::vector<BezierCurve3D> curves = {};
+  std::vector<Point3D> curve_points = {};
+  curves.reserve(q + 1);
+  curve_points.reserve(p + 1);
+
+  // (dir == SurfaceDirection::kVDir)
+
+  std::vector<double> alphas(q + 1, 0.0);
+
+  int a = q;
+  int b = q + 1;
+
+  Qw.resize(2);
+  for (std::vector<std::vector<Point4D>>& patch : Qw) {
+    patch.resize(p + 1);
+    for (std::vector<Point4D>& points : patch) {
+      points.resize(q + 1);
+    }
+  }
+
+  for (int i = 0; i <= p; ++i) {
+    for (int j = 0; j <= q; ++j) {
+      Qw[0][i][j] = Pw[i][j];
+    }
+  }
+
+  while (b < m) {
+    // Get Mult
+    int i = b;
+    while (b < m && V[b + 1] == V[b]) {
+      ++b;
+    }
+    int mult = b - i + 1;
+
+    if (mult < q) {
+      // Get the numerator and the alfas;
+      double numer = V[b] - V[a];  // Numerator of alpha
+      // Compute and store alphas
+      for (int j = q; j > mult; --j) {
+        alphas[j - mult - 1] = numer / (V[a + j] - V[a]);
+      }
+      int r = q - mult;  // Knot insert r times
+
+      for (int j = 1; j <= r; ++j) {
+        int save = r - j;
+        int s = mult + j;  // This many new points
+        for (int k = q; k >= s; --k) {
+          double alpha = alphas[k - s];
+          for (int col = 0; col <= p; ++col) {
+            Qw[0][col][k] =
+                (alpha * Qw[0][col][k]) + ((1.0 - alpha) * Qw[0][col][k - 1]);
+          }
+        }
+        if (b < m) {
+          for (int col = 0; col <= p; ++col) {
+            Qw[1][col][save] = Qw[0][col][q];
+          }
+        }
+      }
+    }
+
+    for (size_t row = 0; row < Qw[0][0].size(); ++row) {
+      for (size_t col = 0; col < Qw[0].size(); ++col) {
+        const Point4D& point = Qw[0][col][row];
+        curve_points.push_back(Point3D(point.x, point.y, point.z) / point.w);
+      }
+      curves.emplace_back(curve_points);
+      curve_points.clear();
+    }
+
+    patches.emplace_back(curves);
+    curves.clear();
+
+    if (b < m) {
+      Qw[0] = Qw[1];
+      for (int col = 0; col <= p; ++col) {
+        for (i = std::max(q - mult, 0); i <= q; ++i) {
+          Qw[0][col][i] = Pw[col][b - q + i];
+        }
+      }
+      a = b;
+      b = b + 1;
+    }
+  }
+  return patches;
+}
+
+// ALGORITHM A5.7 DecomposeSurface(n, p, U, m, q, V, Pw, dir, nb, Qw)
+std::vector<std::vector<BezierSurface>> NURBSSurface::Decompose() const {
+  std::vector<NURBSSurface> nurbs_surfaces = DecomposeU();
+  std::vector<std::vector<BezierSurface>> bezier_surfaces;
+  bezier_surfaces.reserve(nurbs_surfaces.size());
+  for (const NURBSSurface& surface : nurbs_surfaces) {
+    bezier_surfaces.push_back(surface.DecomposeV());
+  }
+  return bezier_surfaces;
+}
 }  // namespace nurbs
